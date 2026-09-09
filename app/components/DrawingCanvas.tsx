@@ -2,6 +2,7 @@
 
 import {
     useRef,
+    useState,
     type PointerEvent,
 } from "react";
 
@@ -10,6 +11,11 @@ export function DrawingCanvas() {
         useRef<HTMLCanvasElement>(null);
 
     const isDrawingRef = useRef(false);
+
+    const [lineWidth, setLineWidth] =
+  useState(4);
+  const [strokeColor, setStrokeColor] =
+  useState("#111827");
 
 
     function handlePointerDown(
@@ -34,10 +40,10 @@ export function DrawingCanvas() {
         isDrawingRef.current = true;
 
         context.beginPath();
-        context.lineWidth = 4;
-context.lineCap = "round" ;
-context.lineJoin = "round";
-context.strokeStyle = "#111827";
+        context.lineWidth = lineWidth;
+        context.lineCap = "round";
+        context.lineJoin = "round";
+        context.strokeStyle = strokeColor;
         context.moveTo(x, y);
     }
 
@@ -69,22 +75,47 @@ context.strokeStyle = "#111827";
     }
 
     function handlePointerUp() {
-  isDrawingRef.current=false;
-}
+        isDrawingRef.current = false;
+    }
 
 
     return (
         <section>
-          <canvas
-  ref={canvasRef}
-  onPointerDown={handlePointerDown}
-  onPointerMove={handlePointerMove}
-  onPointerUp={handlePointerUp}
-  onPointerLeave={handlePointerUp}
-  width={800}
-  height={500}
-  className="border border-gray-400"
-/>
+            <canvas
+                ref={canvasRef}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerLeave={handlePointerUp}
+                width={800}
+                height={500}
+                className="border border-gray-400"
+            />
+       
+<label>
+  선 굵기: {lineWidth}
+
+  <input
+    type="range"
+    min={1}
+    max={30}
+    value={lineWidth}
+    onChange={(event) => {
+      setLineWidth(Number(event.target.value));
+    }}
+  />
+</label>
+<label>
+  선 색상
+
+  <input
+    type="color"
+    value={strokeColor}
+    onChange={(event) => {
+      setStrokeColor(event.target.value);
+    }}
+  />
+</label>
         </section>
     );
 }
