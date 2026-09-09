@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DrawingCanvas } from "../components/DrawingCanvas";
 
 export default function DrawPage() {
   return (
@@ -7,7 +8,9 @@ export default function DrawPage() {
 
       <h1>그림 이어 그리기</h1>
 
-      <p>Canvas 그림판이 들어갈 페이지입니다.</p>
+      <p>다른 사람이 시작한 그림을 이어서 그려보세요.</p>
+
+      <DrawingCanvas />
     </main>
   );
 }
