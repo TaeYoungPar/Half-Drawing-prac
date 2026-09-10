@@ -1,12 +1,15 @@
 "use client";
 
 import {
+    useEffect,
     useRef,
     useState,
     type PointerEvent,
 } from "react";
 
 import type { Stroke } from "../types/drawing";
+import { drawStroke } from "../utils/drawStroke";
+
 
 export function DrawingCanvas() {
     const canvasRef =
@@ -16,12 +19,42 @@ export function DrawingCanvas() {
     const [strokes, setStrokes] =
         useState<Stroke[]>([]);
     const isDrawingRef = useRef(false);
-
+    const [undoneStrokes, setUndoneStrokes] =
+        useState<Stroke[]>([]);
 
     const [lineWidth, setLineWidth] =
         useState(4);
     const [strokeColor, setStrokeColor] =
         useState("#111827");
+
+
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+
+        if (!canvas) {
+            return;
+        }
+
+        const context = canvas.getContext("2d");
+
+        if (!context) {
+            return;
+        }
+
+        context.clearRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height);
+
+        for (const stroke of strokes) {
+            drawStroke(
+                context,
+                stroke
+            );
+        }
+    }, [strokes]);
 
 
     function handlePointerDown(
@@ -95,23 +128,25 @@ export function DrawingCanvas() {
         currentStroke.points.push({ x, y });
     }
 
-function handlePointerUp() {
-  isDrawingRef.current = false;
+    function handlePointerUp() {
+        isDrawingRef.current = false;
 
-  const completedStroke =
-    currentStrokeRef.current;
+        const completedStroke =
+            currentStrokeRef.current;
 
-  if (!completedStroke) {
-    return;
-  }
+        if (!completedStroke) {
+            return;
+        }
 
-  setStrokes((previousStrokes) => [
-    ...previousStrokes,
-   completedStroke,
-  ]);
+        setStrokes((previousStrokes) => [
+            ...previousStrokes,
+            completedStroke,
+        ]);
 
-  currentStrokeRef.current = null;
-}
+        setUndoneStrokes([]);
+
+        currentStrokeRef.current = null;
+    }
 
     function handleClear() {
         const canvas = canvasRef.current;
@@ -133,7 +168,48 @@ function handlePointerUp() {
             canvas.height
         );
         setStrokes([]);
+        setUndoneStrokes([]);
     }
+
+function handleUndo() {
+  const lastStroke =
+    strokes[strokes.length - 1];
+
+  if (!lastStroke) {
+    return;
+  }
+
+  setStrokes((previousStrokes) =>
+    previousStrokes.slice(0, -1)
+  );
+
+  setUndoneStrokes((previousUndoneStrokes) => [
+    ...previousUndoneStrokes,
+lastStroke
+  ]);
+}
+
+function handleRedo() {
+  const restoredStroke =
+    undoneStrokes[
+      undoneStrokes.length - 1
+    ];
+
+  if (!restoredStroke) {
+    return;
+  }
+
+  setStrokes((previousStrokes) => [
+    ...previousStrokes,
+restoredStroke
+  ]);
+
+  setUndoneStrokes((previousUndoneStrokes) =>
+    previousUndoneStrokes.slice(0, -1)
+  );
+}
+
+
 
     return (
         <section>
@@ -181,6 +257,25 @@ function handlePointerUp() {
             </button>
 
             <span>그린 선: {strokes.length}개</span>
+            <button
+                type="button"
+                onClick={handleUndo}
+                disabled={strokes.length === 0}
+            >
+                실행 취소
+            </button>
+
+            <button
+  type="button"
+  onClick={handleRedo}
+  disabled={undoneStrokes.length === 0}
+>
+  다시 실행
+</button>
+<span>
+  취소된 선: {undoneStrokes.length}개
+</span>
         </section>
+        
     );
 }
