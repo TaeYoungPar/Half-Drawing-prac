@@ -9,18 +9,25 @@ import {
 
 import type { Stroke } from "../types/drawing";
 import { drawStroke } from "../utils/drawStroke";
-
+import { useDrawingHistory } from "../hooks/useDrawingHistory";
 
 export function DrawingCanvas() {
     const canvasRef =
         useRef<HTMLCanvasElement>(null);
     const currentStrokeRef =
         useRef<Stroke | null>(null);
-    const [strokes, setStrokes] =
-        useState<Stroke[]>([]);
+
+    const {
+        strokes,
+        undoneStrokes,
+        addStroke,
+        undo,
+        redo,
+        clear,
+    } = useDrawingHistory();
+
     const isDrawingRef = useRef(false);
-    const [undoneStrokes, setUndoneStrokes] =
-        useState<Stroke[]>([]);
+
 
     const [lineWidth, setLineWidth] =
         useState(4);
@@ -128,86 +135,22 @@ export function DrawingCanvas() {
         currentStroke.points.push({ x, y });
     }
 
-    function handlePointerUp() {
-        isDrawingRef.current = false;
+   function handlePointerUp() {
+  isDrawingRef.current = false;
 
-        const completedStroke =
-            currentStrokeRef.current;
+  const completedStroke =
+    currentStrokeRef.current;
 
-        if (!completedStroke) {
-            return;
-        }
-
-        setStrokes((previousStrokes) => [
-            ...previousStrokes,
-            completedStroke,
-        ]);
-
-        setUndoneStrokes([]);
-
-        currentStrokeRef.current = null;
-    }
-
-    function handleClear() {
-        const canvas = canvasRef.current;
-
-        if (!canvas) {
-            return;
-        }
-
-        const context = canvas.getContext("2d");
-
-        if (!context) {
-            return;
-        }
-
-        context.clearRect(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-        setStrokes([]);
-        setUndoneStrokes([]);
-    }
-
-function handleUndo() {
-  const lastStroke =
-    strokes[strokes.length - 1];
-
-  if (!lastStroke) {
+  if (!completedStroke) {
     return;
   }
 
-  setStrokes((previousStrokes) =>
-    previousStrokes.slice(0, -1)
-  );
+  addStroke(completedStroke);
 
-  setUndoneStrokes((previousUndoneStrokes) => [
-    ...previousUndoneStrokes,
-lastStroke
-  ]);
+  currentStrokeRef.current = null;
 }
 
-function handleRedo() {
-  const restoredStroke =
-    undoneStrokes[
-      undoneStrokes.length - 1
-    ];
-
-  if (!restoredStroke) {
-    return;
-  }
-
-  setStrokes((previousStrokes) => [
-    ...previousStrokes,
-restoredStroke
-  ]);
-
-  setUndoneStrokes((previousUndoneStrokes) =>
-    previousUndoneStrokes.slice(0, -1)
-  );
-}
+    
 
 
 
@@ -251,7 +194,7 @@ restoredStroke
             </label>
             <button
                 type="button"
-                onClick={handleClear}
+                onClick={clear}
             >
                 전체 지우기
             </button>
@@ -259,23 +202,23 @@ restoredStroke
             <span>그린 선: {strokes.length}개</span>
             <button
                 type="button"
-                onClick={handleUndo}
+                onClick={undo}
                 disabled={strokes.length === 0}
             >
                 실행 취소
             </button>
 
             <button
-  type="button"
-  onClick={handleRedo}
-  disabled={undoneStrokes.length === 0}
->
-  다시 실행
-</button>
-<span>
-  취소된 선: {undoneStrokes.length}개
-</span>
+                type="button"
+                onClick={redo}
+                disabled={undoneStrokes.length === 0}
+            >
+                다시 실행
+            </button>
+            <span>
+                취소된 선: {undoneStrokes.length}개
+            </span>
         </section>
-        
+
     );
 }
