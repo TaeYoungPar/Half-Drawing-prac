@@ -6,7 +6,11 @@ import {
   type PointerEvent,
 } from "react";
 
-import type { Stroke } from "../types/drawing";
+import type {
+  Point,
+  Stroke,
+} from "../types/drawing";
+
 import { drawStroke } from "../utils/drawStroke";
 
 
@@ -20,6 +24,31 @@ type UseCanvasDrawingOptions = {
   strokeColor: string;
   onStrokeComplete: (stroke: Stroke) => void;
 };
+
+
+
+function getCanvasPoint(
+  canvas: HTMLCanvasElement,
+  event: PointerEvent<HTMLCanvasElement>
+): Point {
+  const rect = canvas.getBoundingClientRect();
+
+  const scaleX =
+    canvas.width / rect.width;
+
+  const scaleY =
+    canvas.height / rect.height;
+
+  return {
+    x: (
+      event.clientX - rect.left
+    ) * scaleX,
+
+    y: (
+      event.clientY - rect.top
+    ) * scaleY,
+  };
+}
 
 export function useCanvasDrawing({
   strokes,
@@ -69,9 +98,13 @@ export function useCanvasDrawing({
             return;
         }
 
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+      const {
+  x,
+  y,
+} = getCanvasPoint(
+  canvas,
+  event
+);
 
         const context = canvas.getContext("2d");
 
@@ -116,9 +149,13 @@ export function useCanvasDrawing({
             return;
         }
 
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+       const {
+  x,
+  y,
+} = getCanvasPoint(
+  canvas,
+  event
+);
 
         const context = canvas.getContext("2d");
 
