@@ -12,3 +12,6 @@ export type Stroke = {
   lineWidth: number;
   tool: DrawingTool;
 };
+
+export type DrawingSide =
+  "left" | "right";

@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import type {
+  DrawingSide,
   DrawingTool,
   Point,
   Stroke,
@@ -24,6 +25,7 @@ type UseCanvasDrawingOptions = {
   lineWidth: number;
   strokeColor: string;
   tool: DrawingTool;
+  drawingSide: DrawingSide,
   onStrokeComplete: (stroke: Stroke) => void;
 };
 
@@ -57,6 +59,7 @@ export function useCanvasDrawing({
   lineWidth,
   strokeColor,
   tool,
+  drawingSide,
   onStrokeComplete
 }: UseCanvasDrawingOptions) {
   const canvasRef =
@@ -101,6 +104,8 @@ export function useCanvasDrawing({
       return;
     }
 
+
+
     const {
       x,
       y,
@@ -108,6 +113,22 @@ export function useCanvasDrawing({
       canvas,
       event
     );
+
+    const middleX = canvas.width / 2;
+
+    if (
+      drawingSide === "left" &&
+      x > middleX
+    ) {
+      return;
+    }
+
+    if (
+      drawingSide === "right" &&
+      x < middleX
+    ) {
+      return;
+    }
 
     const context = canvas.getContext("2d");
 
@@ -158,13 +179,26 @@ export function useCanvasDrawing({
       return;
     }
 
-    const {
-      x,
-      y,
-    } = getCanvasPoint(
+    const { x, y } = getCanvasPoint(
       canvas,
       event
     );
+
+    const middleX = canvas.width / 2;
+
+    if (
+      drawingSide === "left" &&
+      x > middleX
+    ) {
+      return;
+    }
+
+    if (
+      drawingSide === "right" &&
+      x < middleX
+    ) {
+      return;
+    }
 
     const context = canvas.getContext("2d");
 

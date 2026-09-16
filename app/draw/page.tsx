@@ -10,7 +10,7 @@ export default function DrawPage() {
 
       <p>다른 사람이 시작한 그림을 이어서 그려보세요.</p>
 
-      <DrawingCanvas />
+      <DrawingCanvas drawingSide="left" />
     </main>
   );
 }
