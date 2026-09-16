@@ -6,6 +6,7 @@ type DrawingToolbarProps = {
     lineWidth: number;
     strokeColor: string;
     tool: DrawingTool;
+    onDownload: () => void;
 
     onToolChange:
     (tool: DrawingTool) => void;
@@ -36,6 +37,7 @@ export function DrawingToolbar({
     onUndo,
     onRedo,
     onClear,
+    onDownload,
 }: DrawingToolbarProps) {
     const actionButtonClass =
         "rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40";
@@ -140,6 +142,16 @@ export function DrawingToolbar({
             >
                 전체 지우기
 
+            </button>
+
+            <button
+                type="button"
+                onClick={onDownload}
+                disabled={strokeCount === 0
+                }
+                className={actionButtonClass}
+            >
+                PNG 저장
             </button>
 
             <span className="w-28 whitespace-nowrap text-sm text-gray-600 tabular-nums">

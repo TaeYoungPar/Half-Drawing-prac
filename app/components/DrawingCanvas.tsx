@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useCanvasDrawing } from "../hooks/useCanvasDrawing";
 import { useDrawingHistory } from "../hooks/useDrawingHistory";
 import { DrawingToolbar } from "./DrawingToolbar";
+import { downloadCanvasImage } from "../utils/downloadCanvasImage";
 import type { DrawingTool } from "../types/drawing";
 
 export function DrawingCanvas() {
@@ -38,21 +39,28 @@ export function DrawingCanvas() {
         onStrokeComplete: addStroke,
     });
 
+
+    function handleDownload() {
+  downloadCanvasImage(canvasRef.current);
+}
+    
+
     return (
         <section className="flex w-full flex-col gap-4">
-            <DrawingToolbar
-                lineWidth={lineWidth}
-                strokeColor={strokeColor}
-                onLineWidthChange={setLineWidth}
-                onStrokeColorChange={setStrokeColor}
-                strokeCount={strokes.length}
-                undoneStrokeCount={undoneStrokes.length}
-                onUndo={undo}
-                onRedo={redo}
-                onClear={clear}
-                tool={tool}
-                onToolChange={setTool}
-            />
+           <DrawingToolbar
+  lineWidth={lineWidth}
+  strokeColor={strokeColor}
+  onLineWidthChange={setLineWidth}
+  onStrokeColorChange={setStrokeColor}
+  strokeCount={strokes.length}
+  undoneStrokeCount={undoneStrokes.length}
+  onUndo={undo}
+  onRedo={redo}
+  onClear={clear}
+  tool={tool}
+  onToolChange={setTool}
+  onDownload={handleDownload}
+/>
 
             <canvas
                 ref={canvasRef}
