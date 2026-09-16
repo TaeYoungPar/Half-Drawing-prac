@@ -39,7 +39,7 @@ export function DrawingCanvas() {
     });
 
     return (
-        <section>
+        <section className="flex w-full flex-col gap-4">
             <DrawingToolbar
                 lineWidth={lineWidth}
                 strokeColor={strokeColor}
