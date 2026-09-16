@@ -10,6 +10,11 @@ export function drawStroke(
     return;
   }
 
+  context.globalCompositeOperation =
+  stroke.tool === "eraser"
+    ? "destination-out"
+    : "source-over";
+
   context.beginPath();
   context.lineWidth = stroke.lineWidth;
   context.strokeStyle = stroke.color;

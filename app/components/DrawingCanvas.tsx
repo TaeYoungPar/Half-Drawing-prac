@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useCanvasDrawing } from "../hooks/useCanvasDrawing";
 import { useDrawingHistory } from "../hooks/useDrawingHistory";
 import { DrawingToolbar } from "./DrawingToolbar";
+import type { DrawingTool } from "../types/drawing";
 
 export function DrawingCanvas() {
     const {
@@ -21,6 +22,9 @@ export function DrawingCanvas() {
     const [strokeColor, setStrokeColor] =
         useState("#111827");
 
+    const [tool, setTool] =
+        useState<DrawingTool>("pen");
+
     const {
         canvasRef,
         handlePointerDown,
@@ -30,6 +34,7 @@ export function DrawingCanvas() {
         strokes,
         lineWidth,
         strokeColor,
+        tool,
         onStrokeComplete: addStroke,
     });
 
@@ -45,6 +50,8 @@ export function DrawingCanvas() {
                 onUndo={undo}
                 onRedo={redo}
                 onClear={clear}
+                tool={tool}
+                onToolChange={setTool}
             />
 
             <canvas

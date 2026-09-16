@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import type {
+  DrawingTool,
   Point,
   Stroke,
 } from "../types/drawing";
@@ -22,6 +23,7 @@ type UseCanvasDrawingOptions = {
   strokes: Stroke[];
   lineWidth: number;
   strokeColor: string;
+  tool: DrawingTool;
   onStrokeComplete: (stroke: Stroke) => void;
 };
 
@@ -54,6 +56,7 @@ export function useCanvasDrawing({
   strokes,
   lineWidth,
   strokeColor,
+  tool,
   onStrokeComplete
 }: UseCanvasDrawingOptions) {
   const canvasRef =
@@ -65,129 +68,135 @@ export function useCanvasDrawing({
   const isDrawingRef = useRef(false);
 
   useEffect(() => {
-  const canvas = canvasRef.current;
+    const canvas = canvasRef.current;
 
-  if (!canvas) {
-    return;
-  }
+    if (!canvas) {
+      return;
+    }
 
-  const context = canvas.getContext("2d");
+    const context = canvas.getContext("2d");
 
-  if (!context) {
-    return;
-  }
+    if (!context) {
+      return;
+    }
 
-  context.clearRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
+    context.clearRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
 
-  for (const stroke of strokes) {
-    drawStroke(context, stroke);
-  }
-}, [strokes]);
+    for (const stroke of strokes) {
+      drawStroke(context, stroke);
+    }
+  }, [strokes]);
 
- function handlePointerDown(
-        event: PointerEvent<HTMLCanvasElement>
-    ) {
-        const canvas = canvasRef.current;
+  function handlePointerDown(
+    event: PointerEvent<HTMLCanvasElement>
+  ) {
+    const canvas = canvasRef.current;
 
-        if (!canvas) {
-            return;
-        }
+    if (!canvas) {
+      return;
+    }
 
-      const {
-  x,
-  y,
-} = getCanvasPoint(
-  canvas,
-  event
-);
+    const {
+      x,
+      y,
+    } = getCanvasPoint(
+      canvas,
+      event
+    );
 
-        const context = canvas.getContext("2d");
+    const context = canvas.getContext("2d");
 
-        if (!context) {
-            return;
-        }
-
-
-        isDrawingRef.current = true;
-
-        context.beginPath();
-        context.lineWidth = lineWidth;
-        context.lineCap = "round";
-        context.lineJoin = "round";
-        context.strokeStyle = strokeColor;
-        context.moveTo(x, y);
-
-        currentStrokeRef.current = {
-            points: [{ x, y }],
-            color: strokeColor,
-            lineWidth: lineWidth,
-        };
+    if (!context) {
+      return;
     }
 
 
-       function handlePointerMove(
-        event: PointerEvent<HTMLCanvasElement>
-    ) {
-        if (!isDrawingRef.current) {
-            return;
-        }
+    isDrawingRef.current = true;
 
-        const canvas = canvasRef.current;
+    context.globalCompositeOperation =
+      tool === "eraser"
+        ? "destination-out" :
+        "source-over"
 
-        if (!canvas) {
-            return;
-        }
+    context.beginPath();
+    context.lineWidth = lineWidth;
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.strokeStyle = strokeColor;
+    context.moveTo(x, y);
 
-        const currentStroke = currentStrokeRef.current;
-
-        if (!currentStroke) {
-            return;
-        }
-
-       const {
-  x,
-  y,
-} = getCanvasPoint(
-  canvas,
-  event
-);
-
-        const context = canvas.getContext("2d");
-
-        if (!context) {
-            return;
-        }
-
-        context.lineTo(x, y);
-        context.stroke();
-
-        currentStroke.points.push({ x, y });
-    }
-
-   function handlePointerUp() {
-  isDrawingRef.current = false;
-
-  const completedStroke =
-    currentStrokeRef.current;
-
-  if (!completedStroke) {
-    return;
+    currentStrokeRef.current = {
+      points: [{ x, y }],
+      color: strokeColor,
+      lineWidth: lineWidth,
+      tool,
+    };
   }
 
-  onStrokeComplete(completedStroke);
 
-  currentStrokeRef.current = null;
-}
+  function handlePointerMove(
+    event: PointerEvent<HTMLCanvasElement>
+  ) {
+    if (!isDrawingRef.current) {
+      return;
+    }
 
-return {
- canvasRef,
-handlePointerDown,
-handlePointerMove,
-handlePointerUp
-};
+    const canvas = canvasRef.current;
+
+    if (!canvas) {
+      return;
+    }
+
+    const currentStroke = currentStrokeRef.current;
+
+    if (!currentStroke) {
+      return;
+    }
+
+    const {
+      x,
+      y,
+    } = getCanvasPoint(
+      canvas,
+      event
+    );
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      return;
+    }
+
+    context.lineTo(x, y);
+    context.stroke();
+
+    currentStroke.points.push({ x, y });
+  }
+
+  function handlePointerUp() {
+    isDrawingRef.current = false;
+
+    const completedStroke =
+      currentStrokeRef.current;
+
+    if (!completedStroke) {
+      return;
+    }
+
+    onStrokeComplete(completedStroke);
+
+    currentStrokeRef.current = null;
+  }
+
+  return {
+    canvasRef,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp
+  };
 }
