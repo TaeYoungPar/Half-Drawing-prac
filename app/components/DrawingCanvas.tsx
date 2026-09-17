@@ -10,6 +10,8 @@ import type {
     DrawingSide,
     DrawingTool,
 } from "../types/drawing";
+import { useAnonymousAuth } from "../hooks/useAnonymousAuth";
+
 
 type DrawingCanvasProps = {
     drawingSide: DrawingSide;
@@ -51,6 +53,12 @@ export function DrawingCanvas({
         onStrokeComplete: addStroke,
     });
 
+    const {
+  userId,
+  isLoading,
+  errorMessage,
+} = useAnonymousAuth();
+
 
     function handleDownload() {
         downloadCanvasImage(canvasRef.current);
@@ -59,6 +67,28 @@ export function DrawingCanvas({
 
     return (
         <section className="flex w-full flex-col gap-4">
+        {isLoading && (
+  <p className="text-sm text-gray-600">
+    사용자 연결 중...
+  </p>
+)}
+
+{errorMessage && (
+  <p
+    role="alert"
+    className="text-sm text-red-600"
+  >
+    로그인 오류: {errorMessage}
+  </p>
+)}
+
+{userId && (
+  <p className="text-sm text-green-700">
+    Supabase 익명 로그인 성공:
+    {" "}
+    {userId.slice(0, 8)}
+  </p>
+)}
             <DrawingToolbar
                 lineWidth={lineWidth}
                 strokeColor={strokeColor}
@@ -75,10 +105,10 @@ export function DrawingCanvas({
             />
 
             <p className="text-sm font-medium text-gray-700">
-  {drawingSide === "left"
-    ? "왼쪽 절반에 그림을 그려주세요."
-    : "오른쪽 절반에 그림을 이어 그려주세요."}
-</p>
+                {drawingSide === "left"
+                    ? "왼쪽 절반에 그림을 그려주세요."
+                    : "오른쪽 절반에 그림을 이어 그려주세요."}
+            </p>
 
             <div className="relative w-full max-w-[800px]">
                 <canvas
@@ -92,21 +122,20 @@ export function DrawingCanvas({
                     className="block h-auto w-full touch-none border border-gray-400 bg-white"
                 />
 
-                 <div
-  aria-hidden="true"
-  className={`pointer-events-none absolute inset-y-0 w-1/2 bg-gray-900/5 ${
-    drawingSide === "left"
-      ? "right-0"
-      : "left-0"
-  }`}
-/>
+                <div
+                    aria-hidden="true"
+                    className={`pointer-events-none absolute inset-y-0 w-1/2 bg-gray-900/5 ${drawingSide === "left"
+                            ? "right-0"
+                            : "left-0"
+                        }`}
+                />
 
                 <div
                     aria-hidden="true"
                     className="pointer-events-none absolute inset-y-0 left-1/2 border-l-2 border-dashed border-gray-400"
                 />
-                         
-            
+
+
             </div>
         </section>
     );
