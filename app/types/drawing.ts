@@ -15,3 +15,9 @@ export type Stroke = {
 
 export type DrawingSide =
   "left" | "right";
+
+export type DrawingStatus =
+  | "waiting"
+  | "guest_joined"
+  | "completed"
+  | "expired";
