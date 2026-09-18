@@ -7,8 +7,9 @@ import { useDrawingHistory } from "../hooks/useDrawingHistory";
 import { DrawingToolbar } from "./DrawingToolbar";
 import { downloadCanvasImage } from "../utils/downloadCanvasImage";
 import type {
-    DrawingSide,
-    DrawingTool,
+  DrawingSide,
+  DrawingTool,
+  Stroke,
 } from "../types/drawing";
 import { useAnonymousAuth } from "../hooks/useAnonymousAuth";
 import {
@@ -17,13 +18,18 @@ import {
 } from "../lib/drawings/createRoom";
 
 type DrawingCanvasProps = {
-    drawingSide: DrawingSide;
+  drawingSide: DrawingSide;
+  backgroundStrokes?: Stroke[];
 };
 
 
+const EMPTY_BACKGROUND_STROKES: Stroke[] = [];
+
 
 export function DrawingCanvas({
-    drawingSide
+  drawingSide,
+  backgroundStrokes =
+    EMPTY_BACKGROUND_STROKES,
 }: DrawingCanvasProps) {
     const {
         strokes,
@@ -48,13 +54,14 @@ export function DrawingCanvas({
         handlePointerMove,
         handlePointerUp,
     } = useCanvasDrawing({
-        strokes,
-        lineWidth,
-        strokeColor,
-        tool,
-        drawingSide,
-        onStrokeComplete: addStroke,
-    });
+  backgroundStrokes,
+  strokes,
+  lineWidth,
+  strokeColor,
+  tool,
+  drawingSide,
+  onStrokeComplete: addStroke,
+});
 
     const {
   userId,

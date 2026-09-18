@@ -19,15 +19,17 @@ import { drawStroke } from "../utils/drawStroke";
 
 
 
-
 type UseCanvasDrawingOptions = {
+  backgroundStrokes: Stroke[];
   strokes: Stroke[];
   lineWidth: number;
   strokeColor: string;
   tool: DrawingTool;
-  drawingSide: DrawingSide,
+  drawingSide: DrawingSide;
   onStrokeComplete: (stroke: Stroke) => void;
 };
+
+
 
 
 
@@ -55,12 +57,13 @@ function getCanvasPoint(
 }
 
 export function useCanvasDrawing({
+  backgroundStrokes,
   strokes,
   lineWidth,
   strokeColor,
   tool,
   drawingSide,
-  onStrokeComplete
+  onStrokeComplete,
 }: UseCanvasDrawingOptions) {
   const canvasRef =
     useRef<HTMLCanvasElement>(null);
@@ -90,10 +93,14 @@ export function useCanvasDrawing({
       canvas.height
     );
 
-    for (const stroke of strokes) {
-      drawStroke(context, stroke);
-    }
-  }, [strokes]);
+    for (const stroke of backgroundStrokes) {
+  drawStroke(context, stroke);
+}
+
+for (const stroke of strokes) {
+  drawStroke(context, stroke);
+}
+}, [backgroundStrokes, strokes]);
 
   function handlePointerDown(
     event: PointerEvent<HTMLCanvasElement>

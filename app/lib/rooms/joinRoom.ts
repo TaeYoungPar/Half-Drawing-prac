@@ -22,9 +22,31 @@ export async function joinRoom(
     }
   );
 
-  if (error) {
-    throw new Error(error.message);
+ if (error) {
+  if (
+    error.message.includes(
+      "ROOM_NOT_AVAILABLE"
+    )
+  ) {
+    throw new Error(
+      "존재하지 않거나 참여할 수 없는 방입니다."
+    );
   }
+
+  if (
+    error.message.includes(
+      "LOGIN_REQUIRED"
+    )
+  ) {
+    throw new Error(
+      "로그인이 필요합니다."
+    );
+  }
+
+  throw new Error(
+    "방 참여 중 오류가 발생했습니다."
+  );
+}
 
   const room =
     data?.[0] as JoinedRoom | undefined;
