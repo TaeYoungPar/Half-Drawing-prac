@@ -29,7 +29,7 @@ export async function joinRoom(
     )
   ) {
     throw new Error(
-      "존재하지 않거나 참여할 수 없는 방입니다."
+      "코드를 확인해주세요. 만료·이미 참여 중인 방이거나, 내가 만든 방에는 참여할 수 없어요."
     );
   }
 
@@ -51,7 +51,10 @@ export async function joinRoom(
   const room =
     data?.[0] as JoinedRoom | undefined;
 
-  if (!room) {
+  if (!room || typeof room.room_id !== "string" || !room.room_id ||
+      typeof room.prompt !== "string" ||
+      !["guest_joined", "completed"].includes(room.room_status) ||
+      typeof room.expires_at !== "string" || !Number.isFinite(Date.parse(room.expires_at))) {
     throw new Error(
       "참여할 방 정보를 받지 못했습니다."
     );

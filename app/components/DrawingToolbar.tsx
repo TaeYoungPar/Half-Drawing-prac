@@ -3,164 +3,56 @@
 import type { DrawingTool } from "../types/drawing";
 
 type DrawingToolbarProps = {
-    lineWidth: number;
-    strokeColor: string;
-    tool: DrawingTool;
-    onDownload: () => void;
-
-    onToolChange:
-    (tool: DrawingTool) => void;
-
-    onLineWidthChange:
-    (lineWidth: number) => void;
-
-    onStrokeColorChange:
-    (strokeColor: string) => void;
-
-    strokeCount: number;
-    undoneStrokeCount: number;
-
-    onUndo: () => void;
-    onRedo: () => void;
-    onClear: () => void;
+  lineWidth: number; strokeColor: string; tool: DrawingTool;
+  onDownload: () => void; canDownload?: boolean; disabled?: boolean;
+  onToolChange: (tool: DrawingTool) => void;
+  onLineWidthChange: (width: number) => void;
+  onStrokeColorChange: (color: string) => void;
+  strokeCount: number; undoneStrokeCount: number;
+  onUndo: () => void; onRedo: () => void; onClear: () => void;
 };
 
 export function DrawingToolbar({
-    lineWidth,
-    strokeColor,
-    tool,
-    onToolChange,
-    onLineWidthChange,
-    onStrokeColorChange,
-    strokeCount,
-    undoneStrokeCount,
-    onUndo,
-    onRedo,
-    onClear,
-    onDownload,
+  lineWidth, strokeColor, tool, onToolChange, onLineWidthChange,
+  onStrokeColorChange, strokeCount, undoneStrokeCount, onUndo, onRedo,
+  onClear, onDownload, canDownload = true, disabled = false,
 }: DrawingToolbarProps) {
-    const actionButtonClass =
-        "rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40";
-    return (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <button
-                type="button"
-                onClick={() => {
-                    onToolChange("pen");
-                }}
-                aria-pressed={tool === "pen"}
-                className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${tool === "pen"
-                    ? "border-gray-900 bg-gray-900 text-white"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
-                    }`}
-            >
-                펜
+  return (
+    <div className="panel flex flex-col gap-4 p-4" aria-label="그림 도구">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex gap-1 rounded-xl bg-slate-100 p-1" role="group" aria-label="그리기 도구 선택">
+          {(["pen", "eraser"] as const).map((value) => (
+            <button key={value} type="button" onClick={() => onToolChange(value)}
+              aria-pressed={tool === value} disabled={disabled}
+              className={`min-h-11 rounded-lg px-4 text-sm font-semibold transition disabled:opacity-40 ${tool === value ? "bg-indigo-600 text-white shadow-sm" : "text-slate-600 hover:bg-white"}`}>
+              {value === "pen" ? "펜" : "지우개"}
             </button>
-
-            <button
-                type="button"
-                onClick={() => {
-                    onToolChange("eraser");
-                }}
-                aria-pressed={tool === "eraser"}
-                className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${tool === "eraser"
-                    ? "border-gray-900 bg-gray-900 text-white"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
-                    }`}
-            >
-                지우개
-            </button>
-
-            <label className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium">
-                <span>선 굵기:</span>
-
-                <span className="w-6 text-right tabular-nums">
-                    {lineWidth}
-                </span>
-
-                <input
-                    type="range"
-                    min={1}
-                    max={30}
-                    value={lineWidth}
-                    onChange={(event) => {
-                        onLineWidthChange(
-                            Number(event.target.value)
-                        );
-                    }}
-                    className="w-32 cursor-pointer accent-gray-900"
-                />
-            </label>
-
-            <label
-                className={`flex items-center gap-2 rounded-lg  bg-gray-50 px-3 py-2 text-sm font-medium ${tool === "eraser"
-                    ? "opacity-50"
-                    : ""
-                    }`}
-            >
-                선 색상
-
-                <input
-                    type="color"
-                    value={strokeColor}
-                    disabled={tool === "eraser"}
-                    onChange={(event) => {
-                        onStrokeColorChange(
-                            event.target.value
-                        );
-                    }}
-                    className="h-8 w-10 cursor-pointer rounded border border-gray-300 bg-transparent disabled:cursor-not-allowed"
-                />
-            </label>
-
-            <button
-                type="button"
-                onClick={onUndo}
-                disabled={strokeCount === 0}
-                className={actionButtonClass}
-            >
-                실행 취소
-            </button>
-
-            <button
-                type="button"
-                onClick={onRedo}
-                disabled={undoneStrokeCount === 0}
-                className={actionButtonClass}
-            >
-                다시 실행
-            </button>
-
-            <button
-                type="button"
-                onClick={onClear}
-                className={actionButtonClass}
-                disabled={
-                    strokeCount === 0 &&
-                    undoneStrokeCount === 0
-                }
-            >
-                전체 지우기
-
-            </button>
-
-            <button
-                type="button"
-                onClick={onDownload}
-                disabled={strokeCount === 0
-                }
-                className={actionButtonClass}
-            >
-                PNG 저장
-            </button>
-
-            <span className="w-28 whitespace-nowrap text-sm text-gray-600 tabular-nums">
-                그린 선: {strokeCount}개
-            </span>
-
-            <span className="w-28 whitespace-nowrap text-sm text-gray-600 tabular-nums">
-                취소된 선: {undoneStrokeCount}개
-            </span>
+          ))}
         </div>
-    );
+        <label className="flex min-h-11 flex-wrap items-center gap-2 text-sm font-medium">
+          <span>{tool === "eraser" ? "지우개" : "선"} 굵기</span>
+          <span className="w-6 text-right tabular-nums text-indigo-700">{lineWidth}</span>
+          <input type="range" min={1} max={30} value={lineWidth} disabled={disabled}
+            onChange={(event) => onLineWidthChange(Number(event.target.value))}
+            className="h-11 w-28 cursor-pointer accent-indigo-600 sm:w-32" />
+        </label>
+        <label className={`flex min-h-11 items-center gap-2 text-sm font-medium ${tool === "eraser" ? "opacity-40" : ""}`}>
+          색상
+          <input type="color" value={strokeColor} disabled={disabled || tool === "eraser"}
+            onChange={(event) => onStrokeColorChange(event.target.value)}
+            className="h-11 w-11 cursor-pointer rounded-lg border border-slate-200 bg-white p-1 disabled:cursor-not-allowed" />
+        </label>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+        <button type="button" onClick={onUndo} disabled={disabled || strokeCount === 0} className="button-secondary">↶ 실행 취소</button>
+        <button type="button" onClick={onRedo} disabled={disabled || undoneStrokeCount === 0} className="button-secondary">↷ 다시 실행</button>
+        <button type="button" onClick={onClear} disabled={disabled || (!strokeCount && !undoneStrokeCount)} className="button-secondary">전체 지우기</button>
+        {canDownload && <button type="button" onClick={onDownload} disabled={disabled || strokeCount === 0} className="button-secondary">PNG 저장 ↓</button>}
+        <div className="flex flex-wrap gap-3 text-xs text-slate-500 sm:ml-auto">
+          <span className="w-28 whitespace-nowrap tabular-nums">그린 선: {strokeCount}개</span>
+          <span className="w-28 whitespace-nowrap tabular-nums">취소된 선: {undoneStrokeCount}개</span>
+        </div>
+      </div>
+    </div>
+  );
 }

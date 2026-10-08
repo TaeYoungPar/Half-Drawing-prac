@@ -6,7 +6,9 @@ import {
 } from "react";
 
 import type { Stroke } from "../types/drawing";
-import { drawStroke } from "../utils/drawStroke";
+import { drawHalfStrokes } from "../utils/drawHalfStrokes";
+import Link from "next/link";
+import { downloadCanvasImage } from "../utils/downloadCanvasImage";
 
 type DrawingResultCanvasProps = {
   leftStrokes: Stroke[];
@@ -41,23 +43,32 @@ export function DrawingResultCanvas({
       canvas.height
     );
 
-    for (const stroke of leftStrokes) {
-      drawStroke(context, stroke);
-    }
-
-    for (const stroke of rightStrokes) {
-      drawStroke(context, stroke);
-    }
+    // The finished drawing is replayed in the same order as the two artists worked.
+    drawHalfStrokes(context, leftStrokes, "left");
+    drawHalfStrokes(context, rightStrokes, "right");
   }, [leftStrokes, rightStrokes]);
 
   return (
-    <div className="w-full max-w-[800px]">
+    <div className="flex w-full max-w-[800px] flex-col gap-3">
       <canvas
         ref={canvasRef}
         width={800}
         height={500}
-        className="block h-auto w-full border border-gray-400 bg-white"
+        aria-label="두 사람이 함께 완성한 그림"
+        className="block h-auto w-full rounded-2xl border border-slate-200 bg-white shadow-sm"
       />
+      <button
+        type="button"
+        onClick={() => downloadCanvasImage(canvasRef.current)}
+        className="button-primary self-start"
+      >
+        완성 그림 PNG 저장
+      </button>
+      <p className="text-sm text-slate-500">이 그림은 참여한 두 사람만 볼 수 있어요. 잊기 전에 기기에 저장해주세요.</p>
+      <div className="mt-2 flex flex-wrap gap-3">
+        <Link href="/draw" className="button-secondary">새 그림 시작하기</Link>
+        <Link href="/" className="button-secondary">홈으로</Link>
+      </div>
     </div>
   );
 }

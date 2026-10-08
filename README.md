@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 반쪽그림
 
-## Getting Started
+두 사람이 그림을 반씩 이어 그리는 Next.js 앱입니다. 방장이 왼쪽 절반을 등록하고 참여 코드를 전달하면, 참여자가 오른쪽을 그려 완성합니다.
 
-First, run the development server:
+## 실행
+
+Node.js 및 npm을 설치한 뒤 프로젝트 루트에서 실행합니다.
 
 ```bash
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Windows PowerShell에서 npm 실행 정책 오류가 나면 `npm.cmd ci`, `npm.cmd run dev`를 사용하세요. 로컬 주소는 `http://localhost:3000`입니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`.env.example`을 참고해 `.env.local`을 만들고 Supabase 프로젝트의 URL과 publishable key를 넣으세요. `service_role` 키를 `NEXT_PUBLIC_` 변수에 넣으면 안 됩니다. Supabase에서 익명 로그인을 켜고 `rooms`, `drawings`, `create_room`, `join_room`, `complete_room_if_ready` 및 해당 RLS 정책을 준비해야 합니다. 기존 DB 구조는 이 저장소에서 생성하지 않으므로 배포 대상 Supabase 프로젝트에 이전 SQL 설정이 적용되었는지 확인해야 합니다.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**필수 DB 변경:** 기존 Supabase 프로젝트의 SQL 편집기에서 `supabase/migrations/20260928_guest_preview.sql`을 실행하세요. 이 스크립트는 참여자의 왼쪽 원본 읽기를 차단하고 경계 24px 안에 실제로 기록된 점만 반환하는 `get_left_preview` RPC를 만듭니다. 앱 코드 배포보다 SQL 적용을 먼저 해야 새 참여자 화면이 열립니다. 다른 허용형 `drawings` SELECT 정책이 추가되어 있으면 그것도 점검해야 합니다.
 
-## Learn More
+```bash
+npm run lint
+npm test
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 화면 및 데이터 흐름
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+홈의 **내가 시작한 그림**에서 기존 익명 세션으로 만든 방을 다시 찾을 수 있습니다. 참여 대기·그리는 중·완성됨·기간 만료를 표시하고, 완성 그림 보기와 참여 코드 복사를 제공합니다. 목록은 최신순 6개씩 표시하며, 보이는 탭에서 10초마다 또는 탭으로 돌아올 때 갱신합니다. `그리는 중`은 상대의 방 참여 상태이며 실제 펜 움직임을 감지한 상태는 아닙니다.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`getMyRooms`는 기존 로그인 세션의 사용자 ID로 `rooms.host_id`를 조회하며 그림 원본은 가져오지 않습니다. 홈 방문만으로 새 익명 계정을 생성하지 않습니다. 기존 rooms SELECT RLS를 사용하므로 새 SQL은 필요하지 않지만, 실제 프로젝트에 방장 읽기 정책이 적용되어 있어야 합니다. 브라우저 데이터를 지우거나 다른 기기를 사용하면 익명 계정이 달라져 이전 목록을 찾을 수 없습니다. 조회 실패는 빈 목록으로 숨기지 않고 재시도 안내와 마지막 조회 상태를 표시합니다.
 
-## Deploy on Vercel
+그림을 등록하거나 제출한 뒤에는 캔버스와 편집 도구가 잠겨, 화면과 저장된 데이터가 다르게 보이지 않도록 합니다. 생성 직후와 방장 대기 화면에서 참여 코드를 복사할 수 있습니다. 방장 화면은 탭이 보이는 동안 약 7초마다 완료 여부를 확인합니다. 작은 화면에서는 캔버스를 원래 크기로 유지하고 좌우 이동 버튼으로 작업 영역을 볼 수 있습니다.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+완료한 선은 브라우저의 `localStorage`에 임시 저장됩니다. 같은 브라우저에서 새로고침하면 복원되며, 오른쪽 그림은 방 ID별로 구분됩니다. 서버와 동기화되는 저장은 아니므로 다른 기기나 시크릿 창에서는 이어서 그릴 수 없습니다. 방 생성 또는 그림 제출에 성공하면 해당 임시 그림은 삭제됩니다. 그리는 중인 선은 포인터를 놓아 완료하기 전까지 임시 저장되지 않습니다.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+방장이 주제를 입력하다 새로고침해도 같은 브라우저에서 입력값을 복원합니다. 방을 생성하면 대기 화면으로 이동하므로 참여 코드를 다시 확인할 수 있습니다. 대기 화면에는 등록한 왼쪽 그림이 표시되고, 전체 지우기 전에는 되돌릴 수 없다는 확인을 받습니다.
+
+| 경로 | 역할 |
+| --- | --- |
+| `/` | 그림 시작/방 참여로 이동, 내가 시작한 방 목록과 완성 상태 확인 |
+| `/draw` | 방장이 왼쪽 그림을 그려 주제와 함께 등록 |
+| `/join` | 다른 익명 계정으로 참여 코드 입력 |
+| `/rooms/[id]` | 방장은 완성 여부를 확인하고, 참여자는 오른쪽을 그리며, 완료되면 양쪽 완성 그림을 표시 |
+
+`useDrawingHistory`는 현재 그림과 취소한 그림을 관리합니다. `useCanvasDrawing`은 포인터 입력을 캔버스 좌표로 바꾸고 선을 그립니다. `drawStroke`는 저장된 선을 다시 재생하므로 실행 취소, 지우개, 결과 화면에서 같은 그림을 얻을 수 있습니다. `create_room` RPC는 방과 첫 번째 그림을 생성하고, 오른쪽 제출은 `drawings`에 저장됩니다. DB 트리거가 방을 `completed`로 바꾸면 `/rooms/[id]`에서 완성본을 확인합니다.
+
+## 출시 전 실제 환경 확인
+
+이번 UI/UX 개선 내역과 출시 승인 전 점검표는 `RELEASE_CHECKLIST.md`, 버그 수정·보안 업데이트·25개 테스트 결과와 출시 판정은 `QA_REPORT.md`에 정리했습니다. 자동 검사는 실제 Supabase 두 계정 테스트나 실제 휴대폰 브라우저 테스트를 대신하지 않습니다.
+
+1. 일반 브라우저와 별도 시크릿 창에서 각각 익명 로그인으로 방장/참여자를 만듭니다.
+2. 방장이 그림을 등록하고 코드를 복사한 뒤 방 화면에서 대기합니다.
+3. 참여자가 코드로 들어와 오른쪽을 그리고 제출합니다. 새로고침해도 다시 편집되지 않고 완성본이 보이는지 확인합니다.
+4. 방장 화면에서 `완성 여부 확인`을 누르고 두 그림이 공개되는지 확인합니다.
+5. 참여자 계정으로 `drawings` 테이블의 왼쪽 원본을 직접 SELECT해도 나오지 않는지 확인하고, `get_left_preview` 결과의 모든 점이 x=376..400인지 확인합니다.
+6. 실패한 코드, 만료된 방, 중복 제출, 모바일 터치, 펜/지우개, PNG 저장을 점검합니다.
+
+### 현재 공개 출시 전 제약
+
+빗살무늬만으로는 그림이 비밀이 되지 않습니다. 위 SQL을 적용하면 완료 전 참여자의 원본 SELECT가 거부되고 경계 근처의 점만 별도 RPC로 전송됩니다. 프리뷰는 선의 점 중 x=376..400에 기록된 점만 남기므로 원래의 선과 약간 다르게 보일 수 있습니다. SQL 적용과 실제 RLS 검증 없이 UI만 배포하면 참여자가 개발자 도구로 원본 그림을 볼 수 있습니다.
+
+현재 저장소에는 Supabase 프로젝트의 접속 정보와 배포 플랫폼 설정이 없습니다. 배포할 때 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`를 설정하고 익명 로그인과 RPC 권한을 실제 배포 주소에서 다시 확인하세요.

@@ -3,12 +3,13 @@ import { DrawingCanvas } from "../components/DrawingCanvas";
 
 export default function DrawPage() {
   return (
-    <main>
-      <Link href="/">홈으로 돌아가기</Link>
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-6">
+      <Link href="/" className="text-sm font-medium text-slate-500">← 홈으로</Link>
 
-      <h1>그림 이어 그리기</h1>
+      <span className="eyebrow">STEP 1 · 내 반쪽 그리기</span>
+      <h1 className="text-3xl font-bold tracking-tight">어떤 상상을 시작해볼까요?</h1>
 
-      <p>다른 사람이 시작한 그림을 이어서 그려보세요.</p>
+      <p>왼쪽 절반을 그린 뒤 주제와 함께 등록하고 참여 코드를 공유하세요.</p>
 
       <DrawingCanvas drawingSide="left" />
     </main>
