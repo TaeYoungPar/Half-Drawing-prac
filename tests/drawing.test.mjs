@@ -30,7 +30,7 @@ export function loadTS(filename, mocks = {}) {
   return exports;
 }
 
-function setup(readOnly = false) {
+function setup(readOnly = false, dimensions = {}, drawingSide = "left") {
   const calls = [];
   const captures = new Set();
   const context = {};
@@ -41,6 +41,7 @@ function setup(readOnly = false) {
     setPointerCapture: (id) => captures.add(id),
     hasPointerCapture: (id) => captures.has(id),
     releasePointerCapture: (id) => captures.delete(id),
+    ...dimensions,
   };
   context.canvas = canvas;
   for (const method of ["save", "restore", "beginPath", "rect", "clip", "arc", "fill", "moveTo", "lineTo", "stroke", "clearRect"]) {
@@ -53,13 +54,27 @@ function setup(readOnly = false) {
   const completed = [];
   const handlers = useCanvasDrawing({
     backgroundStrokes: [], strokes: [], lineWidth: 4, strokeColor: "#111827",
-    tool: "pen", drawingSide: "left", readOnly, onStrokeComplete: (stroke) => completed.push(stroke),
+    tool: "pen", drawingSide, readOnly, onStrokeComplete: (stroke) => completed.push(stroke),
   });
   const event = (x, y = 100, pointerId = 1, button = 0) => ({
     clientX: x + 11, clientY: y + 21, pointerId, button, type: "pointerup", preventDefault() {},
   });
   return { handlers, completed, calls, captures, event, stateUpdates };
 }
+
+test("phone-size input reaches the same bitmap seam for both artists", () => {
+  for (const width of [272, 343, 390, 800]) {
+    const height = width * 500 / 800;
+    for (const side of ["left", "right"]) {
+      const { handlers, completed, event } = setup(false, { clientWidth: width, clientHeight: height }, side);
+      handlers.handlePointerDown(event(width * (side === "left" ? 0.25 : 0.75), height / 2));
+      handlers.handlePointerUp(event(width / 2, height / 2));
+      assert.equal(completed.length, 1);
+      assert.ok(Math.abs(completed[0].points.at(-1).x - 400) < 0.000001);
+      assert.ok(Math.abs(completed[0].points.at(-1).y - 250) < 0.000001);
+    }
+  }
+});
 
 test("tap is visible and committed once after capture release", () => {
   const { handlers, completed, calls, captures, event } = setup();

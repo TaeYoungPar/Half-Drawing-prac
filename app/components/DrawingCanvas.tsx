@@ -2,7 +2,6 @@
 
 import {
   useEffect,
-  useRef,
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
@@ -102,7 +101,6 @@ export function DrawingCanvas({
 
   // Once sent, local edits would differ from the drawing saved in the room.
   const readOnly = isRestoring || isSaving || Boolean(createdRoom) || isDrawingSubmitted;
-  const scrollRef = useRef<HTMLDivElement>(null);
   const {
     canvasRef,
     handlePointerDown,
@@ -119,13 +117,6 @@ export function DrawingCanvas({
     readOnly,
     onStrokeComplete: addStroke,
   });
-
-  useEffect(() => {
-    // On a small screen, show the artist's half first at its natural size.
-    if (scrollRef.current) {
-      scrollRef.current.scrollLeft = drawingSide === "right" ? 376 : 0;
-    }
-  }, [drawingSide]);
 
   useEffect(() => {
     if (drawingSide !== "left") return;
@@ -349,13 +340,10 @@ export function DrawingCanvas({
         <p className="text-sm text-gray-600">저장된 그림은 수정할 수 없습니다.</p>
       )}
 
-      <div className="flex gap-2 md:hidden">
-        <button type="button" onClick={() => scrollRef.current?.scrollBy({ left: -240, behavior: "smooth" })} className="rounded-lg border border-gray-300 px-3 py-2 text-sm">← 왼쪽으로 이동</button>
-        <button type="button" onClick={() => scrollRef.current?.scrollBy({ left: 240, behavior: "smooth" })} className="rounded-lg border border-gray-300 px-3 py-2 text-sm">오른쪽으로 이동 →</button>
-      </div>
-      <p className="text-xs text-slate-500 md:hidden">휴대폰에서는 위 버튼으로 작업 영역을 이동해요. 그림 위에서는 손가락으로 바로 그릴 수 있어요.</p>
-      <div ref={scrollRef} className="w-full max-w-[800px] overflow-x-auto" aria-label="그림 작업 영역">
-      <div className="relative w-[800px] md:w-full">
+      <p className="text-xs text-slate-500">가운데 점선이 두 그림의 연결 지점이에요. 이어질 선은 점선까지 그려주세요.</p>
+      {/* Keep the whole bitmap visible on phones too, exactly as in the saved preview.
+          useCanvasDrawing converts this CSS size back to the 800 × 500 bitmap. */}
+      <div className="relative w-full max-w-[800px] overflow-hidden border border-gray-400" aria-label="그림 작업 영역">
         <canvas
           ref={canvasRef}
           onPointerDown={
@@ -370,7 +358,7 @@ export function DrawingCanvas({
           aria-label={drawingSide === "left" ? "왼쪽 반쪽 그림 그리기" : "오른쪽 반쪽 그림 그리기"}
           width={800}
           height={500}
-          className={`block h-auto w-full touch-none border border-gray-400 bg-white ${readOnly ? "cursor-not-allowed" : "cursor-crosshair"}`}
+          className={`block h-auto w-full touch-none bg-white ${readOnly ? "cursor-not-allowed" : "cursor-crosshair"}`}
         />
 
         <div
@@ -390,7 +378,6 @@ export function DrawingCanvas({
           aria-hidden="true"
           className="pointer-events-none absolute inset-y-0 left-1/2 border-l-2 border-dashed border-gray-400"
         />
-      </div>
       </div>
 
       {drawingSide === "left" && (

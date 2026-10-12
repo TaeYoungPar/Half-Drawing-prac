@@ -18,12 +18,12 @@ export function DrawingWaitingCanvas({ strokes }: { strokes: Stroke[] }) {
   }, [strokes]);
 
   return (
-    <div className="relative w-full max-w-[800px]" aria-label="내가 등록한 왼쪽 그림">
+    <div className="relative w-full max-w-[800px] overflow-hidden border border-gray-400" aria-label="내가 등록한 왼쪽 그림">
       <canvas
         ref={canvasRef}
         width={800}
         height={500}
-        className="block h-auto w-full border border-gray-400 bg-white"
+        className="block h-auto w-full bg-white"
       />
       <div
         aria-hidden="true"
