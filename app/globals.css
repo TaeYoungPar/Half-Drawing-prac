@@ -20,10 +20,10 @@ body {
 
 @layer components {
   .button-primary {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-indigo-600;
   }
   .button-secondary {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white;
   }
   .panel { @apply rounded-2xl border border-slate-200 bg-white shadow-sm; }
   .eyebrow { @apply text-xs font-bold tracking-wider text-indigo-600; }
@@ -33,4 +33,53 @@ body {
 button:not(:disabled), a { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+}
+
+/* Fit the entire 800 × 500 bitmap inside the remaining drawing viewport. */
+.drawing-expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  height: 100dvh;
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  gap: 8px;
+  background: #f8f9fc;
+}
+.drawing-expanded > :not(.drawing-tools):not(.drawing-view-controls):not(.drawing-stage) { display: none; }
+.drawing-expanded .drawing-view-controls { order: -1; flex-shrink: 0; }
+.drawing-expanded .drawing-tools { flex-shrink: 0; max-height: 40%; overflow-y: auto; }
+.drawing-expanded .drawing-tools > div { padding: 8px; gap: 4px; }
+.drawing-expanded .drawing-stage {
+  flex: 1;
+  min-height: 0;
+  max-width: none;
+  container-type: size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.drawing-expanded .drawing-frame { width: min(100%, calc((100cqh - 2px) * 1.6)); }
+@media (orientation: landscape) and (max-height: 600px) {
+  .drawing-expanded {
+    display: grid;
+    grid-template-columns: 176px minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .drawing-expanded .drawing-view-controls { grid-column: 1 / -1; }
+  .drawing-expanded .drawing-tools { grid-column: 1; max-height: 100%; align-self: start; }
+  .drawing-expanded .drawing-stage { grid-column: 2; height: 100%; }
+}
+
+@layer components {
+  .tool-toggle {
+    @apply inline-flex h-11 w-[68px] shrink-0 items-center justify-center gap-1 rounded-xl text-sm font-semibold text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .tool-toggle[aria-pressed="true"] { @apply bg-indigo-600 text-white shadow-sm hover:bg-indigo-600; }
+  .icon-button {
+    @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white;
+  }
+  .color-swatch {
+    @apply flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .color-swatch[aria-pressed="true"] { @apply border-indigo-600 ring-2 ring-indigo-100; }
 }

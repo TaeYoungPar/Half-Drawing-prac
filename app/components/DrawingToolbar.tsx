@@ -1,5 +1,6 @@
 "use client";
 
+import { ToolIcon } from "./ToolIcon";
 import type { DrawingTool } from "../types/drawing";
 
 type DrawingToolbarProps = {
@@ -24,17 +25,17 @@ export function DrawingToolbar({
           {(["pen", "eraser"] as const).map((value) => (
             <button key={value} type="button" onClick={() => onToolChange(value)}
               aria-pressed={tool === value} disabled={disabled}
-              className={`min-h-11 rounded-lg px-4 text-sm font-semibold transition disabled:opacity-40 ${tool === value ? "bg-indigo-600 text-white shadow-sm" : "text-slate-600 hover:bg-white"}`}>
-              {value === "pen" ? "펜" : "지우개"}
+              className="tool-toggle">
+              <ToolIcon name={value} />{value === "pen" ? "펜" : "지우개"}
             </button>
           ))}
         </div>
-        <button type="button" onClick={onUndo} disabled={disabled || strokeCount === 0} className="button-secondary" aria-label="마지막 선 실행 취소">↶ 취소</button>
+        <button type="button" onClick={onUndo} disabled={disabled || strokeCount === 0} className="icon-button" aria-label="마지막 선 실행 취소" title="실행 취소"><ToolIcon name="undo" /></button>
         <label className={`flex min-h-11 items-center gap-2 text-sm font-medium ${tool === "eraser" ? "opacity-40" : ""}`}>
-          색상
+          <span className="sr-only">색상</span>
           <input type="color" value={strokeColor} disabled={disabled || tool === "eraser"}
             onChange={(event) => onStrokeColorChange(event.target.value)}
-            className="h-11 w-11 cursor-pointer rounded-lg border border-slate-200 bg-white p-1 disabled:cursor-not-allowed" />
+            title="그림 색상" className="h-11 w-11 cursor-pointer rounded-xl border border-slate-200 bg-white p-1 disabled:cursor-not-allowed disabled:opacity-40" />
         </label>
       </div>
       <details>
@@ -52,16 +53,15 @@ export function DrawingToolbar({
             {["#111827", "#dc2626", "#f59e0b", "#16a34a", "#2563eb", "#9333ea"].map((color) => (
               <button key={color} type="button" aria-label={`색상 ${color}`} aria-pressed={strokeColor === color}
                 disabled={disabled || tool === "eraser"} onClick={() => onStrokeColorChange(color)}
-                className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-slate-300 disabled:opacity-40"
-                style={{ outline: strokeColor === color ? "2px solid #6366f1" : undefined, outlineOffset: 2 }}>
+                className="color-swatch">
                 <span className="h-7 w-7 rounded-full" style={{ backgroundColor: color }} />
               </button>
             ))}
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={onRedo} disabled={disabled || undoneStrokeCount === 0} className="button-secondary">↷ 다시 실행</button>
-            <button type="button" onClick={onClear} disabled={disabled || (!strokeCount && !undoneStrokeCount)} className="button-secondary">전체 지우기</button>
-            {canDownload && <button type="button" onClick={onDownload} disabled={disabled || strokeCount === 0} className="button-secondary">PNG 저장 ↓</button>}
+            <button type="button" onClick={onRedo} disabled={disabled || undoneStrokeCount === 0} className="icon-button" aria-label="다시 실행" title="다시 실행"><ToolIcon name="redo" /></button>
+            <button type="button" onClick={onClear} disabled={disabled || (!strokeCount && !undoneStrokeCount)} className="button-secondary gap-2"><ToolIcon name="trash" />전체 지우기</button>
+            {canDownload && <button type="button" onClick={onDownload} disabled={disabled || strokeCount === 0} className="button-secondary gap-2"><ToolIcon name="download" />PNG 저장</button>}
           </div>
         </div>
       </details>

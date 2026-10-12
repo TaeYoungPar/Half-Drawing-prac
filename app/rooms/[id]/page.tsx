@@ -287,9 +287,9 @@ export default function RoomPage() {
     }
 
     return (
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-6">
+      <main className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-4 sm:gap-4 sm:p-6">
         <span className="eyebrow">STEP 3 · 우리 그림 공개</span>
-        <h1 className="text-3xl font-bold tracking-tight">이런 그림이 될 줄 알았나요?</h1>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">이런 그림이 될 줄 알았나요?</h1>
         <p>그림 주제: {room.prompt}</p>
         <DrawingResultCanvas
           leftStrokes={leftDrawing.strokes}
@@ -310,9 +310,9 @@ export default function RoomPage() {
       );
     }
     return (
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-6">
+      <main className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-4 sm:gap-4 sm:p-6">
         <span className="eyebrow">내 반쪽 등록 완료</span>
-        <h1 className="text-3xl font-bold tracking-tight">이제 친구의 차례예요.</h1>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">이제 친구의 차례예요.</h1>
         <p>그림 주제: {room.prompt}</p>
         <div className="panel max-w-[800px] p-5">
           <p className="text-sm text-slate-500">친구에게 전달할 참여 코드</p>
@@ -341,7 +341,7 @@ export default function RoomPage() {
           type="button"
           onClick={refreshRoom}
           disabled={isRefreshing}
-          className="self-start rounded-lg bg-gray-900 px-4 py-2 text-white disabled:opacity-40"
+          className="button-secondary self-start"
         >
           {isRefreshing ? "확인 중..." : "완성 여부 확인"}
         </button>
@@ -358,7 +358,7 @@ export default function RoomPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-6">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-4 sm:gap-4 sm:p-6">
       <h1 className="text-2xl font-bold">
         이어 그리기
       </h1>

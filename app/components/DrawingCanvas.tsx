@@ -47,16 +47,9 @@ export function DrawingCanvas({
   onSubmitDrawing,
 }: DrawingCanvasProps) {
   const router = useRouter();
-  const [isZoomed, setIsZoomed] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const viewport = scrollRef.current;
-      if (viewport) viewport.scrollLeft = isZoomed && drawingSide === "right" ? viewport.scrollWidth - viewport.clientWidth : 0;
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [isZoomed, drawingSide]);
   const storageKey = `half-drawing:draft:${draftId ?? drawingSide}`;
   const {
     strokes,
@@ -128,6 +121,48 @@ export function DrawingCanvas({
     readOnly,
     onStrokeComplete: addStroke,
   });
+
+  useEffect(() => {
+    if (!isExpanded || !sectionRef.current) return;
+    const section = sectionRef.current;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    const inertElements: Array<[HTMLElement, boolean]> = [];
+    // Keep the drawing mounted so switching views preserves the current strokes.
+    let ancestor: HTMLElement = section;
+    while (ancestor.parentElement) {
+      for (const sibling of ancestor.parentElement.children) {
+        if (sibling !== ancestor && sibling instanceof HTMLElement) {
+          inertElements.push([sibling, sibling.inert]);
+          sibling.inert = true;
+        }
+      }
+      ancestor = ancestor.parentElement;
+      if (ancestor === document.body) break;
+    }
+    document.body.style.overflow = "hidden";
+    section.querySelector<HTMLButtonElement>("[data-view-toggle]")?.focus();
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && !section.querySelector("[data-view-toggle]")?.hasAttribute("disabled")) setIsExpanded(false);
+      if (event.key !== "Tab") return;
+      const controls = Array.from(section.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled), summary, a[href]"))
+        .filter((element) => element.getClientRects().length > 0);
+      const first = controls[0];
+      const last = controls.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault(); last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first?.focus();
+      }
+    }
+    section.addEventListener("keydown", onKeyDown);
+    return () => {
+      section.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      for (const [element, inert] of inertElements) element.inert = inert;
+      previousFocus?.focus();
+    };
+  }, [isExpanded]);
 
   useEffect(() => {
     if (drawingSide !== "left") return;
@@ -301,13 +336,14 @@ export function DrawingCanvas({
   }
 
   return (
-    <section className="flex w-full flex-col gap-4">
+    <section ref={sectionRef} className={`flex w-full flex-col gap-4 ${isExpanded ? "drawing-expanded" : ""}`}
+      role={isExpanded ? "dialog" : undefined} aria-modal={isExpanded || undefined} aria-label={isExpanded ? "화면 가득 그리기" : undefined}>
       {(saveError || successMessage) && (
         <DrawingNotice message={saveError ?? successMessage ?? ""} isError={Boolean(saveError)} onClose={closeToast} />
       )}
 
       {isLoading && (
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-slate-600">
           연결 중… 그림은 먼저 그릴 수 있어요.
         </p>
       )}
@@ -319,6 +355,7 @@ export function DrawingCanvas({
 
       {draftError && <p role="alert" className="text-sm text-amber-700">{draftError}</p>}
 
+      <div className="drawing-tools">
       <DrawingToolbar
         disabled={readOnly || isDrawing}
         lineWidth={lineWidth}
@@ -341,8 +378,9 @@ export function DrawingCanvas({
         // Only the finished result view may export both halves together.
         canDownload={drawingSide === "left"}
       />
+      </div>
 
-      <p className="text-sm font-medium text-gray-700">
+      <p className="text-sm font-medium text-slate-700">
         {drawingSide === "left"
           ? "왼쪽 절반에 그림을 그려주세요."
           : "오른쪽 절반에 그림을 이어 그려주세요."}
@@ -352,24 +390,16 @@ export function DrawingCanvas({
       </p>
 
       {readOnly && (createdRoom || isDrawingSubmitted) && (
-        <p className="text-sm text-gray-600">저장된 그림은 수정할 수 없습니다.</p>
+        <p className="text-sm text-slate-600">저장된 그림은 수정할 수 없습니다.</p>
       )}
 
       <p className="text-xs text-slate-500">가운데 점선이 두 그림의 연결 지점이에요. 이어질 선은 점선까지 그려주세요.</p>
-      <div className="flex flex-wrap gap-2 md:hidden">
-        <button type="button" aria-pressed={isZoomed} disabled={isDrawing} onClick={() => setIsZoomed(!isZoomed)} className="button-secondary">{isZoomed ? "전체 보기" : "확대해서 그리기"}</button>
-        {isZoomed && <>
-          <button type="button" disabled={isDrawing} onClick={() => scrollRef.current?.scrollBy({ left: -180, behavior: "smooth" })} className="button-secondary" aria-label="캔버스 왼쪽으로 이동">← 이동</button>
-          <button type="button" disabled={isDrawing} onClick={() => scrollRef.current?.scrollBy({ left: 180, behavior: "smooth" })} className="button-secondary" aria-label="캔버스 오른쪽으로 이동">이동 →</button>
-        </>}
-        {isZoomed && <button type="button" disabled={isDrawing} onClick={() => {
-          const viewport = scrollRef.current;
-          if (viewport) viewport.scrollLeft = Math.max(0, viewport.scrollWidth / 2 - viewport.clientWidth / 2);
-        }} className="button-secondary">중앙선 보기</button>}
+      <div className="drawing-view-controls flex flex-wrap items-center gap-2">
+        <button data-view-toggle type="button" aria-pressed={isExpanded} disabled={isDrawing} onClick={() => setIsExpanded(!isExpanded)} className="button-secondary">{isExpanded ? "그리기 화면으로 돌아가기" : "화면 가득 그리기"}</button>
+        {isExpanded && <p className="text-xs text-slate-500">{drawingSide === "left" ? "왼쪽" : "오른쪽"} 절반에 그려주세요. 가로로 돌리면 더 넓게 보여요.</p>}
       </div>
-      {isZoomed && <p className="text-xs text-slate-500 md:hidden">이동 버튼으로 작업 영역을 옮기세요. 전체 보기에서 연결 위치를 확인할 수 있어요. 휴대폰을 가로로 돌리면 더 넓게 그릴 수 있어요.</p>}
-      <div ref={scrollRef} className="w-full max-w-[800px] overflow-x-auto">
-      <div className={`relative overflow-hidden border border-gray-400 ${isZoomed ? "w-[800px] md:w-full" : "w-full"}`} aria-label="그림 작업 영역">
+      <div className="drawing-stage w-full max-w-[800px]">
+      <div className="drawing-frame relative w-full overflow-hidden rounded-xl border border-slate-300" aria-label="그림 작업 영역">
         <canvas
           ref={canvasRef}
           onPointerDown={
@@ -402,17 +432,17 @@ export function DrawingCanvas({
 
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-1/2 border-l-2 border-dashed border-gray-400"
+          className="pointer-events-none absolute inset-y-0 left-1/2 border-l-2 border-dashed border-slate-400"
         />
       </div>
 
       </div>
 
       {drawingSide === "left" && (
-        <div className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+        <div className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
           <label
             htmlFor="room-prompt"
-            className="text-sm font-medium text-gray-700"
+            className="text-sm font-medium text-slate-700"
           >
             그림 주제
           </label>
@@ -429,10 +459,10 @@ export function DrawingCanvas({
               );
             }}
             placeholder="예: 우주를 여행하는 고양이"
-            className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 py-2 text-base outline-none focus:border-gray-900 disabled:bg-gray-100"
+            className="min-h-11 rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-none focus:border-indigo-600 disabled:bg-slate-100"
           />
 
-          <div className="text-right text-xs text-gray-500">
+          <div className="text-right text-xs text-slate-500">
             {roomPrompt.length}/80
           </div>
 
@@ -474,7 +504,7 @@ export function DrawingCanvas({
               <button
                 type="button"
                 onClick={handleCopyCode}
-                className="mt-3 rounded-lg border border-green-700 px-3 py-2 text-sm font-medium text-green-800 hover:bg-green-100"
+                className="button-secondary mt-3"
               >
                 참여 코드 복사
               </button>
@@ -491,7 +521,7 @@ export function DrawingCanvas({
 
       {drawingSide === "right" &&
         onSubmitDrawing && (
-          <div className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <div className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
             <button
               type="button"
               onClick={

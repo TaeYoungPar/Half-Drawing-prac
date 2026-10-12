@@ -18,7 +18,7 @@ export function DrawingWaitingCanvas({ strokes }: { strokes: Stroke[] }) {
   }, [strokes]);
 
   return (
-    <div className="relative w-full max-w-[800px] overflow-hidden border border-gray-400" aria-label="내가 등록한 왼쪽 그림">
+    <div className="relative w-full max-w-[800px] overflow-hidden rounded-xl border border-slate-300" aria-label="내가 등록한 왼쪽 그림">
       <canvas
         ref={canvasRef}
         width={800}
@@ -33,7 +33,7 @@ export function DrawingWaitingCanvas({ strokes }: { strokes: Stroke[] }) {
             "repeating-linear-gradient(135deg, #f3f4f6 0, #f3f4f6 8px, #d1d5db 8px, #d1d5db 16px)",
         }}
       />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-1/2 border-l-2 border-dashed border-gray-400" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-1/2 border-l-2 border-dashed border-slate-400" />
     </div>
   );
 }

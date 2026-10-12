@@ -70,7 +70,7 @@ export function DrawingResultCanvas({
         width={800}
         height={500}
         aria-label="두 사람이 함께 완성한 그림"
-        className="block h-auto w-full rounded-2xl border border-slate-200 bg-white shadow-sm"
+        className="block h-auto w-full rounded-xl border border-slate-300 bg-white"
       />
       <button type="button" onClick={handleShare} disabled={isSharing} className="button-primary self-start">{isSharing ? "이미지 준비 중…" : "완성 그림 공유"}</button>
       {shareMessage && <p role="status" className="text-sm text-slate-600">{shareMessage}</p>}
