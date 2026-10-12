@@ -3,12 +3,13 @@
 import {
   useEffect,
   useRef,
+  useState,
 } from "react";
 
 import type { Stroke } from "../types/drawing";
 import { drawHalfStrokes } from "../utils/drawHalfStrokes";
 import Link from "next/link";
-import { downloadCanvasImage } from "../utils/downloadCanvasImage";
+import { downloadCanvasImage, shareCanvasImage } from "../utils/downloadCanvasImage";
 
 type DrawingResultCanvasProps = {
   leftStrokes: Stroke[];
@@ -19,6 +20,20 @@ export function DrawingResultCanvas({
   leftStrokes,
   rightStrokes,
 }: DrawingResultCanvasProps) {
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
+  async function handleShare() {
+    if (isSharing) return;
+    setIsSharing(true);
+    setShareMessage(null);
+    try {
+      setShareMessage(await shareCanvasImage(canvasRef.current));
+    } catch (error) {
+      setShareMessage(error instanceof Error ? error.message : "이미지를 공유하지 못했습니다.");
+    } finally {
+      setIsSharing(false);
+    }
+  }
   const canvasRef =
     useRef<HTMLCanvasElement>(null);
 
@@ -57,10 +72,12 @@ export function DrawingResultCanvas({
         aria-label="두 사람이 함께 완성한 그림"
         className="block h-auto w-full rounded-2xl border border-slate-200 bg-white shadow-sm"
       />
+      <button type="button" onClick={handleShare} disabled={isSharing} className="button-primary self-start">{isSharing ? "이미지 준비 중…" : "완성 그림 공유"}</button>
+      {shareMessage && <p role="status" className="text-sm text-slate-600">{shareMessage}</p>}
       <button
         type="button"
         onClick={() => downloadCanvasImage(canvasRef.current)}
-        className="button-primary self-start"
+        className="button-secondary self-start"
       >
         완성 그림 PNG 저장
       </button>

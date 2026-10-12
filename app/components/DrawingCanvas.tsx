@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
@@ -46,6 +47,16 @@ export function DrawingCanvas({
   onSubmitDrawing,
 }: DrawingCanvasProps) {
   const router = useRouter();
+  const [isZoomed, setIsZoomed] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const viewport = scrollRef.current;
+      if (viewport) viewport.scrollLeft = isZoomed && drawingSide === "right" ? viewport.scrollWidth - viewport.clientWidth : 0;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [isZoomed, drawingSide]);
   const storageKey = `half-drawing:draft:${draftId ?? drawingSide}`;
   const {
     strokes,
@@ -211,6 +222,8 @@ export function DrawingCanvas({
       return;
     }
 
+    if (!window.confirm("이 그림으로 등록할까요? 등록 후에는 수정할 수 없습니다.")) return;
+
     setIsSaving(true);
     setSaveError(null);
     setSuccessMessage(null);
@@ -258,6 +271,8 @@ export function DrawingCanvas({
       );
       return;
     }
+
+    if (!window.confirm("이어 그리기를 완료할까요? 완료 후에는 수정할 수 없습니다.")) return;
 
     setIsSaving(true);
     setSaveError(null);
@@ -341,9 +356,20 @@ export function DrawingCanvas({
       )}
 
       <p className="text-xs text-slate-500">가운데 점선이 두 그림의 연결 지점이에요. 이어질 선은 점선까지 그려주세요.</p>
-      {/* Keep the whole bitmap visible on phones too, exactly as in the saved preview.
-          useCanvasDrawing converts this CSS size back to the 800 × 500 bitmap. */}
-      <div className="relative w-full max-w-[800px] overflow-hidden border border-gray-400" aria-label="그림 작업 영역">
+      <div className="flex flex-wrap gap-2 md:hidden">
+        <button type="button" aria-pressed={isZoomed} disabled={isDrawing} onClick={() => setIsZoomed(!isZoomed)} className="button-secondary">{isZoomed ? "전체 보기" : "확대해서 그리기"}</button>
+        {isZoomed && <>
+          <button type="button" disabled={isDrawing} onClick={() => scrollRef.current?.scrollBy({ left: -180, behavior: "smooth" })} className="button-secondary" aria-label="캔버스 왼쪽으로 이동">← 이동</button>
+          <button type="button" disabled={isDrawing} onClick={() => scrollRef.current?.scrollBy({ left: 180, behavior: "smooth" })} className="button-secondary" aria-label="캔버스 오른쪽으로 이동">이동 →</button>
+        </>}
+        {isZoomed && <button type="button" disabled={isDrawing} onClick={() => {
+          const viewport = scrollRef.current;
+          if (viewport) viewport.scrollLeft = Math.max(0, viewport.scrollWidth / 2 - viewport.clientWidth / 2);
+        }} className="button-secondary">중앙선 보기</button>}
+      </div>
+      {isZoomed && <p className="text-xs text-slate-500 md:hidden">이동 버튼으로 작업 영역을 옮기세요. 전체 보기에서 연결 위치를 확인할 수 있어요. 휴대폰을 가로로 돌리면 더 넓게 그릴 수 있어요.</p>}
+      <div ref={scrollRef} className="w-full max-w-[800px] overflow-x-auto">
+      <div className={`relative overflow-hidden border border-gray-400 ${isZoomed ? "w-[800px] md:w-full" : "w-full"}`} aria-label="그림 작업 영역">
         <canvas
           ref={canvasRef}
           onPointerDown={
@@ -380,6 +406,8 @@ export function DrawingCanvas({
         />
       </div>
 
+      </div>
+
       {drawingSide === "left" && (
         <div className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
           <label
@@ -401,7 +429,7 @@ export function DrawingCanvas({
               );
             }}
             placeholder="예: 우주를 여행하는 고양이"
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 outline-none focus:border-gray-900 disabled:bg-gray-100"
+            className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 py-2 text-base outline-none focus:border-gray-900 disabled:bg-gray-100"
           />
 
           <div className="text-right text-xs text-gray-500">

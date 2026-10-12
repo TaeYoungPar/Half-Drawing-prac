@@ -19,7 +19,7 @@ export function DrawingToolbar({
 }: DrawingToolbarProps) {
   return (
     <div className="panel flex flex-col gap-4 p-4" aria-label="그림 도구">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2">
         <div className="flex gap-1 rounded-xl bg-slate-100 p-1" role="group" aria-label="그리기 도구 선택">
           {(["pen", "eraser"] as const).map((value) => (
             <button key={value} type="button" onClick={() => onToolChange(value)}
@@ -29,13 +29,7 @@ export function DrawingToolbar({
             </button>
           ))}
         </div>
-        <label className="flex min-h-11 flex-wrap items-center gap-2 text-sm font-medium">
-          <span>{tool === "eraser" ? "지우개" : "선"} 굵기</span>
-          <span className="w-6 text-right tabular-nums text-indigo-700">{lineWidth}</span>
-          <input type="range" min={1} max={30} value={lineWidth} disabled={disabled}
-            onChange={(event) => onLineWidthChange(Number(event.target.value))}
-            className="h-11 w-28 cursor-pointer accent-indigo-600 sm:w-32" />
-        </label>
+        <button type="button" onClick={onUndo} disabled={disabled || strokeCount === 0} className="button-secondary" aria-label="마지막 선 실행 취소">↶ 취소</button>
         <label className={`flex min-h-11 items-center gap-2 text-sm font-medium ${tool === "eraser" ? "opacity-40" : ""}`}>
           색상
           <input type="color" value={strokeColor} disabled={disabled || tool === "eraser"}
@@ -43,16 +37,34 @@ export function DrawingToolbar({
             className="h-11 w-11 cursor-pointer rounded-lg border border-slate-200 bg-white p-1 disabled:cursor-not-allowed" />
         </label>
       </div>
-      <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
-        <button type="button" onClick={onUndo} disabled={disabled || strokeCount === 0} className="button-secondary">↶ 실행 취소</button>
-        <button type="button" onClick={onRedo} disabled={disabled || undoneStrokeCount === 0} className="button-secondary">↷ 다시 실행</button>
-        <button type="button" onClick={onClear} disabled={disabled || (!strokeCount && !undoneStrokeCount)} className="button-secondary">전체 지우기</button>
-        {canDownload && <button type="button" onClick={onDownload} disabled={disabled || strokeCount === 0} className="button-secondary">PNG 저장 ↓</button>}
-        <div className="flex flex-wrap gap-3 text-xs text-slate-500 sm:ml-auto">
-          <span className="w-28 whitespace-nowrap tabular-nums">그린 선: {strokeCount}개</span>
-          <span className="w-28 whitespace-nowrap tabular-nums">취소된 선: {undoneStrokeCount}개</span>
+      <details>
+        <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold text-slate-600">굵기 · 색상 · 더 많은 도구</summary>
+        <div className="flex flex-col gap-3 border-t border-slate-100 pt-3">
+          <label className="flex min-h-11 flex-wrap items-center gap-2 text-sm font-medium">
+            <span>{tool === "eraser" ? "지우개" : "선"} 굵기</span>
+            <span className="w-6 text-right tabular-nums text-indigo-700">{lineWidth}</span>
+            <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded bg-slate-100"><span className="rounded-full" style={{ width: lineWidth, height: lineWidth, backgroundColor: tool === "eraser" ? "#64748b" : strokeColor }} /></span>
+            <input type="range" min={1} max={30} value={lineWidth} disabled={disabled}
+              onChange={(event) => onLineWidthChange(Number(event.target.value))}
+              className="h-11 w-28 cursor-pointer accent-indigo-600 sm:w-32" />
+          </label>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="빠른 색상 선택">
+            {["#111827", "#dc2626", "#f59e0b", "#16a34a", "#2563eb", "#9333ea"].map((color) => (
+              <button key={color} type="button" aria-label={`색상 ${color}`} aria-pressed={strokeColor === color}
+                disabled={disabled || tool === "eraser"} onClick={() => onStrokeColorChange(color)}
+                className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-slate-300 disabled:opacity-40"
+                style={{ outline: strokeColor === color ? "2px solid #6366f1" : undefined, outlineOffset: 2 }}>
+                <span className="h-7 w-7 rounded-full" style={{ backgroundColor: color }} />
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={onRedo} disabled={disabled || undoneStrokeCount === 0} className="button-secondary">↷ 다시 실행</button>
+            <button type="button" onClick={onClear} disabled={disabled || (!strokeCount && !undoneStrokeCount)} className="button-secondary">전체 지우기</button>
+            {canDownload && <button type="button" onClick={onDownload} disabled={disabled || strokeCount === 0} className="button-secondary">PNG 저장 ↓</button>}
+          </div>
         </div>
-      </div>
+      </details>
     </div>
   );
 }

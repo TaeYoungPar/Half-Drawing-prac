@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAnonymousAuth } from "../hooks/useAnonymousAuth";
 import { joinRoom } from "../lib/rooms/joinRoom";
+
+import { normalizeRoomCode } from "../utils/shareInvitation";
 
 export default function JoinRoomPage() {
   const router = useRouter();
@@ -12,6 +14,14 @@ export default function JoinRoomPage() {
   const { userId, isLoading, errorMessage, retry } = useAnonymousAuth();
   const [isJoining, setIsJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("code");
+    if (code) {
+      const timer = window.setTimeout(() => setRoomCode(normalizeRoomCode(code)), 0);
+      return () => window.clearTimeout(timer);
+    }
+  }, []);
 
   async function handleJoin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -45,7 +55,7 @@ export default function JoinRoomPage() {
             disabled={isJoining} autoComplete="off" autoCapitalize="characters" spellCheck={false}
             aria-describedby="code-help" aria-invalid={Boolean(joinError)}
             onChange={(event) => {
-              setRoomCode(event.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase());
+              setRoomCode(normalizeRoomCode(event.target.value));
               setJoinError(null);
             }}
             placeholder="A1B2C3D4E5"

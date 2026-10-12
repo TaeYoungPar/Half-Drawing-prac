@@ -20,6 +20,7 @@ import {
 
 import { saveRightDrawing } from "../../lib/drawings/saveRightDrawing";
 import { getLeftPreview } from "../../lib/rooms/getLeftPreview";
+import { shareInvitation } from "../../utils/shareInvitation";
 import { copyRoomCode } from "../../utils/copyRoomCode";
 
 import type { Stroke } from "../../types/drawing";
@@ -63,6 +64,15 @@ export default function RoomPage() {
       setCopyMessage("참여 코드를 복사했습니다.");
     } catch (error) {
       setCopyMessage(error instanceof Error ? error.message : "코드를 복사하지 못했습니다.");
+    }
+  }
+
+  async function handleShareInvitation() {
+    if (!room) return;
+    try {
+      setCopyMessage(await shareInvitation(room.code));
+    } catch {
+      setCopyMessage("초대 링크를 공유하지 못했습니다. 참여 코드를 복사해주세요.");
     }
   }
 
@@ -307,8 +317,9 @@ export default function RoomPage() {
         <div className="panel max-w-[800px] p-5">
           <p className="text-sm text-slate-500">친구에게 전달할 참여 코드</p>
           <p className="mt-2 break-all font-mono text-3xl font-bold tracking-widest text-indigo-700">{room.code}</p>
-          <p className="mt-3 text-xs leading-5 text-slate-500">친구에게 이 사이트 주소와 코드를 함께 보내주세요. 다른 기기나 브라우저에서 참여할 수 있어요.</p>
+          <p className="mt-3 text-xs leading-5 text-slate-500">아래 버튼으로 초대 링크를 보내면 코드가 자동 입력돼요. 다른 기기나 브라우저에서 참여할 수 있어요.</p>
         </div>
+        <button type="button" onClick={handleShareInvitation} className="button-primary self-start">친구에게 초대 링크 공유</button>
         <button
           type="button"
           onClick={handleCopyCode}
