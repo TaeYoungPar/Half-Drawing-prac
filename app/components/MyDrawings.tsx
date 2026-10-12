@@ -23,17 +23,17 @@ export function MyDrawings() {
   }
 
   return (
-    <section aria-labelledby="my-drawings-heading" className="mt-16">
+    <section aria-labelledby="my-drawings-heading" className="mt-10 sm:mt-14">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 id="my-drawings-heading" className="text-2xl font-bold">내가 시작한 그림</h2>
+          <h2 id="my-drawings-heading" className="text-xl font-bold sm:text-2xl">내가 시작한 그림</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">홈으로 돌아와도 친구의 진행 상태를 확인할 수 있어요.</p>
         </div>
         <button type="button" onClick={refresh} disabled={isLoading || isRefreshing} className="button-secondary">
           {isRefreshing ? "확인 중…" : "상태 새로고침"}
         </button>
       </div>
-      <p className="mt-3 text-xs leading-5 text-slate-500">같은 브라우저의 익명 계정으로 조회해요. 홈을 열어두면 약 10초마다 갱신돼요. 브라우저 데이터를 지우면 이전 방을 찾지 못할 수 있어요.</p>
+      <details className="mt-2 text-sm text-slate-600"><summary className="min-h-11 cursor-pointer py-3">내 그림을 다시 찾으려면</summary><p className="pb-2 text-sm leading-6">그림을 시작한 브라우저로 돌아와 주세요. 화면이 열려 있으면 상태를 자동으로 확인해요. 브라우저 데이터를 지우면 이전 방을 찾지 못할 수 있어요.</p></details>
       {copyMessage && <p role="status" className="mt-3 text-sm text-indigo-700">{copyMessage}</p>}
       {error && <div role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">
         <p>{error} {rooms.length > 0 && "아래 목록은 마지막으로 확인한 상태예요."}</p>
@@ -43,7 +43,7 @@ export function MyDrawings() {
         : !error && rooms.length === 0 ? <div className="panel mt-5 p-6">
           <p className="font-semibold">아직 시작한 그림이 없어요.</p>
           <p className="mt-2 text-sm text-slate-500">반쪽 그림을 등록하면 여기에 표시돼요.</p>
-          <Link href="/draw" className="button-primary mt-4">첫 그림 시작하기</Link>
+          <Link href="/draw" className="button-secondary mt-4">첫 그림 시작하기</Link>
         </div> : <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rooms.map((room) => {
             const status = STATUS[room.status];

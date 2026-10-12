@@ -141,7 +141,7 @@ export function DrawingCanvas({
       if (ancestor === document.body) break;
     }
     document.body.style.overflow = "hidden";
-    section.querySelector<HTMLButtonElement>("[data-view-toggle]")?.focus();
+    section.querySelector<HTMLButtonElement>("[data-view-toggle]")?.focus({ preventScroll: true });
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && !section.querySelector("[data-view-toggle]")?.hasAttribute("disabled")) setIsExpanded(false);
       if (event.key !== "Tab") return;
@@ -337,7 +337,7 @@ export function DrawingCanvas({
 
   return (
     <section ref={sectionRef} className={`flex w-full flex-col gap-4 ${isExpanded ? "drawing-expanded" : ""}`}
-      role={isExpanded ? "dialog" : undefined} aria-modal={isExpanded || undefined} aria-label={isExpanded ? "화면 가득 그리기" : undefined}>
+      role={isExpanded ? "dialog" : undefined} aria-modal={isExpanded || undefined} aria-label={isExpanded ? "내 반쪽 크게 그리기" : undefined} data-drawing-side={drawingSide}>
       {(saveError || successMessage) && (
         <DrawingNotice message={saveError ?? successMessage ?? ""} isError={Boolean(saveError)} onClose={closeToast} />
       )}
@@ -385,21 +385,17 @@ export function DrawingCanvas({
           ? "왼쪽 절반에 그림을 그려주세요."
           : "오른쪽 절반에 그림을 이어 그려주세요."}
       </p>
-      <p className="text-xs leading-5 text-slate-500">
-        {isRestoring ? "임시 그림 복원 중…" : "완료한 선은 이 브라우저에 자동 임시 저장돼요. 다른 기기에서는 이어서 복원되지 않아요."}
-      </p>
-
       {readOnly && (createdRoom || isDrawingSubmitted) && (
         <p className="text-sm text-slate-600">저장된 그림은 수정할 수 없습니다.</p>
       )}
 
-      <p className="text-xs text-slate-500">가운데 점선이 두 그림의 연결 지점이에요. 이어질 선은 점선까지 그려주세요.</p>
       <div className="drawing-view-controls flex flex-wrap items-center gap-2">
-        <button data-view-toggle type="button" aria-pressed={isExpanded} disabled={isDrawing} onClick={() => setIsExpanded(!isExpanded)} className="button-secondary">{isExpanded ? "그리기 화면으로 돌아가기" : "화면 가득 그리기"}</button>
-        {isExpanded && <p className="text-xs text-slate-500">{drawingSide === "left" ? "왼쪽" : "오른쪽"} 절반에 그려주세요. 가로로 돌리면 더 넓게 보여요.</p>}
+        <button data-view-toggle type="button" aria-pressed={isExpanded} disabled={isDrawing} onClick={() => setIsExpanded(!isExpanded)} className="button-secondary">{isExpanded ? "그리기 화면으로 돌아가기" : "내 반쪽 크게 그리기"}</button>
+        {isExpanded && <p className="text-xs text-slate-500">{drawingSide === "left" ? "오른쪽 점선까지 그리면 친구 그림과 이어져요." : "왼쪽의 얇은 힌트를 보고 점선부터 이어 그려요."}</p>}
       </div>
       <div className="drawing-stage w-full max-w-[800px]">
       <div className="drawing-frame relative w-full overflow-hidden rounded-xl border border-slate-300" aria-label="그림 작업 영역">
+        <div className="drawing-bitmap relative w-full">
         <canvas
           ref={canvasRef}
           onPointerDown={
@@ -434,9 +430,15 @@ export function DrawingCanvas({
           aria-hidden="true"
           className="pointer-events-none absolute inset-y-0 left-1/2 border-l-2 border-dashed border-slate-400"
         />
+        </div>
+      </div>
       </div>
 
-      </div>
+      <details className="text-sm text-slate-600">
+        <summary className="min-h-11 cursor-pointer py-3">자동 저장 · 그림 연결 안내</summary>
+        <p className="text-sm leading-6">{isRestoring ? "임시 그림 복원 중…" : "완료한 선은 이 브라우저에 자동 임시 저장돼요. 다른 기기에서는 복원되지 않아요."}</p>
+        <p className="mt-2 text-sm leading-6">점선이 친구 그림과 이어지는 경계예요. 이어질 선은 점선까지 그려주세요. 큰 보기에서 돌아오면 전체 그림을 볼 수 있어요.</p>
+      </details>
 
       {drawingSide === "left" && (
         <div className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">

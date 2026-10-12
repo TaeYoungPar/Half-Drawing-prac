@@ -13,6 +13,8 @@
 }
 
 body {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
@@ -58,7 +60,11 @@ button:not(:disabled), a { cursor: pointer; }
   align-items: center;
   justify-content: center;
 }
-.drawing-expanded .drawing-frame { width: min(100%, calc((100cqh - 2px) * 1.6)); }
+.drawing-expanded .drawing-frame { width: min(100%, calc((100cqh - 2px) * .8)); aspect-ratio: 4 / 5; }
+.drawing-expanded .drawing-bitmap { width: 200%; }
+.drawing-expanded[data-drawing-side="left"] .drawing-frame { border-right: 2px dashed #6366f1; }
+.drawing-expanded[data-drawing-side="right"] .drawing-frame { width: min(100%, calc((100cqh - 2px) * .848)); aspect-ratio: 424 / 500; }
+.drawing-expanded[data-drawing-side="right"] .drawing-bitmap { width: calc(100% * 800 / 424); transform: translateX(-47%); }
 @media (orientation: landscape) and (max-height: 600px) {
   .drawing-expanded {
     display: grid;
@@ -82,4 +88,14 @@ button:not(:disabled), a { cursor: pointer; }
     @apply flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40;
   }
   .color-swatch[aria-pressed="true"] { @apply border-indigo-600 ring-2 ring-indigo-100; }
+}
+
+.hero-variant-b .home-art { order: -1; }
+.button-primary:hover:not(:disabled), .button-secondary:hover:not(:disabled) { box-shadow: 0 3px 10px rgb(30 41 59 / 8%); }
+@media (prefers-reduced-motion: no-preference) {
+  .button-primary, .button-secondary { transition: background-color 150ms, box-shadow 150ms; }
+}
+
+@media (max-width: 639px) {
+  .hero-variant-b .home-art img { height: 150px; object-fit: contain; }
 }

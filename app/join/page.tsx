@@ -44,7 +44,7 @@ export default function JoinRoomPage() {
 
   return (
     <main className="mx-auto w-full max-w-lg px-5 py-12 sm:py-20">
-      <Link href="/" className="text-sm font-medium text-slate-500">← 홈으로</Link>
+      <Link href="/" className="inline-flex min-h-11 self-start items-center rounded-xl px-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100">← 홈으로</Link>
       <div className="panel mt-6 p-6 sm:p-8">
         <span className="eyebrow">STEP 2 · 친구의 상상 이어가기</span>
         <h1 className="mt-3 text-3xl font-bold tracking-tight">초대받으셨나요?</h1>

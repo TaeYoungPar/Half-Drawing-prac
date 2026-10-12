@@ -17,12 +17,16 @@ type UseCanvasDrawingOptions = {
 
 function getCanvasPoint(canvas: HTMLCanvasElement, event: PointerEvent<HTMLCanvasElement>): Point {
   const rect = canvas.getBoundingClientRect();
+  // Preserve fractional CSS dimensions in focused view; clientWidth rounds them.
+  // The canvas has no border in the UI (legacy bordered canvases remain supported).
+  const displayWidth = rect.width ? rect.width - canvas.clientLeft * 2 : canvas.clientWidth;
+  const displayHeight = rect.height ? rect.height - canvas.clientTop * 2 : canvas.clientHeight;
   // Bitmap starts inside the border, not at the outside bounding rectangle.
   return {
     x: Math.max(0, Math.min(canvas.width,
-      (event.clientX - rect.left - canvas.clientLeft) * canvas.width / canvas.clientWidth)),
+      (event.clientX - rect.left - canvas.clientLeft) * canvas.width / displayWidth)),
     y: Math.max(0, Math.min(canvas.height,
-      (event.clientY - rect.top - canvas.clientTop) * canvas.height / canvas.clientHeight)),
+      (event.clientY - rect.top - canvas.clientTop) * canvas.height / displayHeight)),
   };
 }
 

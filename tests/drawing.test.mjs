@@ -76,6 +76,21 @@ test("phone-size input reaches the same bitmap seam for both artists", () => {
   }
 });
 
+test("fractional focused-canvas dimensions preserve the exact seam", () => {
+  const width = 701.875, height = width * 500 / 800;
+  for (const side of ["left", "right"]) {
+    const { handlers, completed, event } = setup(false, {
+      clientWidth: Math.round(width), clientHeight: Math.round(height), clientLeft: 0, clientTop: 0,
+      getBoundingClientRect: () => ({ left: 10, top: 20, width, height }),
+    }, side);
+    handlers.handlePointerDown(event(width * (side === "left" ? .25 : .75) - 1, height / 2 - 1));
+    handlers.handlePointerUp(event(width / 2 - 1, height / 2 - 1));
+    assert.equal(completed.length, 1);
+    assert.equal(completed[0].points.at(-1).x, 400);
+    assert.equal(completed[0].points.at(-1).y, 250);
+  }
+});
+
 test("tap is visible and committed once after capture release", () => {
   const { handlers, completed, calls, captures, event } = setup();
   handlers.handlePointerDown(event(100));

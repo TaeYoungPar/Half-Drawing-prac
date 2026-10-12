@@ -26,12 +26,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <header className="border-b border-slate-200/70 bg-white">
-          <nav aria-label="주 메뉴" className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
-            <Link href="/" className="flex items-center gap-2 text-lg font-extrabold tracking-tight">
+          <nav aria-label="주 메뉴" className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-8">
+            <Link href="/" className="flex min-h-11 items-center gap-2 text-lg font-extrabold tracking-tight">
               <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white">◐</span>
               반쪽그림
             </Link>
-            <Link href="/join" className="text-sm font-semibold text-indigo-700">코드로 참여 ↗</Link>
+            <Link href="/join" className="inline-flex min-h-11 items-center rounded-xl px-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50">코드로 참여 ↗</Link>
           </nav>
         </header>
         {children}
