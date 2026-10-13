@@ -73,7 +73,6 @@ export function DrawingCanvas({
     useState<DrawingTool>("pen");
 
   const lineWidth = tool === "pen" ? penWidth : eraserWidth;
-  const setLineWidth = tool === "pen" ? setPenWidth : setEraserWidth;
   const reviewRef = useRef<HTMLDivElement>(null);
   const [reviewRequested, setReviewRequested] = useState(false);
 
@@ -378,9 +377,11 @@ export function DrawingCanvas({
       <div className="drawing-tools">
       <DrawingToolbar
         disabled={readOnly || isDrawing}
-        lineWidth={lineWidth}
+        penWidth={penWidth}
+        eraserWidth={eraserWidth}
         strokeColor={strokeColor}
-        onLineWidthChange={setLineWidth}
+        onPenWidthChange={setPenWidth}
+        onEraserWidthChange={setEraserWidth}
         onStrokeColorChange={
           setStrokeColor
         }

@@ -5,17 +5,18 @@ import { ToolIcon } from "./ToolIcon";
 import type { DrawingTool } from "../types/drawing";
 
 type DrawingToolbarProps = {
-  lineWidth: number; strokeColor: string; tool: DrawingTool;
+  penWidth: number; eraserWidth: number; strokeColor: string; tool: DrawingTool;
   onDownload: () => void; canDownload?: boolean; disabled?: boolean;
   onToolChange: (tool: DrawingTool) => void;
-  onLineWidthChange: (width: number) => void;
+  onPenWidthChange: (width: number) => void;
+  onEraserWidthChange: (width: number) => void;
   onStrokeColorChange: (color: string) => void;
   strokeCount: number; undoneStrokeCount: number;
   onUndo: () => void; onRedo: () => void; onClear: () => void;
 };
 
 export function DrawingToolbar({
-  lineWidth, strokeColor, tool, onToolChange, onLineWidthChange,
+  penWidth, eraserWidth, strokeColor, tool, onToolChange, onPenWidthChange, onEraserWidthChange,
   onStrokeColorChange, strokeCount, undoneStrokeCount, onUndo, onRedo,
   onClear, onDownload, canDownload = true, disabled = false,
 }: DrawingToolbarProps) {
@@ -61,14 +62,21 @@ export function DrawingToolbar({
       <details>
         <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold text-slate-600">굵기 · 더 많은 도구</summary>
         <div className="flex flex-col gap-3 border-t border-slate-100 pt-3">
-          <label className="flex min-h-11 flex-wrap items-center gap-2 text-sm font-medium">
-            <span>{tool === "eraser" ? "지우개" : "선"} 굵기</span>
-            <span className="w-6 text-right tabular-nums text-indigo-700">{lineWidth}</span>
-            <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded bg-slate-100"><span className="rounded-full" style={{ width: lineWidth, height: lineWidth, backgroundColor: tool === "eraser" ? "#64748b" : strokeColor }} /></span>
-            <input type="range" min={1} max={30} value={lineWidth} disabled={disabled}
-              onChange={(event) => onLineWidthChange(Number(event.target.value))}
-              className="h-11 w-28 cursor-pointer accent-indigo-600 sm:w-32" />
-          </label>
+          {[
+            { label: "펜 굵기", value: penWidth, onChange: onPenWidthChange, color: strokeColor },
+            { label: "지우개 굵기", value: eraserWidth, onChange: onEraserWidthChange, color: "#64748b" },
+          ].map(({ label, value, onChange, color }) => (
+            <label key={label} className="flex min-h-11 flex-wrap items-center gap-2 text-sm font-medium">
+              <span className="w-20 shrink-0">{label}</span>
+              <span className="w-6 text-right tabular-nums text-indigo-700">{value}</span>
+              <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-slate-100">
+                <span className="rounded-full" style={{ width: value, height: value, backgroundColor: color }} />
+              </span>
+              <input type="range" min={1} max={30} value={value} disabled={disabled} aria-label={label}
+                onChange={(event) => onChange(Number(event.target.value))}
+                className="h-11 w-28 cursor-pointer accent-indigo-600 sm:w-32" />
+            </label>
+          ))}
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={onRedo} disabled={disabled || undoneStrokeCount === 0} className="icon-button" aria-label="다시 실행" title="다시 실행"><ToolIcon name="redo" /></button>
             <button type="button" onClick={onClear} disabled={disabled || (!strokeCount && !undoneStrokeCount)} className="button-secondary gap-2"><ToolIcon name="trash" />전체 지우기</button>
