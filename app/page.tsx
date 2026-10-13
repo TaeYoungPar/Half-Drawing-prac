@@ -1,12 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MyDrawings } from "./components/MyDrawings";
+import { HomeDashboard } from "./components/HomeDashboard";
 
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const variant = (await searchParams).variant === "b" ? "b" : "a";
   return (
     <main id="main-content" className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-8 sm:py-10">
-      <section aria-labelledby="home-heading" data-design-variant={variant}
+      <HomeDashboard introduction={<section aria-labelledby="home-heading" data-design-variant={variant}
         className={`home-hero hero-variant-${variant} grid items-center gap-6 rounded-3xl border border-amber-100 bg-[#fffaf2] p-5 sm:gap-10 sm:p-10 lg:grid-cols-2`}>
         <div className="home-copy">
           <span className="inline-flex rounded-full bg-white px-3 py-2 text-xs font-bold text-indigo-700">둘이 그려서, 하나의 작품</span>
@@ -32,8 +32,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             width={960} height={640} sizes="(min-width: 1024px) 480px, (min-width: 640px) 650px, 90vw" preload className="h-auto w-full" />
           <figcaption className="px-4 pb-4 text-center text-sm leading-6 text-slate-600">고양이를 그렸는데… 우주선이 됐네?<span className="ml-2 text-xs text-slate-500">예시 그림</span></figcaption>
         </figure>
-      </section>
-      <MyDrawings />
+      </section>} />
       <section aria-labelledby="how-it-works" className="mt-10 sm:mt-14">
         <h2 id="how-it-works" className="text-xl font-bold sm:text-2xl">세 번이면 완성돼요</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">

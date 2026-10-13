@@ -3,19 +3,19 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useMyRooms } from "../hooks/useMyRooms";
-import { MY_ROOMS_PAGE_SIZE } from "../lib/rooms/getMyRooms";
+import { MY_ROOMS_PAGE_SIZE, type RoomScope } from "../lib/rooms/getMyRooms";
 import { copyRoomCode } from "../utils/copyRoomCode";
 import type { DrawingStatus } from "../types/drawing";
 
 const STATUS: Record<DrawingStatus, { label: string; className: string; description: string }> = {
   waiting: { label: "참여 대기", className: "bg-slate-100 text-slate-700", description: "친구에게 참여 코드를 보내주세요." },
-  guest_joined: { label: "그리는 중", className: "bg-amber-50 text-amber-800", description: "친구가 참여했어요. 완성하면 여기서 확인할 수 있어요." },
+  guest_joined: { label: "친구 참여", className: "bg-amber-50 text-amber-800", description: "친구가 참여했어요. 완성하면 여기서 확인할 수 있어요." },
   completed: { label: "완성됨", className: "bg-emerald-50 text-emerald-800", description: "두 사람의 그림이 완성됐어요. 전체 그림을 열어보세요!" },
   expired: { label: "기간 만료", className: "bg-slate-100 text-slate-500", description: "참여 기한이 지난 방이에요." },
 };
 
-export function MyDrawings() {
-  const { rooms, total, page, isLoading, isRefreshing, error, refresh, changePage, hasNextPage } = useMyRooms();
+export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) {
+  const { rooms, total, page, scope, changeScope, hasHistory, isLoading, isRefreshing, error, refresh, changePage, hasNextPage } = state;
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   async function copyCode(code: string) {
     try { await copyRoomCode(code); setCopyMessage("참여 코드를 복사했어요. 친구에게 보내주세요."); }
@@ -23,15 +23,21 @@ export function MyDrawings() {
   }
 
   return (
-    <section aria-labelledby="my-drawings-heading" className="mt-10 sm:mt-14">
+    <section aria-labelledby="my-drawings-heading" className={hasHistory ? "mt-4" : "mt-10 sm:mt-14"}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 id="my-drawings-heading" className="text-xl font-bold sm:text-2xl">내가 시작한 그림</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">홈으로 돌아와도 친구의 진행 상태를 확인할 수 있어요.</p>
+          <h2 id="my-drawings-heading" className="text-xl font-bold sm:text-2xl">내 그림</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">시작하거나 참여한 그림을 다시 열고 완성 상태를 확인해요.</p>
         </div>
         <button type="button" onClick={refresh} disabled={isLoading || isRefreshing} className="button-secondary">
           {isRefreshing ? "확인 중…" : "상태 새로고침"}
         </button>
+      </div>
+      <div className="mt-4 grid grid-cols-3 gap-2" role="group" aria-label="내 그림 목록 선택">
+        {([["all", "전체"], ["host", "시작한 그림"], ["guest", "참여한 그림"]] as const).map(([value, label]) => (
+          <button key={value} type="button" aria-label={value === "all" ? "전체" : value === "host" ? "내가 시작한 그림" : "내가 참여한 그림"} aria-pressed={scope === value} onClick={() => changeScope(value as RoomScope)}
+            className={`${scope === value ? "button-primary" : "button-secondary"} min-w-0 px-2 text-xs sm:text-sm`}>{label}</button>
+        ))}
       </div>
       <details className="mt-2 text-sm text-slate-600"><summary className="min-h-11 cursor-pointer py-3">내 그림을 다시 찾으려면</summary><p className="pb-2 text-sm leading-6">그림을 시작한 브라우저로 돌아와 주세요. 화면이 열려 있으면 상태를 자동으로 확인해요. 브라우저 데이터를 지우면 이전 방을 찾지 못할 수 있어요.</p></details>
       {copyMessage && <p role="status" className="mt-3 text-sm text-indigo-700">{copyMessage}</p>}
@@ -41,24 +47,25 @@ export function MyDrawings() {
       </div>}
       {isLoading ? <p role="status" className="panel mt-5 p-6 text-sm text-slate-500">내 그림을 확인하는 중…</p>
         : !error && rooms.length === 0 ? <div className="panel mt-5 p-6">
-          <p className="font-semibold">아직 시작한 그림이 없어요.</p>
-          <p className="mt-2 text-sm text-slate-500">반쪽 그림을 등록하면 여기에 표시돼요.</p>
-          <Link href="/draw" className="button-secondary mt-4">첫 그림 시작하기</Link>
+          <p className="font-semibold">{scope === "guest" ? "아직 참여한 그림이 없어요." : scope === "host" ? "아직 시작한 그림이 없어요." : "아직 함께 그린 그림이 없어요."}</p>
+          <p className="mt-2 text-sm text-slate-500">그림을 시작하거나 친구의 그림에 참여하면 여기에 표시돼요.</p>
+          <Link href={scope === "guest" ? "/join" : "/draw"} className="button-secondary mt-4">{scope === "guest" ? "참여 코드 입력하기" : "첫 그림 시작하기"}</Link>
         </div> : <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rooms.map((room) => {
             const status = STATUS[room.status];
             return <article key={room.id} className="panel flex flex-col items-start p-5">
-              <span className={`rounded-full px-3 py-1 text-xs font-bold ${status.className}`}>{status.label}</span>
+              <p className="mb-2 text-xs font-semibold text-slate-500">{room.participantRole === "host" ? "내가 시작한 그림" : "내가 참여한 그림"}</p>
+              <span className={`rounded-full px-3 py-1 text-xs font-bold ${status.className}`}>{room.status === "guest_joined" && room.participantRole === "guest" ? "이어 그릴 차례" : status.label}</span>
               <h3 className="mt-4 w-full break-words text-lg font-bold">{room.prompt}</h3>
               <time dateTime={room.created_at} className="mt-1 text-xs text-slate-500">
                 {new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeZone: "Asia/Seoul" }).format(new Date(room.created_at))} 시작
               </time>
-              <p className="mb-5 mt-3 text-sm leading-6 text-slate-600">{status.description}</p>
+              <p className="mb-5 mt-3 text-sm leading-6 text-slate-600">{room.participantRole === "guest" && room.status === "guest_joined" ? "내 반쪽을 이어 그려 완성해주세요." : status.description}</p>
               <div className="mt-auto flex flex-wrap gap-2">
                 <Link href={`/rooms/${room.id}`} className={room.status === "completed" ? "button-primary" : "button-secondary"}>
                   {room.status === "completed" ? "완성 그림 보기 →" : "방으로 이동"}
                 </Link>
-                {(room.status === "waiting" || room.status === "guest_joined") &&
+                {room.participantRole === "host" && (room.status === "waiting" || room.status === "guest_joined") &&
                   <button type="button" onClick={() => copyCode(room.code)} className="button-secondary">코드 복사</button>}
               </div>
             </article>;

@@ -37,7 +37,7 @@ button:not(:disabled), a { cursor: pointer; }
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
 }
 
-/* Fit the entire 800 × 500 bitmap inside the remaining drawing viewport. */
+/* Fit the artist’s half inside the remaining drawing viewport. */
 .drawing-expanded {
   position: fixed;
   inset: 0;
@@ -68,7 +68,8 @@ button:not(:disabled), a { cursor: pointer; }
 @media (orientation: landscape) and (max-height: 600px) {
   .drawing-expanded {
     display: grid;
-    grid-template-columns: 176px minmax(0, 1fr);
+    grid-template-columns: 176px minmax(0, min(60vw, calc((100dvh - 92px) * .848)));
+    justify-content: center;
     grid-template-rows: auto minmax(0, 1fr);
   }
   .drawing-expanded .drawing-view-controls { grid-column: 1 / -1; }

@@ -311,12 +311,16 @@ test("join RPC rejects incomplete responses and accepts a completed rejoining ro
   }
 });
 
-function myRoomsReader({ session = { user: { id: "host" } }, authError = null,
+const HOME_USER_ID = "11111111-1111-4111-8111-111111111111";
+const OTHER_USER_ID = "22222222-2222-4222-8222-222222222222";
+
+function myRoomsReader({ session = { user: { id: HOME_USER_ID } }, authError = null,
   data = [], count = data?.length ?? 0, queryError = null } = {}) {
   const calls = [];
   const query = {
     select(...args) { calls.push(["select", ...args]); return this; },
     eq(...args) { calls.push(["eq", ...args]); return this; },
+    or(...args) { calls.push(["or", ...args]); return this; },
     order(...args) { calls.push(["order", ...args]); return this; },
     async range(...args) { calls.push(["range", ...args]); return { data, count, error: queryError }; },
   };
@@ -330,7 +334,7 @@ function myRoomsReader({ session = { user: { id: "host" } }, authError = null,
 }
 
 const myRoomFixture = (overrides = {}) => ({ id: "room", code: "A1B2C3D4E5", prompt: "고양이",
-  status: "waiting", created_at: "2026-01-01T00:00:00Z", expires_at: "2099-01-01T00:00:00Z", ...overrides });
+  host_id: HOME_USER_ID, guest_id: null, status: "waiting", created_at: "2026-01-01T00:00:00Z", expires_at: "2099-01-01T00:00:00Z", ...overrides });
 
 test("home visitor does not create an account or query rooms without an existing session", async () => {
   const { getMyRooms, calls } = myRoomsReader({ session: null });
@@ -340,17 +344,36 @@ test("home visitor does not create an account or query rooms without an existing
   assert.equal(calls.length, 0);
 });
 
-test("home list selects host metadata only and uses stable six-room pagination", async () => {
+test("home list selects participant metadata only and uses stable six-room pagination", async () => {
   const { getMyRooms, calls } = myRoomsReader({ data: [myRoomFixture()], count: 35 });
   const result = await getMyRooms(1);
   assert.equal(result.total, 35);
   assert.equal(result.rooms[0].code, "A1B2C3D4E5");
   assert.equal(calls[0][1], "rooms");
-  assert.equal(calls[1][1], "id, code, prompt, status, created_at, expires_at");
+  assert.equal(calls[1][1], "id, code, prompt, status, created_at, expires_at, host_id, guest_id");
   assert.equal(calls[1][2].count, "exact");
-  assert.deepEqual(calls[2], ["eq", "host_id", "host"]);
+  assert.deepEqual(calls[2], ["or", `host_id.eq.${HOME_USER_ID},guest_id.eq.${HOME_USER_ID}`]);
+  assert.equal(result.rooms[0].participantRole, "host");
   assert.deepEqual(calls.slice(3).map((call) => [call[0], call[1]]), [["order", "created_at"], ["order", "id"], ["range", 6]]);
   assert.deepEqual(calls.at(-1), ["range", 6, 11]);
+});
+
+test("home list supports joined rooms and separately filtered scopes", async () => {
+  const joined = myRoomFixture({ host_id: OTHER_USER_ID, guest_id: HOME_USER_ID, status: "completed" });
+  const all = myRoomsReader({ data: [myRoomFixture(), joined] });
+  const result = await all.getMyRooms();
+  assert.deepEqual(Array.from(result.rooms, room => room.participantRole), ["host", "guest"]);
+  for (const [scope, column, fixture] of [["host", "host_id", myRoomFixture()], ["guest", "guest_id", joined]]) {
+    const reader = myRoomsReader({ data: [fixture] });
+    await reader.getMyRooms(0, scope);
+    assert.deepEqual(reader.calls[2], ["eq", column, HOME_USER_ID]);
+  }
+  await assert.rejects(myRoomsReader({ data: [joined] }).getMyRooms(0, "host"), /데이터 형식/);
+  await assert.rejects(myRoomsReader({ data: [myRoomFixture({ host_id: OTHER_USER_ID })] }).getMyRooms(), /데이터 형식/);
+  await assert.rejects(myRoomsReader().getMyRooms(0, "invalid"), /목록 종류/);
+  const malformed = myRoomsReader({ session: { user: { id: "invalid,guest_id.not.is.null" } } });
+  await assert.rejects(malformed.getMyRooms(), /사용자 연결/);
+  assert.equal(malformed.calls.length, 0);
 });
 
 test("home list expires active rooms but preserves completed results", async () => {

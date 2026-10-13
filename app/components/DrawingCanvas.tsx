@@ -63,14 +63,19 @@ export function DrawingCanvas({
     draftError,
   } = useDrawingHistory(storageKey);
 
-  const [lineWidth, setLineWidth] =
-    useState(4);
+  const [penWidth, setPenWidth] = useState(4);
+  const [eraserWidth, setEraserWidth] = useState(16);
 
   const [strokeColor, setStrokeColor] =
     useState("#111827");
 
   const [tool, setTool] =
     useState<DrawingTool>("pen");
+
+  const lineWidth = tool === "pen" ? penWidth : eraserWidth;
+  const setLineWidth = tool === "pen" ? setPenWidth : setEraserWidth;
+  const reviewRef = useRef<HTMLDivElement>(null);
+  const [reviewRequested, setReviewRequested] = useState(false);
 
   const {
     userId,
@@ -202,6 +207,21 @@ export function DrawingCanvas({
       window.clearTimeout(timerId);
     };
   }, [saveError, successMessage]);
+
+  useEffect(() => {
+    if (isExpanded || !reviewRequested) return;
+    const frame = window.requestAnimationFrame(() => {
+      reviewRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+      reviewRef.current?.querySelector<HTMLElement>("input:not(:disabled), button:not(:disabled)")?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [isExpanded, reviewRequested]);
+
+  function finishFocusedDrawing() {
+    if (isDrawing || readOnly) return;
+    setReviewRequested(true);
+    setIsExpanded(false);
+  }
 
   function closeToast() {
     setSaveError(null);
@@ -390,7 +410,8 @@ export function DrawingCanvas({
       )}
 
       <div className="drawing-view-controls flex flex-wrap items-center gap-2">
-        <button data-view-toggle type="button" aria-pressed={isExpanded} disabled={isDrawing} onClick={() => setIsExpanded(!isExpanded)} className="button-secondary">{isExpanded ? "그리기 화면으로 돌아가기" : "내 반쪽 크게 그리기"}</button>
+        <button data-view-toggle type="button" aria-pressed={isExpanded} disabled={isDrawing} onClick={() => { setReviewRequested(false); setIsExpanded(!isExpanded); }} className="button-secondary">{isExpanded ? "그리기 화면으로 돌아가기" : "내 반쪽 크게 그리기"}</button>
+        {isExpanded && <button type="button" onClick={finishFocusedDrawing} disabled={readOnly || isDrawing || !strokes.some((stroke) => stroke.tool === "pen")} className="button-primary">다 그렸어요</button>}
         {isExpanded && <p className="text-xs text-slate-500">{drawingSide === "left" ? "오른쪽 점선까지 그리면 친구 그림과 이어져요." : "왼쪽의 얇은 힌트를 보고 점선부터 이어 그려요."}</p>}
       </div>
       <div className="drawing-stage w-full max-w-[800px]">
@@ -441,7 +462,8 @@ export function DrawingCanvas({
       </details>
 
       {drawingSide === "left" && (
-        <div className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div ref={reviewRef} className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          {reviewRequested && <p role="status" className="text-sm font-semibold text-indigo-700">그림 주제를 확인하고 등록해주세요. 아직 친구에게 전송되지 않았어요.</p>}
           <label
             htmlFor="room-prompt"
             className="text-sm font-medium text-slate-700"
@@ -486,6 +508,7 @@ export function DrawingCanvas({
               ? "등록 중..."
               : "반쪽 그림 등록"}
           </button>
+          {(!strokes.some((stroke) => stroke.tool === "pen") || !roomPrompt.trim()) && <p className="text-sm text-slate-600">그림과 주제를 채우면 등록할 수 있어요.</p>}
           <p className="text-xs leading-5 text-slate-500">등록하면 그림을 수정할 수 없어요. 다음 화면에서 친구에게 줄 참여 코드를 확인할 수 있어요.</p>
 
           {createdRoom && (
@@ -523,7 +546,8 @@ export function DrawingCanvas({
 
       {drawingSide === "right" &&
         onSubmitDrawing && (
-          <div className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div ref={reviewRef} className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            {reviewRequested && <p role="status" className="text-sm font-semibold text-indigo-700">경계 연결을 확인하고 완료해주세요. 아직 제출되지 않았어요.</p>}
             <button
               type="button"
               onClick={
@@ -543,6 +567,7 @@ export function DrawingCanvas({
                 ? "완성 중..."
                 : "이어 그리기 완료"}
             </button>
+            {!strokes.some((stroke) => stroke.tool === "pen") && <p className="text-sm text-slate-600">펜으로 선을 그리면 완료할 수 있어요.</p>}
             <p className="text-xs leading-5 text-slate-500">완료하면 수정할 수 없어요. 두 사람의 그림이 합쳐진 결과를 바로 확인해요.</p>
           </div>
         )}

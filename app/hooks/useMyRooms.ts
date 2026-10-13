@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMyRooms, MY_ROOMS_PAGE_SIZE, type MyRoom } from "../lib/rooms/getMyRooms";
+import { getMyRooms, MY_ROOMS_PAGE_SIZE, type MyRoom, type RoomScope } from "../lib/rooms/getMyRooms";
 
 export function useMyRooms() {
+  const [scope, setScope] = useState<RoomScope>("all");
+  const [hasHistory, setHasHistory] = useState(false);
   const [rooms, setRooms] = useState<MyRoom[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
@@ -20,13 +22,14 @@ export function useMyRooms() {
       pending = true;
       setIsRefreshing(true);
       try {
-        const result = await getMyRooms(page);
+        const result = await getMyRooms(page, scope);
         if (!cancelled) {
           // Room cleanup can remove the last page while this tab is open.
           if (page > 0 && page * MY_ROOMS_PAGE_SIZE >= result.total) {
             setPage(Math.max(0, Math.ceil(result.total / MY_ROOMS_PAGE_SIZE) - 1));
             return;
           }
+          if (result.total > 0) setHasHistory(true);
           setRooms(result.rooms);
           setTotal(result.total);
           setError(null);
@@ -52,14 +55,18 @@ export function useMyRooms() {
       window.removeEventListener("focus", onReturn);
       document.removeEventListener("visibilitychange", onReturn);
     };
-  }, [page, attempt]);
+  }, [page, scope, attempt]);
 
+  function changeScope(next: RoomScope) {
+    if (next === scope) return;
+    setScope(next); setPage(0); setRooms([]); setTotal(0); setError(null); setIsLoading(true);
+  }
   function refresh() { setAttempt((value) => value + 1); }
   function changePage(next: number) {
     if (next < 0 || next * MY_ROOMS_PAGE_SIZE >= total) return;
     setIsLoading(true);
     setPage(next);
   }
-  return { rooms, total, page, isLoading, isRefreshing, error, refresh, changePage,
+  return { rooms, total, page, scope, changeScope, hasHistory, isLoading, isRefreshing, error, refresh, changePage,
     hasNextPage: (page + 1) * MY_ROOMS_PAGE_SIZE < total };
 }

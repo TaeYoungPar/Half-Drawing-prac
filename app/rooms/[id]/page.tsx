@@ -329,7 +329,7 @@ export default function RoomPage() {
         </button>
         {copyMessage && <p role="status" className="text-sm text-gray-700">{copyMessage}</p>}
         <p className="text-sm text-gray-600">
-          {room.guest_id ? "참여자가 그림을 그리고 있습니다." : "참여 코드를 친구에게 전달해주세요."}
+          {room.guest_id ? "친구가 참여했어요. 완성하면 여기서 확인할 수 있어요." : "참여 코드를 친구에게 전달해주세요."}
         </p>
         <p className="text-xs text-gray-500">완성 여부는 약 7초마다 자동으로 확인합니다. 이 방 주소를 북마크하면 나중에 다시 볼 수 있어요.</p>
         <p className="text-xs text-slate-500">브라우저 데이터를 지우면 익명 계정이 사라져 방에 돌아오지 못할 수 있어요.</p>

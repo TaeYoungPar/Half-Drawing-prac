@@ -29,7 +29,10 @@ async function mock(context,id){
   if(path==='/rest/v1/rpc/get_left_preview')return json(room.drawings[0].strokes.map(s=>({...s,points:s.points.filter(p=>p.x>=376&&p.x<=400)})).filter(s=>s.points.length));
   if(path==='/rest/v1/rooms'){
    if(url.searchParams.has('id'))return json(room);
-   return r.fulfill({status:200,contentType:'application/json',headers:{'content-range':room?'0-0/1':'*/0','access-control-expose-headers':'content-range'},body:JSON.stringify(room?[{id:room.id,code:room.code,prompt:room.prompt,status:room.status,created_at:new Date().toISOString(),expires_at:expires}]:[])});
+   const all=url.searchParams.get('or');const hostFilter=url.searchParams.get('host_id');const guestFilter=url.searchParams.get('guest_id');
+   assert.ok(all===`(host_id.eq.${id},guest_id.eq.${id})` || hostFilter===`eq.${id}` || guestFilter===`eq.${id}`,'explicit participant filtering required');
+   const visible=room && (all ? room.host_id===id || room.guest_id===id : hostFilter ? room.host_id===id : room.guest_id===id);
+   return r.fulfill({status:200,contentType:'application/json',headers:{'content-range':visible?'0-0/1':'*/0','access-control-expose-headers':'content-range'},body:JSON.stringify(visible?[{id:room.id,code:room.code,prompt:room.prompt,status:room.status,created_at:new Date().toISOString(),expires_at:expires,host_id:room.host_id,guest_id:room.guest_id}]:[])});
   }
   if(path==='/rest/v1/drawings'&&r.request().method()==='POST'){
    writes++;const b=r.request().postDataJSON();room.drawings.push({role:'right',strokes:b.strokes,completed:true});room.status='completed';return json([],201);
@@ -44,7 +47,7 @@ async function mock(context,id){
   const c=await browser.newContext({viewport:{width,height},isMobile:name!=='desktop',hasTouch:name!=='desktop'});await mock(c,hostId);
   const p=await c.newPage();
   for(const variant of ['a','b']){
-   await p.goto(`${base}/?variant=${variant}`);await p.getByText('아직 시작한 그림이 없어요.').waitFor({timeout:8000}).catch(async e=>{console.log('FAIL',name,variant,(await p.locator('body').innerText()).slice(0,1800));throw e;});
+   await p.goto(`${base}/?variant=${variant}`);await p.getByText('아직 함께 그린 그림이 없어요.').waitFor({timeout:8000}).catch(async e=>{console.log('FAIL',name,variant,(await p.locator('body').innerText()).slice(0,1800));throw e;});
    assert.equal(await p.locator('[data-design-variant]').getAttribute('data-design-variant'),variant);
    await p.locator('img').evaluate(img=>img.decode());
    assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
@@ -77,30 +80,53 @@ async function mock(context,id){
  }
  const host=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});await mock(host,hostId);const h=await host.newPage();await h.goto(base);await h.getByRole('link',{name:'새 그림 시작하기',exact:false}).first().click();
  const canvas=h.getByLabel('왼쪽 반쪽 그림 그리기');await canvas.scrollIntoViewIfNeeded();await h.waitForFunction(()=>!document.querySelector('input#room-prompt').disabled);
+ await h.getByText('굵기 · 더 많은 도구').click();
+ const slider=h.locator('input[type=range]');await slider.focus();await slider.press('Home');await slider.press('ArrowRight');
+ assert.equal(await slider.inputValue(),'2');
+ await h.getByRole('button',{name:'지우개',exact:true}).click();assert.equal(await slider.inputValue(),'16');await slider.focus();await slider.press('End');
+ await h.getByRole('button',{name:'펜',exact:true}).click();assert.equal(await slider.inputValue(),'2');
+ await h.getByRole('button',{name:'지우개',exact:true}).click();assert.equal(await slider.inputValue(),'30');await h.getByRole('button',{name:'펜',exact:true}).click();
+ await h.getByText('굵기 · 더 많은 도구').click();
+ await h.getByRole('button',{name:'색상 팔레트',exact:true}).click();await h.getByRole('button',{name:'지우개',exact:true}).click();assert.equal(await h.getByRole('button',{name:'색상 팔레트',exact:true}).getAttribute('aria-expanded'),'false');await h.getByRole('button',{name:'펜',exact:true}).click();
+ await h.getByRole('button',{name:'색상 팔레트',exact:true}).click();await h.screenshot({path:`${out}/palette-mobile.png`,fullPage:true});await h.getByLabel('직접 고르기').evaluate(el=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,'#2563eb');el.dispatchEvent(new Event('input',{bubbles:true}));});
+ assert.equal(await h.getByRole('button',{name:'색상 팔레트',exact:true}).getAttribute('aria-expanded'),'true');
+ assert.equal(await h.getByRole('button',{name:'색상 팔레트',exact:true}).locator('span').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(37, 99, 235)');
+ await h.getByRole('button',{name:'빨강 선택',exact:true}).click();
+ assert.equal(await h.getByRole('button',{name:'색상 팔레트',exact:true}).getAttribute('aria-expanded'),'false');
+ await canvas.scrollIntoViewIfNeeded();
  const box=await canvas.boundingBox();await h.mouse.move(box.x+box.width*.25,box.y+box.height*.5);await h.mouse.down();await h.mouse.move(box.x+box.width*.5,box.y+box.height*.5,{steps:8});await h.mouse.up();
  await h.getByLabel('그림 주제',{exact:true}).fill('친구와 떠나는 우주 여행');
  await h.screenshot({path:`${out}/draw-mobile.png`,fullPage:true});
  await h.getByRole('button',{name:'내 반쪽 크게 그리기',exact:true}).click();
  const active=h.locator('.drawing-frame');const expanded=await active.boundingBox();assert.ok(expanded.height>box.height*1.8);
  assert.equal(await h.getByRole('button',{name:'캔버스 왼쪽으로 이동'}).count(),0);
- await h.screenshot({path:`${out}/focus-left-mobile.png`});assert.ok((await h.getByRole('button',{name:'그리기 화면으로 돌아가기'}).boundingBox()).y>=0);await h.setViewportSize({width:844,height:390});const landscape=await active.boundingBox();assert.ok(landscape.y>=0&&landscape.y+landscape.height<=391);await h.screenshot({path:`${out}/focus-left-landscape.png`});await h.setViewportSize({width:390,height:844});
- await h.getByRole('button',{name:'그리기 화면으로 돌아가기',exact:true}).click();
+ await h.screenshot({path:`${out}/focus-left-mobile.png`});assert.ok((await h.getByRole('button',{name:'그리기 화면으로 돌아가기'}).boundingBox()).y>=0);await h.setViewportSize({width:844,height:390});const landscape=await active.boundingBox();assert.ok(landscape.y>=0&&landscape.y+landscape.height<=391);await h.screenshot({path:`${out}/focus-left-landscape.png`});const toolsBox=await h.locator('.drawing-tools').boundingBox();assert.ok(landscape.x-(toolsBox.x+toolsBox.width)<=32,'landscape tools stay near canvas');await h.setViewportSize({width:390,height:844});
+ await h.getByRole('button',{name:'다 그렸어요',exact:true}).click();await h.getByRole('status').filter({hasText:'아직 친구에게 전송되지 않았어요'}).waitFor();assert.equal(writes,0);
  h.once('dialog',d=>d.dismiss());await h.getByRole('button',{name:'반쪽 그림 등록',exact:true}).click();assert.equal(writes,0);
  h.once('dialog',d=>d.accept());await h.getByRole('button',{name:'반쪽 그림 등록',exact:true}).click();await h.getByRole('heading',{name:'이제 친구의 차례예요.'}).waitFor();
  await h.screenshot({path:`${out}/waiting-mobile.png`,fullPage:true});
  await h.evaluate(()=>{window.sharedInvites=[];Object.defineProperty(navigator,'share',{configurable:true,value:async data=>window.sharedInvites.push(data)});});
  await h.getByRole('button',{name:'친구에게 초대 링크 공유'}).click();const invite=await h.evaluate(()=>window.sharedInvites[0].url);assert.equal(new URL(invite).searchParams.get('code'),'ABC123DEF4');
- const guest=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});await mock(guest,guestId);const g=await guest.newPage();await g.goto(invite);await g.waitForFunction(()=>document.querySelector('#room-code').value==='ABC123DEF4');await g.screenshot({path:`${out}/join-mobile.png`,fullPage:true});await g.getByRole('button',{name:'이어 그리러 가기 →'}).click();await g.getByRole('heading',{name:'이어 그리기',exact:true}).waitFor();
+ const guest=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});await mock(guest,guestId);const g=await guest.newPage();await g.goto(invite);await g.waitForFunction(()=>document.querySelector('#room-code').value==='ABC123DEF4');await g.screenshot({path:`${out}/join-mobile.png`,fullPage:true});await g.getByRole('button',{name:'이어 그리러 가기 →'}).click();await g.getByRole('heading',{name:'이어 그리기',exact:true}).waitFor();await h.getByRole('button',{name:'완성 여부 확인',exact:true}).click();await h.getByText('친구가 참여했어요. 완성하면 여기서 확인할 수 있어요.').waitFor();await h.screenshot({path:`${out}/waiting-guest-joined.png`,fullPage:true});
  await g.getByRole('button',{name:'내 반쪽 크게 그리기',exact:true}).click();await g.screenshot({path:`${out}/focus-right-mobile.png`});assert.ok((await g.getByRole('button',{name:'그리기 화면으로 돌아가기'}).boundingBox()).y>=0);
  const frame=await g.locator('.drawing-frame').boundingBox();assert.ok(frame.height>400);
  await g.mouse.move(frame.x+frame.width*(26/424),frame.y+frame.height*.5);await g.mouse.down();await g.mouse.move(frame.x+frame.width*.8,frame.y+frame.height*.4,{steps:8});await g.mouse.up();
- await g.getByRole('button',{name:'그리기 화면으로 돌아가기'}).click();
+ await g.getByRole('button',{name:'다 그렸어요',exact:true}).click();await g.getByRole('status').filter({hasText:'아직 제출되지 않았어요'}).waitFor();assert.equal(room.status,'guest_joined');
  g.once('dialog',d=>d.dismiss());await g.getByRole('button',{name:'이어 그리기 완료',exact:true}).click();assert.equal(room.status,'guest_joined');
  g.once('dialog',d=>d.accept());await g.getByRole('button',{name:'이어 그리기 완료',exact:true}).click();await g.getByRole('heading',{name:'이런 그림이 될 줄 알았나요?'}).waitFor();
  await g.screenshot({path:`${out}/result-mobile.png`,fullPage:true});
  await h.getByRole('button',{name:'완성 여부 확인',exact:true}).click();await h.getByRole('heading',{name:'이런 그림이 될 줄 알았나요?'}).waitFor();
  const download=g.waitForEvent('download');await g.getByRole('button',{name:'완성 그림 PNG 저장',exact:true}).click();assert.equal((await download).suggestedFilename(),'half-drawing.png');
  assert.ok(room.drawings[1].strokes.every(s=>s.points.every(p=>p.x>=400&&p.x<=800)));
+ await g.getByRole('link',{name:'홈으로',exact:true}).click();
+ await g.getByRole('link',{name:'완성 그림 보기 →',exact:true}).waitFor();
+ assert.ok((await g.getByRole('heading',{name:'내 그림',exact:true}).boundingBox()).y<200,'returning history is shown first');
+ await g.screenshot({path:`${out}/returning-guest-mobile.png`,fullPage:true});await g.setViewportSize({width:320,height:740});assert.equal(await g.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await g.screenshot({path:`${out}/returning-guest-narrow.png`,fullPage:true});await g.setViewportSize({width:390,height:844});
+ await g.getByRole('button',{name:'내가 시작한 그림',exact:true}).click();await g.getByText('아직 시작한 그림이 없어요.').waitFor();
+ await g.getByRole('button',{name:'내가 참여한 그림',exact:true}).click();await g.getByRole('link',{name:'완성 그림 보기 →',exact:true}).waitFor();
+ await g.getByRole('link',{name:'완성 그림 보기 →',exact:true}).click();await g.getByRole('heading',{name:'이런 그림이 될 줄 알았나요?'}).waitFor();
+ assert.equal(room.drawings[0].strokes[0].lineWidth,2);assert.equal(room.drawings[0].strokes[0].color,'#dc2626');
+ results.push('Independent pen/eraser widths, palette selection, focused finish without premature submit, nearby landscape tools, guest history filters and completed-room return PASS');
  results.push('Host draw -> confirmation cancel/accept -> waiting -> share invitation -> guest autofill -> join -> focused right drawing -> cancel/accept completion -> both results -> PNG download PASS (mock backend only)');
  fs.writeFileSync(`${out}/flow-results.txt`,results.join('\n')+'\n');console.log(results.join('\n'));
  fs.writeFileSync(`${out}/fixture-room.json`,JSON.stringify(room,null,2));
