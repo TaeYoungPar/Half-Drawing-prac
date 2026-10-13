@@ -393,3 +393,26 @@ test("home list reports connection and malformed-data errors instead of showing 
   }
   await assert.rejects(myRoomsReader().getMyRooms(-1), /목록 페이지/);
 });
+
+
+test("empty erased and white pixels are rejected while visible ink is accepted", () => {
+  const { pixelsHaveInk, hasCanvasInk } = loadTS("app/utils/visibleInk.ts");
+  assert.equal(pixelsHaveInk(new Uint8ClampedArray([0, 0, 0, 0, 255, 255, 255, 255])), false);
+  assert.equal(pixelsHaveInk(new Uint8ClampedArray([255, 255, 255, 0, 20, 30, 40, 255])), true);
+  const rectangles = [];
+  const canvas = { width: 800, height: 500, getContext: () => ({ getImageData: (...args) => {
+    rectangles.push(args); return { data: new Uint8ClampedArray([255, 255, 255, 255]) };
+  } }) };
+  assert.equal(hasCanvasInk(canvas, "left"), false);
+  assert.equal(hasCanvasInk(canvas, "right"), false);
+  assert.deepEqual(rectangles, [[0, 0, 400, 500], [400, 0, 400, 500]]);
+});
+
+test("drawing preferences restore each tool independently and reject malformed values", () => {
+  const { parseDrawingSettings } = loadTS("app/utils/drawingSettings.ts");
+  const restored = parseDrawingSettings({ penWidth: 2, eraserWidth: 30, strokeColor: "#9333ea", tool: "eraser" });
+  assert.equal(restored.penWidth, 2);assert.equal(restored.eraserWidth, 30);assert.equal(restored.strokeColor, "#9333ea");assert.equal(restored.tool, "eraser");
+  for (const bad of [null, {}, { penWidth: -1, eraserWidth: 999, strokeColor: "javascript:bad", tool: "unknown" }, { penWidth: 2.5, eraserWidth: NaN }]) {
+    const parsed = parseDrawingSettings(bad);assert.equal(parsed.penWidth, 4);assert.equal(parsed.eraserWidth, 16);assert.equal(parsed.strokeColor, "#111827");assert.equal(parsed.tool, "pen");
+  }
+});

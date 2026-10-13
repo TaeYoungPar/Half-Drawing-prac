@@ -9,6 +9,10 @@ import { useRouter } from "next/navigation";
 
 import { useCanvasDrawing } from "../hooks/useCanvasDrawing";
 import { useDrawingHistory } from "../hooks/useDrawingHistory";
+import { useDrawingSettings } from "../hooks/useDrawingSettings";
+import { useOverlayHistory } from "../hooks/useOverlayHistory";
+import { lockBodyScroll } from "../utils/bodyScrollLock";
+import { hasCanvasInk } from "../utils/visibleInk";
 import { DrawingToolbar } from "./DrawingToolbar";
 import { DrawingNotice } from "./DrawingNotice";
 import { downloadCanvasImage } from "../utils/downloadCanvasImage";
@@ -16,7 +20,6 @@ import { copyRoomCode } from "../utils/copyRoomCode";
 
 import type {
   DrawingSide,
-  DrawingTool,
   Stroke,
 } from "../types/drawing";
 
@@ -63,14 +66,10 @@ export function DrawingCanvas({
     draftError,
   } = useDrawingHistory(storageKey);
 
-  const [penWidth, setPenWidth] = useState(4);
-  const [eraserWidth, setEraserWidth] = useState(16);
-
-  const [strokeColor, setStrokeColor] =
-    useState("#111827");
-
-  const [tool, setTool] =
-    useState<DrawingTool>("pen");
+  const { penWidth, eraserWidth, strokeColor, tool, setPenWidth, setEraserWidth, setStrokeColor, setTool, restored: settingsRestored } = useDrawingSettings();
+  const [hasInk, setHasInk] = useState(false);
+  const autoStarted = useRef(false);
+  useOverlayHistory(isExpanded, setIsExpanded, "drawing");
 
   const lineWidth = tool === "pen" ? penWidth : eraserWidth;
   const reviewRef = useRef<HTMLDivElement>(null);
@@ -108,7 +107,7 @@ export function DrawingCanvas({
   ] = useState(false);
 
   // Once sent, local edits would differ from the drawing saved in the room.
-  const readOnly = isRestoring || isSaving || Boolean(createdRoom) || isDrawingSubmitted;
+  const readOnly = isRestoring || !settingsRestored || isSaving || Boolean(createdRoom) || isDrawingSubmitted;
   const {
     canvasRef,
     handlePointerDown,
@@ -127,16 +126,28 @@ export function DrawingCanvas({
   });
 
   useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setHasInk(hasCanvasInk(canvasRef.current, drawingSide)));
+    return () => window.cancelAnimationFrame(frame);
+  }, [canvasRef, strokes, drawingSide]);
+
+  useEffect(() => {
+    if (isRestoring || !settingsRestored || autoStarted.current) return;
+    if (!window.matchMedia("(max-width: 767px)").matches) { autoStarted.current = true; return; }
+    const frame = window.requestAnimationFrame(() => { autoStarted.current = true; setIsExpanded(true); });
+    return () => window.cancelAnimationFrame(frame);
+  }, [isRestoring, settingsRestored]);
+
+  useEffect(() => {
     if (!isExpanded || !sectionRef.current) return;
     const section = sectionRef.current;
     const previousFocus = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
+    const unlock = lockBodyScroll();
     const inertElements: Array<[HTMLElement, boolean]> = [];
     // Keep the drawing mounted so switching views preserves the current strokes.
     let ancestor: HTMLElement = section;
     while (ancestor.parentElement) {
       for (const sibling of ancestor.parentElement.children) {
-        if (sibling !== ancestor && sibling instanceof HTMLElement) {
+        if (sibling !== ancestor && sibling instanceof HTMLElement && sibling.tagName !== "DIALOG") {
           inertElements.push([sibling, sibling.inert]);
           sibling.inert = true;
         }
@@ -144,7 +155,6 @@ export function DrawingCanvas({
       ancestor = ancestor.parentElement;
       if (ancestor === document.body) break;
     }
-    document.body.style.overflow = "hidden";
     section.querySelector<HTMLButtonElement>("[data-view-toggle]")?.focus({ preventScroll: true });
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && !section.querySelector("[data-view-toggle]")?.hasAttribute("disabled")) setIsExpanded(false);
@@ -162,7 +172,7 @@ export function DrawingCanvas({
     section.addEventListener("keydown", onKeyDown);
     return () => {
       section.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
+      unlock();
       for (const [element, inert] of inertElements) element.inert = inert;
       previousFocus?.focus();
     };
@@ -216,8 +226,20 @@ export function DrawingCanvas({
     return () => window.cancelAnimationFrame(frame);
   }, [isExpanded, reviewRequested]);
 
+  useEffect(() => {
+    if (isExpanded || !reviewRequested) return;
+    const viewport = window.visualViewport;
+    const onResize = () => {
+      if (document.activeElement === reviewRef.current?.querySelector("input")) {
+        document.activeElement?.scrollIntoView({ block: "center" });
+      }
+    };
+    viewport?.addEventListener("resize", onResize);
+    return () => viewport?.removeEventListener("resize", onResize);
+  }, [isExpanded, reviewRequested]);
+
   function finishFocusedDrawing() {
-    if (isDrawing || readOnly) return;
+    if (isDrawing || readOnly || !hasCanvasInk(canvasRef.current, drawingSide)) return;
     setReviewRequested(true);
     setIsExpanded(false);
   }
@@ -269,7 +291,7 @@ export function DrawingCanvas({
       return;
     }
 
-    if (!strokes.some((stroke) => stroke.tool === "pen")) {
+    if (!hasCanvasInk(canvasRef.current, drawingSide)) {
       setSaveError(
         "그림을 한 개 이상 그려주세요."
       );
@@ -319,7 +341,7 @@ export function DrawingCanvas({
       setSaveError("사용자 연결을 확인하고 다시 시도해주세요.");
       return;
     }
-    if (!strokes.some((stroke) => stroke.tool === "pen")) {
+    if (!hasCanvasInk(canvasRef.current, drawingSide)) {
       setSaveError(
         "오른쪽에 그림을 한 개 이상 그려주세요."
       );
@@ -412,7 +434,12 @@ export function DrawingCanvas({
 
       <div className="drawing-view-controls flex flex-wrap items-center gap-2">
         <button data-view-toggle type="button" aria-pressed={isExpanded} disabled={isDrawing} onClick={() => { setReviewRequested(false); setIsExpanded(!isExpanded); }} className="button-secondary">{isExpanded ? "그리기 화면으로 돌아가기" : "내 반쪽 크게 그리기"}</button>
-        {isExpanded && <button type="button" onClick={finishFocusedDrawing} disabled={readOnly || isDrawing || !strokes.some((stroke) => stroke.tool === "pen")} className="button-primary">다 그렸어요</button>}
+        {isExpanded && <button type="button" onClick={finishFocusedDrawing} disabled={readOnly || isDrawing || !hasInk} className="button-primary">다 그렸어요</button>}
+        {isExpanded && (errorMessage || draftError) && <div role="alert" className="w-full rounded-xl bg-amber-50 p-2 text-sm text-amber-900">
+          {draftError ?? errorMessage}
+          {errorMessage && <button type="button" onClick={retry} className="button-secondary ml-2">연결 다시 시도</button>}
+        </div>}
+        {isExpanded && !hasInk && strokes.length > 0 && <p role="status" className="text-sm text-amber-800">남은 그림이 없어요. 다시 그려주세요.</p>}
         {isExpanded && <p className="text-xs text-slate-500">{drawingSide === "left" ? "오른쪽 점선까지 그리면 친구 그림과 이어져요." : "왼쪽의 얇은 힌트를 보고 점선부터 이어 그려요."}</p>}
       </div>
       <div className="drawing-stage w-full max-w-[800px]">
@@ -437,9 +464,9 @@ export function DrawingCanvas({
 
         <div
           aria-hidden="true"
-          className={`pointer-events-none absolute inset-y-0 ${
+          className={`pointer-events-auto touch-pan-y absolute inset-y-0 ${
             drawingSide === "left"
-              ? "right-0 w-1/2"
+              ? "right-0 w-[calc(50%-1px)]"
               : "left-0 w-[47%]"
           }`}
           style={{
@@ -500,7 +527,7 @@ export function DrawingCanvas({
               isRestoring ||
               !userId ||
               !roomPrompt.trim() ||
-              !strokes.some((stroke) => stroke.tool === "pen") ||
+              !hasInk ||
               Boolean(createdRoom)
             }
             className="button-primary"
@@ -509,7 +536,8 @@ export function DrawingCanvas({
               ? "등록 중..."
               : "반쪽 그림 등록"}
           </button>
-          {(!strokes.some((stroke) => stroke.tool === "pen") || !roomPrompt.trim()) && <p className="text-sm text-slate-600">그림과 주제를 채우면 등록할 수 있어요.</p>}
+          {strokes.length > 0 && !hasInk && <p role="status" className="text-sm text-amber-800">남은 그림이 없어요. 다시 그리면 등록할 수 있어요.</p>}
+          {(!hasInk || !roomPrompt.trim()) && <p className="text-sm text-slate-600">그림과 주제를 채우면 등록할 수 있어요.</p>}
           <p className="text-xs leading-5 text-slate-500">등록하면 그림을 수정할 수 없어요. 다음 화면에서 친구에게 줄 참여 코드를 확인할 수 있어요.</p>
 
           {createdRoom && (
@@ -559,7 +587,7 @@ export function DrawingCanvas({
                 isDrawing ||
                 isRestoring ||
                 !userId ||
-                !strokes.some((stroke) => stroke.tool === "pen") ||
+                !hasInk ||
                 isDrawingSubmitted
               }
               className="button-primary"
@@ -568,7 +596,8 @@ export function DrawingCanvas({
                 ? "완성 중..."
                 : "이어 그리기 완료"}
             </button>
-            {!strokes.some((stroke) => stroke.tool === "pen") && <p className="text-sm text-slate-600">펜으로 선을 그리면 완료할 수 있어요.</p>}
+            {strokes.length > 0 && !hasInk && <p role="status" className="text-sm text-amber-800">남은 그림이 없어요. 다시 그려주세요.</p>}
+            {!hasInk && <p className="text-sm text-slate-600">펜으로 선을 그리면 완료할 수 있어요.</p>}
             <p className="text-xs leading-5 text-slate-500">완료하면 수정할 수 없어요. 두 사람의 그림이 합쳐진 결과를 바로 확인해요.</p>
           </div>
         )}

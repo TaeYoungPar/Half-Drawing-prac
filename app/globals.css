@@ -49,7 +49,7 @@ button:not(:disabled), a { cursor: pointer; }
 }
 .drawing-expanded > :not(.drawing-tools):not(.drawing-view-controls):not(.drawing-stage) { display: none; }
 .drawing-expanded .drawing-view-controls { order: -1; flex-shrink: 0; }
-.drawing-expanded .drawing-tools { flex-shrink: 0; max-height: 40%; overflow-y: auto; }
+.drawing-expanded .drawing-tools { flex-shrink: 0; }
 .drawing-expanded .drawing-tools > div { padding: 8px; gap: 4px; }
 .drawing-expanded .drawing-stage {
   flex: 1;
@@ -100,3 +100,6 @@ button:not(:disabled), a { cursor: pointer; }
 @media (max-width: 639px) {
   .hero-variant-b .home-art img { height: 150px; object-fit: contain; }
 }
+
+.overlay-dialog { max-height: calc(100dvh - 16px); overscroll-behavior: contain; }
+.result-preview-scroll { max-height: 65dvh; overflow: auto; overscroll-behavior: contain; touch-action: pan-x pan-y pinch-zoom; }
