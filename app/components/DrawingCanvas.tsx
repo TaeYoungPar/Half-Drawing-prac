@@ -216,22 +216,24 @@ export function DrawingCanvas({
     if (isExpanded || !reviewRequested) return;
     let frame = 0;
     const scrollToReview = () => {
+      window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
-        if (!reviewRef.current) return;
-        // Keep the keyboard closed so the topic and final action stay visible together.
-        reviewRef.current.focus({ preventScroll: true });
-        window.scrollTo({
-          top: document.documentElement.scrollHeight,
-          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+        frame = window.requestAnimationFrame(() => {
+          if (!reviewRef.current?.isConnected) return;
+          // Focus the review panel without opening the keyboard. Jump directly so a
+          // browser history restoration cannot cancel an in-flight smooth scroll.
+          reviewRef.current.focus({ preventScroll: true });
+          window.scrollTo({
+            top: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
+            behavior: "instant",
+          });
         });
       });
     };
-    // Closing the large view traverses history; let browser scroll restoration finish first.
-    if (window.history.state?.halfDrawingOverlays?.some((entry: { kind: string }) => entry.kind === "drawing")) {
-      window.addEventListener("popstate", scrollToReview, { once: true });
-    } else {
-      scrollToReview();
-    }
+    // Always move after closing; receiving popstate must not be a prerequisite.
+    // Repeat after a late history traversal so its saved position cannot win.
+    window.addEventListener("popstate", scrollToReview, { once: true });
+    scrollToReview();
     return () => {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("popstate", scrollToReview);
