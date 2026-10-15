@@ -29,11 +29,11 @@ export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) 
           <h2 id="my-drawings-heading" className="section-heading">내 그림</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">시작하거나 참여한 그림을 다시 열고 완성 상태를 확인해요.</p>
         </div>
-        <button type="button" onClick={refresh} disabled={isLoading || isRefreshing} className="button-secondary">
-          {isRefreshing ? "확인 중…" : "상태 새로고침"}
+        <button type="button" onClick={refresh} disabled={isRefreshing} aria-busy={isRefreshing} className="button-secondary min-w-36">
+          {isRefreshing ? "새로고침 중…" : "상태 새로고침"}
         </button>
       </div>
-      <div className="notebook-tabs mt-5 grid grid-cols-3 gap-2 p-1.5 sm:max-w-lg" role="group" aria-label="내 그림 목록 선택">
+      <div className="mt-5 grid grid-cols-3 gap-3 sm:max-w-lg" role="group" aria-label="내 그림 목록 선택">
         {([["all", "전체"], ["host", "시작한 그림"], ["guest", "참여한 그림"]] as const).map(([value, label]) => (
           <button key={value} type="button" aria-label={value === "all" ? "전체" : value === "host" ? "내가 시작한 그림" : "내가 참여한 그림"} aria-pressed={scope === value} onClick={() => changeScope(value as RoomScope)}
             className={`${scope === value ? "button-primary" : "button-secondary"} min-w-0 px-2 text-xs sm:text-sm`}>{label}</button>

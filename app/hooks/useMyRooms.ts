@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getMyRooms, MY_ROOMS_PAGE_SIZE, type MyRoom, type RoomScope } from "../lib/rooms/getMyRooms";
 
 export function useMyRooms() {
+  const cache = useRef(new Map<string, { rooms: MyRoom[]; total: number }>());
   const [scope, setScope] = useState<RoomScope>("all");
   const [rooms, setRooms] = useState<MyRoom[]>([]);
   const [total, setTotal] = useState(0);
@@ -19,15 +20,18 @@ export function useMyRooms() {
     async function load() {
       if (pending || cancelled) return;
       pending = true;
-      setIsRefreshing(true);
+      let changingPage = false;
       try {
         const result = await getMyRooms(page, scope);
         if (!cancelled) {
           // Room cleanup can remove the last page while this tab is open.
           if (page > 0 && page * MY_ROOMS_PAGE_SIZE >= result.total) {
+            changingPage = true;
+            setIsLoading(true);
             setPage(Math.max(0, Math.ceil(result.total / MY_ROOMS_PAGE_SIZE) - 1));
             return;
           }
+          cache.current.set(`${scope}:${page}`, result);
           setRooms(result.rooms);
           setTotal(result.total);
           setError(null);
@@ -36,7 +40,7 @@ export function useMyRooms() {
         if (!cancelled) setError(reason instanceof Error ? reason.message : "목록을 불러오지 못했습니다.");
       } finally {
         pending = false;
-        if (!cancelled) { setIsLoading(false); setIsRefreshing(false); }
+        if (!cancelled) { if (!changingPage) setIsLoading(false); setIsRefreshing(false); }
       }
     }
     const initial = window.setTimeout(() => { void load(); }, 0);
@@ -55,14 +59,28 @@ export function useMyRooms() {
     };
   }, [page, scope, attempt]);
 
+  function showCachedSelection(nextScope: RoomScope, nextPage: number) {
+    const saved = cache.current.get(`${nextScope}:${nextPage}`);
+    setRooms(saved?.rooms ?? []);
+    setTotal(saved?.total ?? 0);
+    setIsLoading(!saved);
+    setIsRefreshing(false);
+    setError(null);
+  }
+
   function changeScope(next: RoomScope) {
     if (next === scope) return;
-    setScope(next); setPage(0); setRooms([]); setTotal(0); setError(null); setIsLoading(true);
+    showCachedSelection(next, 0);
+    setScope(next); setPage(0);
   }
-  function refresh() { setAttempt((value) => value + 1); }
+  function refresh() {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    setAttempt((value) => value + 1);
+  }
   function changePage(next: number) {
-    if (next < 0 || next * MY_ROOMS_PAGE_SIZE >= total) return;
-    setIsLoading(true);
+    if (next === page || next < 0 || next * MY_ROOMS_PAGE_SIZE >= total) return;
+    showCachedSelection(scope, next);
     setPage(next);
   }
   return { rooms, total, page, scope, changeScope, isLoading, isRefreshing, error, refresh, changePage,

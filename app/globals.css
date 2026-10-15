@@ -144,7 +144,6 @@ button:not(:disabled), a { cursor: pointer; }
 .board-paper { position: relative; overflow: hidden; border: 2px solid #85aab2; border-radius: 14px; background: var(--paper); }
 .board-paper::after { content: ''; position: absolute; top: 40px; bottom: 16px; left: 50%; border-left: 2px dashed #8b7865; pointer-events: none; }
 .board-caption { background: var(--paper); border: 1px solid #cfc0a6; border-radius: 8px; }
-.notebook-tabs { background: #f4ead0; border: 2px solid #caba9d; border-radius: 14px; }
 .room-card { background: #f8eac8; }
 .room-card:nth-child(3n + 2) { background: #f9dce0; }
 .room-card:nth-child(3n) { background: #dcedd5; }
