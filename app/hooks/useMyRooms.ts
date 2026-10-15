@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getMyRooms, MY_ROOMS_PAGE_SIZE, type MyRoom, type RoomScope } from "../lib/rooms/getMyRooms";
 
 export function useMyRooms() {
   const cache = useRef(new Map<string, { rooms: MyRoom[]; total: number }>());
+  const requests = useRef(new Map<string, Promise<{ rooms: MyRoom[]; total: number }>>());
   const [scope, setScope] = useState<RoomScope>("all");
   const [rooms, setRooms] = useState<MyRoom[]>([]);
   const [total, setTotal] = useState(0);
@@ -14,6 +15,27 @@ export function useMyRooms() {
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
 
+  const requestRooms = useCallback((targetPage: number, targetScope: RoomScope) => {
+    const key = `${targetScope}:${targetPage}`;
+    const existing = requests.current.get(key);
+    if (existing) return existing;
+    const request = getMyRooms(targetPage, targetScope)
+      .then((result) => { cache.current.set(key, result); return result; })
+      .finally(() => { requests.current.delete(key); });
+    requests.current.set(key, request);
+    return request;
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      for (const targetScope of ["all", "host", "guest"] as const) {
+        // Warm only the first page. An inactive filter's failure must not disturb the current list.
+        void requestRooms(0, targetScope).catch(() => {});
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [requestRooms]);
+
   useEffect(() => {
     let cancelled = false;
     let pending = false;
@@ -22,7 +44,7 @@ export function useMyRooms() {
       pending = true;
       let changingPage = false;
       try {
-        const result = await getMyRooms(page, scope);
+        const result = await requestRooms(page, scope);
         if (!cancelled) {
           // Room cleanup can remove the last page while this tab is open.
           if (page > 0 && page * MY_ROOMS_PAGE_SIZE >= result.total) {
@@ -31,7 +53,6 @@ export function useMyRooms() {
             setPage(Math.max(0, Math.ceil(result.total / MY_ROOMS_PAGE_SIZE) - 1));
             return;
           }
-          cache.current.set(`${scope}:${page}`, result);
           setRooms(result.rooms);
           setTotal(result.total);
           setError(null);
@@ -57,7 +78,7 @@ export function useMyRooms() {
       window.removeEventListener("focus", onReturn);
       document.removeEventListener("visibilitychange", onReturn);
     };
-  }, [page, scope, attempt]);
+  }, [page, scope, attempt, requestRooms]);
 
   function showCachedSelection(nextScope: RoomScope, nextPage: number) {
     const saved = cache.current.get(`${nextScope}:${nextPage}`);
