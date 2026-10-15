@@ -15,6 +15,7 @@ import { lockBodyScroll } from "../utils/bodyScrollLock";
 import { hasCanvasInk } from "../utils/visibleInk";
 import { DrawingToolbar } from "./DrawingToolbar";
 import { DrawingNotice } from "./DrawingNotice";
+import { DrawingPrompt } from "./DrawingPrompt";
 import { downloadCanvasImage } from "../utils/downloadCanvasImage";
 import { copyRoomCode } from "../utils/copyRoomCode";
 
@@ -32,6 +33,7 @@ import {
 
 type DrawingCanvasProps = {
   drawingSide: DrawingSide;
+  prompt?: string;
   backgroundStrokes?: Stroke[];
   draftId?: string;
 
@@ -44,6 +46,7 @@ const EMPTY_BACKGROUND_STROKES: Stroke[] = [];
 
 export function DrawingCanvas({
   drawingSide,
+  prompt,
   backgroundStrokes =
     EMPTY_BACKGROUND_STROKES,
   draftId,
@@ -429,6 +432,7 @@ export function DrawingCanvas({
       )}
 
       <div className="drawing-view-controls flex flex-wrap items-center gap-2">
+        {isExpanded && (prompt || roomPrompt.trim()) && <DrawingPrompt prompt={prompt || roomPrompt.trim()} compact />}
         <button data-view-toggle type="button" aria-pressed={isExpanded} disabled={isDrawing} onClick={() => { setReviewRequested(false); setIsExpanded(!isExpanded); }} className="button-secondary">{isExpanded ? "그리기 화면으로 돌아가기" : "내 반쪽 크게 그리기"}</button>
         {isExpanded && <button type="button" onClick={finishFocusedDrawing} disabled={readOnly || isDrawing || !hasInk} className="button-primary">다 그렸어요</button>}
         {isExpanded && (errorMessage || draftError) && <div role="alert" className="w-full rounded-xl bg-amber-50 p-2 text-sm text-amber-900">
@@ -486,11 +490,11 @@ export function DrawingCanvas({
       </details>
 
       {drawingSide === "left" && (
-        <div ref={reviewRef} tabIndex={-1} aria-label="그림 주제와 등록" className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div ref={reviewRef} tabIndex={-1} aria-label="그림 주제와 등록" className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-4">
           {reviewRequested && <p role="status" className="text-sm font-semibold text-indigo-700">그림 주제를 확인하고 등록해주세요. 아직 친구에게 전송되지 않았어요.</p>}
           <label
             htmlFor="room-prompt"
-            className="text-sm font-medium text-slate-700"
+            className="text-lg font-bold text-indigo-900"
           >
             그림 주제
           </label>
@@ -507,7 +511,7 @@ export function DrawingCanvas({
               );
             }}
             placeholder="예: 우주를 여행하는 고양이"
-            className="min-h-11 rounded-xl border border-slate-300 bg-white px-3 py-2 text-base outline-none focus:border-indigo-600 disabled:bg-slate-100"
+            className="min-h-12 rounded-xl border border-indigo-200 bg-white px-3 py-3 text-lg font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-500 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100"
           />
 
           <div className="text-right text-xs text-slate-500">

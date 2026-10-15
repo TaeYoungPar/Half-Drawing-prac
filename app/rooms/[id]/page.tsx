@@ -9,6 +9,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 
 import { DrawingCanvas } from "../../components/DrawingCanvas";
+import { DrawingPrompt } from "../../components/DrawingPrompt";
 import { DrawingResultCanvas } from "../../components/DrawingResultCanvas";
 import { DrawingWaitingCanvas } from "../../components/DrawingWaitingCanvas";
 import { useAnonymousAuth } from "../../hooks/useAnonymousAuth";
@@ -290,7 +291,7 @@ export default function RoomPage() {
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-4 sm:gap-4 sm:p-6">
         <span className="eyebrow">STEP 3 · 우리 그림 공개</span>
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">이런 그림이 될 줄 알았나요?</h1>
-        <p>그림 주제: {room.prompt}</p>
+        <DrawingPrompt prompt={room.prompt} />
         <DrawingResultCanvas
           leftStrokes={leftDrawing.strokes}
           rightStrokes={rightDrawing.strokes}
@@ -313,7 +314,7 @@ export default function RoomPage() {
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-4 sm:gap-4 sm:p-6">
         <span className="eyebrow">내 반쪽 등록 완료</span>
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">이제 친구의 차례예요.</h1>
-        <p>그림 주제: {room.prompt}</p>
+        <DrawingPrompt prompt={room.prompt} />
         <div className="panel max-w-[800px] p-5">
           <p className="text-sm text-slate-500">친구에게 전달할 참여 코드</p>
           <p className="mt-2 break-all font-mono text-3xl font-bold tracking-widest text-indigo-700">{room.code}</p>
@@ -363,9 +364,7 @@ export default function RoomPage() {
         이어 그리기
       </h1>
 
-      <p>
-        그림 주제: {room.prompt}
-      </p>
+      <DrawingPrompt prompt={room.prompt} />
 
       <p className="text-sm text-gray-600">
         왼쪽 그림은 경계 부분만 보입니다. 오른쪽을 이어 그린 뒤 완료하면 전체 그림을 볼 수 있어요.
@@ -375,6 +374,7 @@ export default function RoomPage() {
       <DrawingCanvas
         key={roomId}
         drawingSide="right"
+        prompt={room.prompt}
         draftId={roomId}
         backgroundStrokes={previewStrokes}
         onSubmitDrawing={
