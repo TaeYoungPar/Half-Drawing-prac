@@ -490,11 +490,11 @@ export function DrawingCanvas({
       </details>
 
       {drawingSide === "left" && (
-        <div ref={reviewRef} tabIndex={-1} aria-label="그림 주제와 등록" className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+        <div ref={reviewRef} tabIndex={-1} aria-label="그림 주제와 등록" className="panel flex w-full max-w-[800px] flex-col gap-4 p-5 sm:p-7">
           {reviewRequested && <p role="status" className="text-sm font-semibold text-indigo-700">그림 주제를 확인하고 등록해주세요. 아직 친구에게 전송되지 않았어요.</p>}
           <label
             htmlFor="room-prompt"
-            className="text-lg font-bold text-indigo-900"
+            className="text-lg font-bold tracking-tight text-slate-900"
           >
             그림 주제
           </label>
@@ -511,7 +511,7 @@ export function DrawingCanvas({
               );
             }}
             placeholder="예: 우주를 여행하는 고양이"
-            className="min-h-12 rounded-xl border border-indigo-200 bg-white px-3 py-3 text-lg font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-500 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100"
+            className="min-h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-500 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 sm:text-lg"
           />
 
           <div className="text-right text-xs text-slate-500">
@@ -575,7 +575,7 @@ export function DrawingCanvas({
 
       {drawingSide === "right" &&
         onSubmitDrawing && (
-          <div ref={reviewRef} tabIndex={-1} aria-label="이어 그리기 완료 확인" className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div ref={reviewRef} tabIndex={-1} aria-label="이어 그리기 완료 확인" className="panel flex w-full max-w-[800px] flex-col gap-4 p-5 sm:p-7">
             {reviewRequested && <p role="status" className="text-sm font-semibold text-indigo-700">경계 연결을 확인하고 완료해주세요. 아직 제출되지 않았어요.</p>}
             <button
               type="button"

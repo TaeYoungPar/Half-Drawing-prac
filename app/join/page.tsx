@@ -43,11 +43,11 @@ export default function JoinRoomPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-lg px-5 py-12 sm:py-20">
+    <main className="mx-auto w-full max-w-xl px-5 py-8 sm:py-16">
       <Link href="/" className="inline-flex min-h-11 self-start items-center rounded-xl px-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100">← 홈으로</Link>
-      <div className="panel mt-6 p-6 sm:p-8">
+      <div className="panel mt-6 p-6 sm:p-10">
         <span className="eyebrow">STEP 2 · 친구의 상상 이어가기</span>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight">초대받으셨나요?</h1>
+        <h1 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl">초대받으셨나요?</h1>
         <p className="mt-3 text-sm leading-6 text-slate-600">친구에게 받은 코드를 입력해주세요. 친구의 그림은 경계 부분만 보이고, 완성하면 전체를 볼 수 있어요.</p>
         <form onSubmit={handleJoin} className="mt-7 flex flex-col gap-3" aria-busy={isJoining}>
           <label htmlFor="room-code" className="text-sm font-semibold">참여 코드</label>
@@ -59,7 +59,7 @@ export default function JoinRoomPage() {
               setJoinError(null);
             }}
             placeholder="A1B2C3D4E5"
-            className="min-h-14 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 font-mono text-xl tracking-widest" />
+            className="min-h-16 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 font-mono text-xl tracking-widest transition focus:border-slate-400 focus:bg-white" />
           <p id="code-help" className="text-xs leading-5 text-slate-500">영문·숫자 10자리 · 방을 만든 기기와 다른 기기 또는 브라우저에서 참여해주세요.</p>
           <button type="submit" disabled={isLoading || isJoining || !userId || !roomCode} className="button-primary mt-3">
             {isLoading ? "연결 중…" : isJoining ? "그림으로 이동 중…" : "이어 그리러 가기 →"}

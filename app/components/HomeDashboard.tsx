@@ -10,9 +10,9 @@ export function HomeDashboard({ introduction }: { introduction: ReactNode }) {
   return (
     <>
       {state.hasHistory ? (
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold">우리 그림, 이어서 확인해요</h1>
-          <Link href="/draw" className="button-secondary">새 그림 시작하기</Link>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="min-w-0 flex-1 text-xl font-extrabold tracking-tight sm:text-3xl">우리 그림, 이어서 확인해요</h1>
+          <Link href="/draw" className="button-secondary shrink-0 px-4" aria-label="새 그림 시작하기">새 그림 ↗</Link>
         </div>
       ) : introduction}
       <MyDrawings state={state} />

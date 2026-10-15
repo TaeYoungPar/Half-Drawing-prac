@@ -288,9 +288,9 @@ export default function RoomPage() {
     }
 
     return (
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-4 sm:gap-4 sm:p-6">
+      <main className="workspace">
         <span className="eyebrow">STEP 3 · 우리 그림 공개</span>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">이런 그림이 될 줄 알았나요?</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl">이런 그림이 될 줄 알았나요?</h1>
         <DrawingPrompt prompt={room.prompt} />
         <DrawingResultCanvas
           leftStrokes={leftDrawing.strokes}
@@ -311,9 +311,9 @@ export default function RoomPage() {
       );
     }
     return (
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-4 sm:gap-4 sm:p-6">
+      <main className="workspace">
         <span className="eyebrow">내 반쪽 등록 완료</span>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">이제 친구의 차례예요.</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl">이제 친구의 차례예요.</h1>
         <DrawingPrompt prompt={room.prompt} />
         <div className="panel max-w-[800px] p-5">
           <p className="text-sm text-slate-500">친구에게 전달할 참여 코드</p>
@@ -359,7 +359,7 @@ export default function RoomPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-4 sm:gap-4 sm:p-6">
+    <main className="workspace">
       <h1 className="text-2xl font-bold">
         이어 그리기
       </h1>

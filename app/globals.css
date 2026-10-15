@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8f9fc;
-  --foreground: #182238;
+  --background: #f8fafc;
+  --foreground: #0f172a;
 }
 
 @theme inline {
@@ -20,15 +20,20 @@ body {
   font-family: var(--font-geist-sans), "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 }
 
+h1, h2, h3 { letter-spacing: -.035em; }
+::selection { background: #e0e7ff; color: #0f172a; }
+
 @layer components {
   .button-primary {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-indigo-600;
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-3 text-sm font-bold text-white shadow-md shadow-slate-200 transition hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:hover:bg-slate-950;
   }
   .button-secondary {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:shadow-lg hover:shadow-slate-200 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:hover:bg-white;
   }
-  .panel { @apply rounded-2xl border border-slate-200 bg-white shadow-sm; }
-  .eyebrow { @apply text-xs font-bold tracking-wider text-indigo-600; }
+  .panel { @apply rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-100; }
+  .eyebrow { @apply text-xs font-bold tracking-widest text-slate-600; }
+  .workspace { @apply mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-6 sm:gap-6 sm:px-8 sm:py-12; }
+  .section-heading { @apply text-2xl font-extrabold tracking-tight sm:text-3xl; }
 }
 
 :focus-visible { outline: 3px solid #818cf8; outline-offset: 3px; }
@@ -45,12 +50,13 @@ button:not(:disabled), a { cursor: pointer; }
   height: 100dvh;
   padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
   gap: 8px;
-  background: #f8f9fc;
+  background: var(--background);
 }
 .drawing-expanded > :not(.drawing-tools):not(.drawing-view-controls):not(.drawing-stage) { display: none; }
 .drawing-expanded .drawing-view-controls { order: -1; flex-shrink: 0; }
 .drawing-expanded .drawing-tools { flex-shrink: 0; }
-.drawing-expanded .drawing-tools > div { padding: 8px; gap: 4px; }
+.drawing-expanded .drawing-tools > div { padding: 8px; gap: 4px; border-radius: 16px; box-shadow: none; }
+.drawing-expanded .button-primary, .drawing-expanded .button-secondary { min-height: 44px; padding-top: 8px; padding-bottom: 8px; }
 .drawing-expanded .drawing-stage {
   flex: 1;
   min-height: 0;
@@ -81,7 +87,7 @@ button:not(:disabled), a { cursor: pointer; }
   .tool-toggle {
     @apply inline-flex h-11 w-[68px] shrink-0 items-center justify-center gap-1 rounded-xl text-sm font-semibold text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40;
   }
-  .tool-toggle[aria-pressed="true"] { @apply bg-indigo-600 text-white shadow-sm hover:bg-indigo-600; }
+  .tool-toggle[aria-pressed="true"] { @apply bg-slate-950 text-white shadow-sm hover:bg-slate-800; }
   .icon-button {
     @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white;
   }
@@ -91,14 +97,11 @@ button:not(:disabled), a { cursor: pointer; }
   .color-swatch[aria-pressed="true"] { @apply border-indigo-600 ring-2 ring-indigo-100; }
 }
 
-.hero-variant-b .home-art { order: -1; }
-.button-primary:hover:not(:disabled), .button-secondary:hover:not(:disabled) { box-shadow: 0 3px 10px rgb(30 41 59 / 8%); }
-@media (prefers-reduced-motion: no-preference) {
-  .button-primary, .button-secondary { transition: background-color 150ms, box-shadow 150ms; }
+@media (min-width: 1024px) {
+  .hero-variant-b .home-art { order: -1; }
 }
-
-@media (max-width: 639px) {
-  .hero-variant-b .home-art img { height: 150px; object-fit: contain; }
+@media (prefers-reduced-motion: no-preference) {
+  .button-primary, .button-secondary { transition: background-color 180ms, border-color 180ms, box-shadow 180ms; }
 }
 
 .overlay-dialog { max-height: calc(100dvh - 16px); overscroll-behavior: contain; }
