@@ -30,7 +30,7 @@ export function DrawingWaitingCanvas({ strokes }: { strokes: Stroke[] }) {
         className="pointer-events-none absolute inset-y-0 right-0 w-1/2"
         style={{
           backgroundImage:
-            "repeating-linear-gradient(135deg, #f3f4f6 0, #f3f4f6 8px, #d1d5db 8px, #d1d5db 16px)",
+            "repeating-linear-gradient(135deg, #f7f0dc 0, #f7f0dc 8px, #dfd1b2 8px, #dfd1b2 16px)",
         }}
       />
       <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-1/2 border-l-2 border-dashed border-slate-400" />

@@ -27,17 +27,21 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <header className="border-b border-slate-200/80 bg-white/90">
-          <nav aria-label="주 메뉴" className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-8 sm:py-5">
-            <Link href="/" className="flex min-h-11 items-center gap-2.5 text-lg font-extrabold tracking-tight">
-              <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-xl text-white">◐</span>
-              반쪽그림
+        <header className="site-header">
+          <nav aria-label="주 메뉴" className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-3 sm:gap-3 sm:px-8 sm:py-5">
+            <Link href="/" aria-label="반쪽그림 홈으로" className="flex min-h-11 items-center gap-2">
+              <span aria-hidden="true" className="text-2xl text-[#d99152]">✦</span>
+              <span className="brand-title text-[24px] sm:text-[28px]">Half Drawing<br /><span className="ml-5">Practice</span></span>
             </Link>
-            <Link href="/join" className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">코드로 참여 ↗</Link>
+            <div className="flex items-center gap-2" aria-label="바로가기">
+              <Link href="/" className="nav-sticker bg-[#ffdc8a]">홈</Link>
+              <Link href="/#my-drawings" className="nav-sticker bg-[#c9dfb6]">내 보관함</Link>
+              <Link href="/join" className="nav-sticker bg-[#f3b3bd]" aria-label="코드로 참여">코드 참여</Link>
+            </div>
           </nav>
         </header>
         {children}
-        <footer className="mt-auto border-t border-slate-200 px-5 py-8 text-center text-xs leading-6 text-slate-500 sm:py-10">
+        <footer className="mt-auto border-t border-[#c8b99b] bg-[#fffbed]/90 px-5 py-8 text-center text-xs leading-6 text-slate-500 sm:py-10">
           두 사람의 상상이 만나는 곳, 반쪽그림<br />
           참여 코드는 7일 동안 유효해요. 완성한 그림은 기기에 저장해주세요.
         </footer>

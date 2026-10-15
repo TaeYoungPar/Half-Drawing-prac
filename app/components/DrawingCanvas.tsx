@@ -214,15 +214,28 @@ export function DrawingCanvas({
 
   useEffect(() => {
     if (isExpanded || !reviewRequested) return;
-    const frame = window.requestAnimationFrame(() => {
-      // Keep the keyboard closed so the topic and final action stay visible together.
-      reviewRef.current?.focus({ preventScroll: true });
-      window.scrollTo({
-        top: document.documentElement.scrollHeight,
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+    let frame = 0;
+    const scrollToReview = () => {
+      frame = window.requestAnimationFrame(() => {
+        if (!reviewRef.current) return;
+        // Keep the keyboard closed so the topic and final action stay visible together.
+        reviewRef.current.focus({ preventScroll: true });
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+        });
       });
-    });
-    return () => window.cancelAnimationFrame(frame);
+    };
+    // Closing the large view traverses history; let browser scroll restoration finish first.
+    if (window.history.state?.halfDrawingOverlays?.some((entry: { kind: string }) => entry.kind === "drawing")) {
+      window.addEventListener("popstate", scrollToReview, { once: true });
+    } else {
+      scrollToReview();
+    }
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("popstate", scrollToReview);
+    };
   }, [isExpanded, reviewRequested]);
 
   useEffect(() => {
@@ -471,7 +484,7 @@ export function DrawingCanvas({
           }`}
           style={{
             backgroundImage:
-              "repeating-linear-gradient(135deg, #f3f4f6 0, #f3f4f6 8px, #d1d5db 8px, #d1d5db 16px)",
+              "repeating-linear-gradient(135deg, #f7f0dc 0, #f7f0dc 8px, #dfd1b2 8px, #dfd1b2 16px)",
           }}
         />
 

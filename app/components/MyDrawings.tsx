@@ -23,7 +23,7 @@ export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) 
   }
 
   return (
-    <section aria-labelledby="my-drawings-heading" className={hasHistory ? "mt-8 sm:mt-10" : "mt-16 sm:mt-24"}>
+    <section id="my-drawings" aria-labelledby="my-drawings-heading" className={hasHistory ? "mt-3 sm:mt-8 scroll-mt-6" : "mt-9 sm:mt-12 scroll-mt-6"}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 id="my-drawings-heading" className="section-heading">내 그림</h2>
@@ -33,7 +33,7 @@ export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) 
           {isRefreshing ? "확인 중…" : "상태 새로고침"}
         </button>
       </div>
-      <div className="mt-6 grid grid-cols-3 gap-2 rounded-full border border-slate-200 bg-slate-100/70 p-1.5 sm:max-w-lg" role="group" aria-label="내 그림 목록 선택">
+      <div className="notebook-tabs mt-5 grid grid-cols-3 gap-2 p-1.5 sm:max-w-lg" role="group" aria-label="내 그림 목록 선택">
         {([["all", "전체"], ["host", "시작한 그림"], ["guest", "참여한 그림"]] as const).map(([value, label]) => (
           <button key={value} type="button" aria-label={value === "all" ? "전체" : value === "host" ? "내가 시작한 그림" : "내가 참여한 그림"} aria-pressed={scope === value} onClick={() => changeScope(value as RoomScope)}
             className={`${scope === value ? "button-primary" : "button-secondary"} min-w-0 px-2 text-xs sm:text-sm`}>{label}</button>
@@ -53,10 +53,10 @@ export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) 
         </div> : <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rooms.map((room) => {
             const status = STATUS[room.status];
-            return <article key={room.id} className="panel flex flex-col items-start p-6 sm:p-7">
+            return <article key={room.id} className="panel room-card flex flex-col items-start p-4 sm:p-5">
               <p className="mb-2 text-xs font-semibold text-slate-500">{room.participantRole === "host" ? "내가 시작한 그림" : "내가 참여한 그림"}</p>
               <span className={`rounded-full px-3 py-1 text-xs font-bold ${status.className}`}>{room.status === "guest_joined" && room.participantRole === "guest" ? "이어 그릴 차례" : status.label}</span>
-              <h3 className="mt-4 w-full break-words text-lg font-bold">{room.prompt}</h3>
+              <div className="room-topic mt-4"><p className="text-xs font-semibold text-slate-600">그림 주제</p><h3 className="mt-2 break-words text-lg font-bold">{room.prompt}</h3></div>
               <time dateTime={room.created_at} className="mt-1 text-xs text-slate-500">
                 {new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeZone: "Asia/Seoul" }).format(new Date(room.created_at))} 시작
               </time>

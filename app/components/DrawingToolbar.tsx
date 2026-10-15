@@ -28,7 +28,7 @@ export function DrawingToolbar({
   return (
     <div className="panel flex flex-col gap-2 p-3" aria-label="그림 도구">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex gap-1 rounded-xl bg-slate-100 p-1" role="group" aria-label="그리기 도구 선택">
+        <div className="flex gap-1 rounded-xl bg-[#f1e5c8] p-1" role="group" aria-label="그리기 도구 선택">
           {(["pen", "eraser"] as const).map((value) => (
             <button key={value} type="button" onClick={() => onToolChange(value)} aria-pressed={tool === value} disabled={disabled} className="tool-toggle">
               <ToolIcon name={value} />{value === "pen" ? "펜" : "지우개"}
