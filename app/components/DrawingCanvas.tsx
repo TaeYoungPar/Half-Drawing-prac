@@ -68,7 +68,6 @@ export function DrawingCanvas({
 
   const { penWidth, eraserWidth, strokeColor, tool, setPenWidth, setEraserWidth, setStrokeColor, setTool, restored: settingsRestored } = useDrawingSettings();
   const [hasInk, setHasInk] = useState(false);
-  const autoStarted = useRef(false);
   useOverlayHistory(isExpanded, setIsExpanded, "drawing");
 
   const lineWidth = tool === "pen" ? penWidth : eraserWidth;
@@ -129,13 +128,6 @@ export function DrawingCanvas({
     const frame = window.requestAnimationFrame(() => setHasInk(hasCanvasInk(canvasRef.current, drawingSide)));
     return () => window.cancelAnimationFrame(frame);
   }, [canvasRef, strokes, drawingSide]);
-
-  useEffect(() => {
-    if (isRestoring || !settingsRestored || autoStarted.current) return;
-    if (!window.matchMedia("(max-width: 767px)").matches) { autoStarted.current = true; return; }
-    const frame = window.requestAnimationFrame(() => { autoStarted.current = true; setIsExpanded(true); });
-    return () => window.cancelAnimationFrame(frame);
-  }, [isRestoring, settingsRestored]);
 
   useEffect(() => {
     if (!isExpanded || !sectionRef.current) return;

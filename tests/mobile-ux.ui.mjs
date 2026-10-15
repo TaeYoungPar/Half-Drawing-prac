@@ -10,6 +10,12 @@ fs.mkdirSync(out, { recursive: true });
 async function settled(page, kind, present) {
   await page.waitForFunction(({ kind, present }) => (history.state?.halfDrawingOverlays || []).some(entry => entry.kind === kind) === present, { kind, present });
 }
+async function openDrawing(page) {
+  await page.waitForFunction(() => !document.querySelector('#room-prompt')?.disabled);
+  assert.equal(await page.getByRole('dialog', { name: '내 반쪽 크게 그리기', exact: true }).count(), 0, 'new drawing and normal-view reload must stay in normal view');
+  assert.equal(await page.getByRole('button', { name: '내 반쪽 크게 그리기', exact: true }).getAttribute('aria-pressed'), 'false');
+  await page.getByRole('button', { name: '내 반쪽 크게 그리기', exact: true }).click();
+}
 async function closeTools(page) {
   await page.getByRole('button', { name: '그림 도구 닫기', exact: true }).click();
   await settled(page, '그림 도구', false);
@@ -37,11 +43,12 @@ async function swipe(context, page, x, y, dx, dy) {
     const page = await context.newPage();
     await page.goto(base);
     await page.getByRole('link', { name: '새 그림 시작하기', exact: false }).first().click();
+    await openDrawing(page);
     await page.getByRole('dialog', { name: '내 반쪽 크게 그리기', exact: true }).waitFor();
     const stage = page.locator('.drawing-frame');
     const first = await stage.boundingBox();
     await page.screenshot({ path: `${out}/default-drawing-${width}.png` });
-    assert.ok(first.height >= 350, 'mobile drawing starts in the larger active half');
+    assert.ok(first.height >= 350, 'explicit large view shows the larger active half');
     await page.getByText('굵기 · 더 많은 도구').click();
     await page.getByRole('dialog', { name: '그림 도구', exact: true }).waitFor();
     assert.equal(Math.round((await stage.boundingBox()).height), Math.round(first.height), 'tool sheet must not resize canvas');
@@ -62,6 +69,7 @@ async function swipe(context, page, x, y, dx, dy) {
     assert.equal(await page.evaluate(() => document.body.style.overflow), '');
     await page.goBack(); await page.waitForURL(base + '/');
     await page.getByRole('link', { name: '새 그림 시작하기', exact: false }).first().click();
+    await openDrawing(page);
     await page.getByRole('dialog', { name: '내 반쪽 크게 그리기', exact: true }).waitFor();
     await page.getByRole('button', { name: '색상 팔레트', exact: true }).click();
     await page.getByRole('button', { name: '보라 선택', exact: true }).click(); await settled(page, '그림 도구', false);
@@ -86,6 +94,7 @@ async function swipe(context, page, x, y, dx, dy) {
     await page.screenshot({ path: `${out}/small-input-viewport-${width}.png` });
     await page.setViewportSize({ width, height: 740 });
     await page.reload();
+    await openDrawing(page);
     await page.getByRole('dialog', { name: '내 반쪽 크게 그리기', exact: true }).waitFor();
     assert.equal(await ink(page), true);
     assert.equal(await page.locator('#room-prompt').inputValue(), '설정과 그림 복원');
@@ -126,7 +135,7 @@ async function swipe(context, page, x, y, dx, dy) {
     await page.touchscreen.tap(edge.x+edge.width/2,edge.y+edge.height/2);
     await page.waitForFunction(n=>JSON.parse(localStorage.getItem('half-drawing:draft:left')).strokes.length>n,seamBefore);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-    results.push(`${width}px: large default, stable canvas under tool sheet, presets/steps, layered Back, settings/draft reload, erased/white blank guard, gray-half touch scroll PASS`);
+    results.push(`${width}px: normal default and explicit large view, stable canvas under tool sheet, presets/steps, layered Back, settings/draft reload, erased/white blank guard, gray-half touch scroll PASS`);
     await context.close();
   }
   fs.writeFileSync(`${out}/mobile-results.txt`, results.join('\n') + '\n');console.log(results.join('\n'));
