@@ -42,7 +42,7 @@ async function swipe(context, page, x, y, dx, dy) {
     await mock(context, hostId);
     const page = await context.newPage();
     await page.goto(base);
-    await page.getByRole('link', { name: '새 그림 시작하기', exact: false }).first().click();
+    await page.getByRole('link', { name: '그림 시작하기', exact: false }).first().click();
     await openDrawing(page);
     await page.getByRole('dialog', { name: '내 반쪽 크게 그리기', exact: true }).waitFor();
     const stage = page.locator('.drawing-frame');
@@ -68,7 +68,7 @@ async function swipe(context, page, x, y, dx, dy) {
     assert.equal(new URL(page.url()).pathname, '/draw');
     assert.equal(await page.evaluate(() => document.body.style.overflow), '');
     await page.goBack(); await page.waitForURL(base + '/');
-    await page.getByRole('link', { name: '새 그림 시작하기', exact: false }).first().click();
+    await page.getByRole('link', { name: '그림 시작하기', exact: false }).first().click();
     await openDrawing(page);
     await page.getByRole('dialog', { name: '내 반쪽 크게 그리기', exact: true }).waitFor();
     await page.getByRole('button', { name: '색상 팔레트', exact: true }).click();

@@ -1,13 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { HomeDashboard } from "./components/HomeDashboard";
 import { ToolIcon } from "./components/ToolIcon";
 
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const variant = (await searchParams).variant === "b" ? "b" : "a";
   return (
     <main id="main-content" className="mx-auto w-full max-w-5xl px-4 pb-14 pt-5 sm:px-8 sm:pb-20 sm:pt-8">
-      <HomeDashboard introduction={<section aria-labelledby="home-heading" data-design-variant={variant} className={`home-hero hero-variant-${variant}`}>
+      <section aria-labelledby="home-heading" data-design-variant={variant} className={`home-hero hero-variant-${variant}`}>
         <h1 id="home-heading" className="board-label">{variant === "a" ? "반쪽은 내가, 나머지는 너!" : "둘의 상상이 만나는 그림판"}</h1>
         <div className="board-shell">
           <figure className="home-art board-paper">
@@ -21,13 +20,13 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           <div className="home-copy mt-4 text-center">
             <p className="text-sm font-semibold leading-6 text-slate-800 sm:text-base">나는 왼쪽, 친구는 오른쪽.<br className="sm:hidden" /> 작은 힌트로 한 장의 그림을 완성해요.</p>
             <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
-              <Link href="/draw" className="button-primary"><ToolIcon name="pen" />새 그림 시작하기</Link>
+              <Link href="/draw" className="button-primary"><ToolIcon name="pen" />그림 시작하기</Link>
               <Link href="/join" className="button-secondary">참여 코드 입력하기 <span aria-hidden="true">↗</span></Link>
             </div>
             <p className="mt-4 text-xs leading-5 text-slate-700">회원가입 없이 · 친구 한 명과 · 그림 실력은 상관없어요</p>
           </div>
         </div>
-      </section>} />
+      </section>
       <section aria-labelledby="how-it-works" className="mt-12 sm:mt-16">
         <span className="eyebrow">우리의 작은 그림 시간</span>
         <h2 id="how-it-works" className="section-heading mt-2">세 번이면 완성돼요</h2>

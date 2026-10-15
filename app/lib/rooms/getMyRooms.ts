@@ -15,13 +15,13 @@ export type MyRoom = {
   participantRole: "host" | "guest";
 };
 
-/** Read metadata only; never download either artist's drawing on the home page. */
+/** Read metadata only; never download either artist's drawing in the library. */
 export async function getMyRooms(page = 0, scope: RoomScope = "all"): Promise<{ rooms: MyRoom[]; total: number }> {
   const supabase = createClient();
   const sessionResult = await supabase.auth.getSession();
   if (sessionResult.error) throw new Error("사용자 연결을 확인하지 못했습니다. 다시 시도해주세요.");
   const userId = sessionResult.data.session?.user.id;
-  // A visitor does not need a new anonymous account just to see the home page.
+  // A visitor does not need a new anonymous account just to open the library.
   if (!userId) return { rooms: [], total: 0 };
   if (!Number.isInteger(page) || page < 0) throw new Error("목록 페이지가 올바르지 않습니다.");
 

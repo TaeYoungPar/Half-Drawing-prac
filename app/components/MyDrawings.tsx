@@ -15,7 +15,7 @@ const STATUS: Record<DrawingStatus, { label: string; className: string; descript
 };
 
 export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) {
-  const { rooms, total, page, scope, changeScope, hasHistory, isLoading, isRefreshing, error, refresh, changePage, hasNextPage } = state;
+  const { rooms, total, page, scope, changeScope, isLoading, isRefreshing, error, refresh, changePage, hasNextPage } = state;
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   async function copyCode(code: string) {
     try { await copyRoomCode(code); setCopyMessage("참여 코드를 복사했어요. 친구에게 보내주세요."); }
@@ -23,7 +23,7 @@ export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) 
   }
 
   return (
-    <section id="my-drawings" aria-labelledby="my-drawings-heading" className={hasHistory ? "mt-3 sm:mt-8 scroll-mt-6" : "mt-9 sm:mt-12 scroll-mt-6"}>
+    <section id="my-drawings" aria-labelledby="my-drawings-heading" className="mt-6 scroll-mt-6 sm:mt-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 id="my-drawings-heading" className="section-heading">내 그림</h2>
@@ -49,7 +49,7 @@ export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) 
         : !error && rooms.length === 0 ? <div className="panel mt-5 px-6 py-8 sm:px-8 sm:py-10">
           <p className="font-semibold">{scope === "guest" ? "아직 참여한 그림이 없어요." : scope === "host" ? "아직 시작한 그림이 없어요." : "아직 함께 그린 그림이 없어요."}</p>
           <p className="mt-2 text-sm text-slate-500">그림을 시작하거나 친구의 그림에 참여하면 여기에 표시돼요.</p>
-          <Link href={scope === "guest" ? "/join" : "/draw"} className="button-secondary mt-4">{scope === "guest" ? "참여 코드 입력하기" : "첫 그림 시작하기"}</Link>
+          <Link href={scope === "guest" ? "/join" : "/draw"} className="button-secondary mt-4">{scope === "guest" ? "참여 코드 입력하기" : "그림 시작하기"}</Link>
         </div> : <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rooms.map((room) => {
             const status = STATUS[room.status];

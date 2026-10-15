@@ -14,12 +14,12 @@ async function waitToolsClosed(page){await page.getByRole('dialog',{name:'그림
   const c=await browser.newContext({viewport:{width,height},isMobile:name!=='desktop',hasTouch:name!=='desktop'});await mock(c,hostId);
   const p=await c.newPage();
   for(const variant of ['a','b']){
-   await p.goto(`${base}/?variant=${variant}`);await p.getByText('아직 함께 그린 그림이 없어요.').waitFor({timeout:8000}).catch(async e=>{console.log('FAIL',name,variant,(await p.locator('body').innerText()).slice(0,1800));throw e;});
+   await p.goto(`${base}/?variant=${variant}`);await p.locator('#home-heading').waitFor({timeout:8000}).catch(async e=>{console.log('FAIL',name,variant,(await p.locator('body').innerText()).slice(0,1800));throw e;});
    assert.equal(await p.locator('[data-design-variant]').getAttribute('data-design-variant'),variant);
    await p.locator('img').evaluate(img=>img.decode());
    assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    await p.screenshot({path:`${out}/home-${variant}-${name}.png`,fullPage:true});
-   const cta=p.getByRole('link',{name:'새 그림 시작하기',exact:false}).first();
+   const cta=p.getByRole('link',{name:'그림 시작하기',exact:false}).first();
    const ctaBox=await cta.boundingBox();
    if(name!=='desktop')assert.ok(ctaBox.y+ctaBox.height<=height,`${name} ${variant}: primary action must fit the first screen`);
    const contrastFailures=await p.evaluate(()=>{
@@ -45,7 +45,7 @@ async function waitToolsClosed(page){await page.getByRole('dialog',{name:'그림
   }
   results.push(`${name}: A/B images, no horizontal overflow, first-screen mobile CTA, text contrast, join invalid-code validation; desktop hover PASS`);await c.close();
  }
- const host=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});await mock(host,hostId);const h=await host.newPage();await h.goto(base);await h.getByRole('link',{name:'새 그림 시작하기',exact:false}).first().click();
+ const host=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});await mock(host,hostId);const h=await host.newPage();await h.goto(base);await h.getByRole('link',{name:'그림 시작하기',exact:false}).first().click();
  await h.waitForFunction(()=>!document.querySelector('#room-prompt')?.disabled);assert.equal(await h.getByRole('dialog',{name:'내 반쪽 크게 그리기',exact:true}).count(),0,'new drawing starts in normal view');
  const canvas=h.getByLabel('왼쪽 반쪽 그림 그리기');await canvas.scrollIntoViewIfNeeded();await h.waitForFunction(()=>!document.querySelector('input#room-prompt').disabled);
  await h.getByText('굵기 · 더 많은 도구').click();
@@ -101,14 +101,21 @@ async function waitToolsClosed(page){await page.getByRole('dialog',{name:'그림
  const download=g.waitForEvent('download');await g.getByRole('button',{name:'완성 그림 PNG 저장',exact:true}).click();assert.equal((await download).suggestedFilename(),'half-drawing.png');
  assert.ok(fixture.room.drawings[1].strokes.every(s=>s.points.every(p=>p.x>=400&&p.x<=800)));
  await g.getByRole('link',{name:'홈으로',exact:true}).click();
+ await g.locator('#home-heading').waitFor();
+ assert.equal(await g.locator('main #my-drawings').count(),0,'home stays the landing page even after completing a drawing');
+ assert.equal(await g.getByRole('link',{name:'홈',exact:true}).getAttribute('aria-current'),'page');
+ await g.screenshot({path:`${out}/returning-home-mobile.png`,fullPage:true});
+ await g.getByRole('link',{name:'내 보관함',exact:true}).click();await g.waitForURL('**/library');
  await g.getByRole('link',{name:'완성 그림 보기 →',exact:true}).waitFor();
- assert.ok((await g.getByRole('heading',{name:'내 그림',exact:true}).boundingBox()).y<200,'returning history is shown first');
+ assert.equal(await g.getByRole('link',{name:'내 보관함',exact:true}).getAttribute('aria-current'),'page');
+ assert.equal(await g.locator('#home-heading').count(),0,'library is a separate page');
+ await g.reload();await g.getByRole('link',{name:'완성 그림 보기 →',exact:true}).waitFor();
  await g.screenshot({path:`${out}/returning-guest-mobile.png`,fullPage:true});await g.setViewportSize({width:320,height:740});assert.equal(await g.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await g.screenshot({path:`${out}/returning-guest-narrow.png`,fullPage:true});await g.setViewportSize({width:390,height:844});
  await g.getByRole('button',{name:'내가 시작한 그림',exact:true}).click();await g.getByText('아직 시작한 그림이 없어요.').waitFor();
  await g.getByRole('button',{name:'내가 참여한 그림',exact:true}).click();await g.getByRole('link',{name:'완성 그림 보기 →',exact:true}).waitFor();
  await g.getByRole('link',{name:'완성 그림 보기 →',exact:true}).click();await g.getByRole('heading',{name:'이런 그림이 될 줄 알았나요?'}).waitFor();
  assert.equal(fixture.room.drawings[0].strokes[0].lineWidth,2);assert.equal(fixture.room.drawings[0].strokes[1].tool,'eraser');assert.equal(fixture.room.drawings[0].strokes[1].lineWidth,30);assert.equal(fixture.room.drawings[0].strokes[0].color,'#dc2626');
- results.push('Independent widths, tool sheet, focused finish without premature submit, guest history, completed-room return and 200% preview/touch pan/Back PASS');
+ results.push('Independent widths, tool sheet, focused finish without premature submit, separate home/library, guest history, completed-room return and 200% preview/touch pan/Back PASS');
  results.push('Host draw -> confirmation cancel/accept -> waiting -> share invitation -> guest autofill -> join -> focused right drawing -> cancel/accept completion -> both results -> PNG download PASS (mock backend only)');
  fs.writeFileSync(`${out}/flow-results.txt`,results.join('\n')+'\n');console.log(results.join('\n'));
  fs.writeFileSync(`${out}/fixture-fixture.room.json`,JSON.stringify(fixture.room,null,2));

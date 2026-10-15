@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
+import { SiteNavigation } from "./components/SiteNavigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,11 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <span aria-hidden="true" className="text-2xl text-[#d99152]">✦</span>
               <span className="brand-title text-[24px] sm:text-[28px]">Half Drawing<br /><span className="ml-5">Practice</span></span>
             </Link>
-            <div className="flex items-center gap-2" aria-label="바로가기">
-              <Link href="/" className="nav-sticker bg-[#ffdc8a]">홈</Link>
-              <Link href="/#my-drawings" className="nav-sticker bg-[#c9dfb6]">내 보관함</Link>
-              <Link href="/join" className="nav-sticker bg-[#f3b3bd]" aria-label="코드로 참여">코드 참여</Link>
-            </div>
+            <SiteNavigation />
           </nav>
         </header>
         {children}

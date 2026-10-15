@@ -87,6 +87,7 @@ export function DrawingResultCanvas({
       <p className="text-sm text-slate-500">이 그림은 참여한 두 사람만 볼 수 있어요. 잊기 전에 기기에 저장해주세요.</p>
       <div className="mt-2 flex flex-wrap gap-3">
         <Link href="/draw" className="button-secondary">새 그림 시작하기</Link>
+        <Link href="/library" className="button-secondary">내 보관함으로</Link>
         <Link href="/" className="button-secondary">홈으로</Link>
       </div>
     </div>

@@ -5,7 +5,6 @@ import { getMyRooms, MY_ROOMS_PAGE_SIZE, type MyRoom, type RoomScope } from "../
 
 export function useMyRooms() {
   const [scope, setScope] = useState<RoomScope>("all");
-  const [hasHistory, setHasHistory] = useState(false);
   const [rooms, setRooms] = useState<MyRoom[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
@@ -29,7 +28,6 @@ export function useMyRooms() {
             setPage(Math.max(0, Math.ceil(result.total / MY_ROOMS_PAGE_SIZE) - 1));
             return;
           }
-          if (result.total > 0) setHasHistory(true);
           setRooms(result.rooms);
           setTotal(result.total);
           setError(null);
@@ -67,6 +65,6 @@ export function useMyRooms() {
     setIsLoading(true);
     setPage(next);
   }
-  return { rooms, total, page, scope, changeScope, hasHistory, isLoading, isRefreshing, error, refresh, changePage,
+  return { rooms, total, page, scope, changeScope, isLoading, isRefreshing, error, refresh, changePage,
     hasNextPage: (page + 1) * MY_ROOMS_PAGE_SIZE < total };
 }
