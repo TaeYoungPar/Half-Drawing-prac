@@ -70,6 +70,11 @@ async function swipe(context, page, x, y, dx, dy) {
     await page.waitForFunction(() => !Array.from(document.querySelectorAll('button')).find(b => b.textContent === '다 그렸어요').disabled);
     assert.equal(await ink(page), true);
     await page.getByRole('button', { name: '다 그렸어요', exact: true }).click(); await settled(page, 'drawing', false);
+    await page.waitForFunction(() => Math.abs(document.documentElement.scrollHeight - innerHeight - scrollY) <= 2);
+    assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('aria-label')), '그림 주제와 등록', 'review receives focus without opening the keyboard');
+    const reviewSubmit = await page.getByRole('button', { name: '반쪽 그림 등록', exact: true }).boundingBox();
+    assert.ok(reviewSubmit.y >= 0 && reviewSubmit.y + reviewSubmit.height <= 741, 'finish scrolls to the bottom with registration visible');
+    await page.screenshot({ path: `${out}/finish-scroll-bottom-${width}.png` });
     await page.getByLabel('그림 주제', { exact: true }).fill('설정과 그림 복원');
     await page.setViewportSize({ width, height: 400 });
     await page.getByLabel('그림 주제', { exact: true }).scrollIntoViewIfNeeded();

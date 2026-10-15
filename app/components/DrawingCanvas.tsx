@@ -220,8 +220,12 @@ export function DrawingCanvas({
   useEffect(() => {
     if (isExpanded || !reviewRequested) return;
     const frame = window.requestAnimationFrame(() => {
-      reviewRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
-      reviewRef.current?.querySelector<HTMLElement>("input:not(:disabled), button:not(:disabled)")?.focus({ preventScroll: true });
+      // Keep the keyboard closed so the topic and final action stay visible together.
+      reviewRef.current?.focus({ preventScroll: true });
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+      });
     });
     return () => window.cancelAnimationFrame(frame);
   }, [isExpanded, reviewRequested]);
@@ -490,7 +494,7 @@ export function DrawingCanvas({
       </details>
 
       {drawingSide === "left" && (
-        <div ref={reviewRef} className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div ref={reviewRef} tabIndex={-1} aria-label="그림 주제와 등록" className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
           {reviewRequested && <p role="status" className="text-sm font-semibold text-indigo-700">그림 주제를 확인하고 등록해주세요. 아직 친구에게 전송되지 않았어요.</p>}
           <label
             htmlFor="room-prompt"
@@ -575,7 +579,7 @@ export function DrawingCanvas({
 
       {drawingSide === "right" &&
         onSubmitDrawing && (
-          <div ref={reviewRef} className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div ref={reviewRef} tabIndex={-1} aria-label="이어 그리기 완료 확인" className="flex w-full max-w-[800px] flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
             {reviewRequested && <p role="status" className="text-sm font-semibold text-indigo-700">경계 연결을 확인하고 완료해주세요. 아직 제출되지 않았어요.</p>}
             <button
               type="button"
