@@ -29,6 +29,7 @@ test("invitation falls back to clipboard when native sharing is unavailable or r
     await shareInvitation("ABC123DEF4");
     assert.ok(copied.endsWith("https://example.com/join?code=ABC123DEF4"));
     assert.match(copied, /나머지를 그려줘/);
+    assert.doesNotMatch(copied.slice(0, copied.indexOf("https://")), /\n\s*$/);
   }
 });
 
@@ -38,7 +39,10 @@ test("native invitation shares the challenge text and code link without revealin
     window: { location }, navigator: { share: async (data) => { shared = data; } },
   });
   await shareInvitation("ABC123DEF4");
-  assert.equal(shared.url, "https://example.com/join?code=ABC123DEF4");
+  const link = shared.text.match(/https:\/\/\S+/)?.[0];
+  assert.equal(link, "https://example.com/join?code=ABC123DEF4");
+  assert.equal(shared.url, undefined, "a separate URL must not add another line");
+  assert.doesNotMatch(shared.text.slice(0, shared.text.indexOf(link)), /\n\s*$/);
   assert.ok(shared.title.length > 0 && shared.text.length > 0);
   assert.equal("files" in shared, false);
 });
