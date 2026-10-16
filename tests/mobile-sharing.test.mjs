@@ -27,24 +27,18 @@ test("invitation falls back to clipboard when native sharing is unavailable or r
     if (rejected) navigator.share = async () => { throw new Error("NotAllowed"); };
     const { shareInvitation } = load("shareInvitation", { window: { location }, navigator });
     await shareInvitation("ABC123DEF4");
-    assert.ok(copied.endsWith("https://example.com/join?code=ABC123DEF4"));
-    assert.match(copied, /나머지를 그려줘/);
-    assert.doesNotMatch(copied.slice(0, copied.indexOf("https://")), /\n\s*$/);
+    assert.equal(copied, "https://example.com/join?code=ABC123DEF4");
   }
 });
 
-test("native invitation shares the challenge text and code link without revealing a drawing", async () => {
+test("native invitation shares only the code link without a chat caption or drawing", async () => {
   let shared;
   const { shareInvitation } = load("shareInvitation", {
     window: { location }, navigator: { share: async (data) => { shared = data; } },
   });
   await shareInvitation("ABC123DEF4");
-  const link = shared.text.match(/https:\/\/\S+/)?.[0];
-  assert.equal(link, "https://example.com/join?code=ABC123DEF4");
-  assert.equal(shared.url, undefined, "a separate URL must not add another line");
-  assert.doesNotMatch(shared.text.slice(0, shared.text.indexOf(link)), /\n\s*$/);
-  assert.ok(shared.title.length > 0 && shared.text.length > 0);
-  assert.equal("files" in shared, false);
+  assert.equal(shared.url, "https://example.com/join?code=ABC123DEF4");
+  assert.deepEqual(Object.keys(shared), ["url"]);
 });
 
 test("cancelled invitation does not copy or report a completed share", async () => {
