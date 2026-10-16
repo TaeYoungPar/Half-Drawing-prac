@@ -27,8 +27,20 @@ test("invitation falls back to clipboard when native sharing is unavailable or r
     if (rejected) navigator.share = async () => { throw new Error("NotAllowed"); };
     const { shareInvitation } = load("shareInvitation", { window: { location }, navigator });
     await shareInvitation("ABC123DEF4");
-    assert.equal(copied, "https://example.com/join?code=ABC123DEF4");
+    assert.ok(copied.endsWith("https://example.com/join?code=ABC123DEF4"));
+    assert.match(copied, /나머지를 그려줘/);
   }
+});
+
+test("native invitation shares the challenge text and code link without revealing a drawing", async () => {
+  let shared;
+  const { shareInvitation } = load("shareInvitation", {
+    window: { location }, navigator: { share: async (data) => { shared = data; } },
+  });
+  await shareInvitation("ABC123DEF4");
+  assert.equal(shared.url, "https://example.com/join?code=ABC123DEF4");
+  assert.ok(shared.title.length > 0 && shared.text.length > 0);
+  assert.equal("files" in shared, false);
 });
 
 test("cancelled invitation does not copy or report a completed share", async () => {
@@ -57,6 +69,7 @@ test("image sharing sends a PNG with a white background", async () => {
   assert.deepEqual(calls, ["white", "drawing"]);
   assert.equal(shared.files[0].type, "image/png");
   assert.equal(shared.files[0].name, "half-drawing.png");
+  assert.ok(shared.title.length > 0 && shared.text.length > 0);
 });
 
 test("unsupported image sharing requests download; cancellation does not", async () => {

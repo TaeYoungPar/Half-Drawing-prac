@@ -55,7 +55,7 @@ export async function shareCanvasImage(canvas: HTMLCanvasElement | null): Promis
     const file = new File([blob], "half-drawing.png", { type: "image/png" });
     if (navigator.share && navigator.canShare?.({ files: [file] })) {
         try {
-            await navigator.share({ files: [file], title: "함께 완성한 반쪽그림" });
+            await navigator.share({ files: [file], title: "반쪽씩 그렸는데, 이런 그림이 됐어! 🎨", text: "서로의 그림을 모른 채 반쪽씩 그렸어. 반쪽그림에서 너랑도 한 장 완성해볼래?" });
             return "그림을 공유했습니다.";
         } catch (error) {
             if (error instanceof Error && error.name === "AbortError") return null;
