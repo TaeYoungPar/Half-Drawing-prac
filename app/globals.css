@@ -156,10 +156,6 @@ button:not(:disabled), a { cursor: pointer; }
 .drawing-expanded[data-drawing-side="left"] .drawing-frame { border-right-color: #8b7865; }
 .overlay-dialog { border: 2px solid var(--ink); background: var(--paper); box-shadow: 6px 6px 0 #49312750; }
 @media (max-width: 639px) {
-  .site-header-compact nav { flex-wrap: nowrap; padding: 8px 12px; }
-  .site-header-compact .brand-full { display: none; }
-  .site-header-compact .brand-short { display: inline; }
-  .site-header-compact .nav-sticker { padding-inline: 8px; font-size: 12px; }
   .drawing-workspace { padding: 12px 12px 24px; gap: 12px; }
   .drawing-toolbar .tool-toggle { width: 64px; white-space: nowrap; font-size: 12px; }
   .drawing-expanded .drawing-tools > div { padding: 8px; gap: 4px; }
@@ -169,3 +165,11 @@ button:not(:disabled), a { cursor: pointer; }
 
 .overlay-dialog { max-height: calc(100dvh - 16px); overscroll-behavior: contain; }
 .result-preview-scroll { max-height: 65dvh; overflow: auto; overscroll-behavior: contain; touch-action: pan-x pan-y pinch-zoom; }
+
+.tool-settings-dialog { height: min(580px, calc(100dvh - 16px)); overflow: hidden; }
+.tool-settings-dialog[open] { display: flex; flex-direction: column; }
+.tool-settings-dialog > :first-child { flex-shrink: 0; }
+.tool-settings-body { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; }
+.tool-settings-tabs { flex-shrink: 0; }
+.tool-settings-tabs .tool-tab { height: 48px; min-height: 48px; padding: 8px 12px; }
+.tool-settings-tabs .tool-tab[aria-pressed="true"] { background: #ffc798; box-shadow: 0 3px 0 var(--ink); }

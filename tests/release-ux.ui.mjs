@@ -55,7 +55,7 @@ try {
     await page.waitForFunction(() => !document.querySelector('#room-prompt')?.disabled);
     const canvas = await page.locator('.drawing-frame').boundingBox();
     if (width < 640) {
-      assert.ok(canvas.y <= 360, `mobile canvas should appear early, received ${canvas.y}`);
+      assert.ok(canvas.y <= 380, `mobile canvas should appear early beneath the shared header, received ${canvas.y}`);
       assert.ok(canvas.y + canvas.height <= height, 'entire normal canvas fits in the first screen');
       assert.equal(await page.getByRole('dialog', { name: '내 반쪽 크게 그리기', exact: true }).count(), 0);
       const toolBoxes = await Promise.all(['펜', '지우개', '마지막 선 실행 취소', '색상 팔레트', '굵기 · 더 많은 도구'].map(name => page.getByRole('button', { name, exact: true }).boundingBox()));

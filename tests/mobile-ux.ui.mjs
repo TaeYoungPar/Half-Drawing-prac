@@ -56,9 +56,12 @@ async function swipe(context, page, x, y, dx, dy) {
     await page.getByRole('button', { name: '펜 굵기 늘리기', exact: true }).click();
     assert.equal(await page.getByRole('slider', { name: '펜 굵기', exact: true }).inputValue(), '3');
     await page.getByRole('button', { name: '펜 굵기 줄이기', exact: true }).click();
+    await page.getByRole('button', { name: '지우개 굵기 선택', exact: true }).click();
     await page.getByRole('button', { name: '지우개 굵기 굵게', exact: true }).click();
-    assert.equal(await page.getByRole('slider', { name: '펜 굵기', exact: true }).inputValue(), '2');
+    assert.equal(await page.getByRole('slider', { name: '펜 굵기', exact: true }).count(), 0);
     assert.equal(await page.getByRole('slider', { name: '지우개 굵기', exact: true }).inputValue(), '30');
+    await page.getByRole('button', { name: '펜 굵기 선택', exact: true }).click();
+    assert.equal(await page.getByRole('slider', { name: '펜 굵기', exact: true }).inputValue(), '2');
     await page.screenshot({ path: `${out}/tools-${width}.png` });
     // Native Back closes settings, then the drawing view, then the route.
     await page.goBack(); await settled(page, '그림 도구', false);
@@ -101,6 +104,7 @@ async function swipe(context, page, x, y, dx, dy) {
     assert.equal(await page.getByRole('button', { name: '색상 팔레트', exact: true }).locator('span').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(147, 51, 234)');
     await page.getByRole('button', {name:'굵기 · 더 많은 도구', exact:true}).click();
     assert.equal(await page.getByRole('slider', { name: '펜 굵기', exact: true }).inputValue(), '2');
+    await page.getByRole('button', { name: '지우개 굵기 선택', exact: true }).click();
     assert.equal(await page.getByRole('slider', { name: '지우개 굵기', exact: true }).inputValue(), '30');
     await closeTools(page);
     await page.getByRole('button', { name: '지우개', exact: true }).click();

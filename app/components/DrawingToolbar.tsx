@@ -23,6 +23,9 @@ export function DrawingToolbar({
 }: DrawingToolbarProps) {
   const [open, setOpen] = useState(false);
   const [panel, setPanel] = useState<"width" | "color">("width");
+  const widthSettings = tool === "pen"
+    ? { label: "펜 굵기", value: penWidth, onChange: onPenWidthChange, color: strokeColor, presets: [2, 4, 12] }
+    : { label: "지우개 굵기", value: eraserWidth, onChange: onEraserWidthChange, color: "#64748b", presets: [8, 16, 30] };
   function showPanel(next: "width" | "color") { setPanel(next); setOpen(true); }
   function chooseColor(color: string) { onStrokeColorChange(color); setOpen(false); }
   return (
@@ -40,11 +43,12 @@ export function DrawingToolbar({
           <ToolIcon name="palette" /><span aria-hidden="true" className="absolute bottom-1 right-1 h-2.5 w-2.5 rounded-full border border-white" style={{ backgroundColor: strokeColor }} />
         </button>
       <button type="button" onClick={() => showPanel("width")} disabled={disabled} aria-label="굵기 · 더 많은 도구" title="굵기 · 더 많은 도구" aria-expanded={open && panel === "width"} className="toolbar-settings icon-button sm:w-auto sm:gap-2 sm:px-3"><ToolIcon name="settings" /><span className="toolbar-settings-label sr-only sm:not-sr-only">굵기 · 더 많은 도구</span></button>
-      <OverlayDialog open={open} setOpen={setOpen} title="그림 도구">
-        <div className="mb-4 grid grid-cols-2 gap-2" role="group" aria-label="도구 설정 선택">
-          <button type="button" aria-pressed={panel === "width"} onClick={() => setPanel("width")} className={panel === "width" ? "button-primary" : "button-secondary"}>굵기 · 작업</button>
-          <button type="button" aria-pressed={panel === "color"} disabled={tool === "eraser"} onClick={() => setPanel("color")} className={panel === "color" ? "button-primary" : "button-secondary"}>색상</button>
+      <OverlayDialog open={open} setOpen={setOpen} title="그림 도구" className="tool-settings-dialog" bodyClassName="tool-settings-body">
+        <div className="tool-settings-tabs mb-4 grid grid-cols-2 gap-2" role="group" aria-label="도구 설정 선택">
+          <button type="button" aria-pressed={panel === "color"} disabled={tool === "eraser"} onClick={() => setPanel("color")} className="tool-tab button-secondary">색상</button>
+          <button type="button" aria-pressed={panel === "width"} onClick={() => setPanel("width")} className="tool-tab button-secondary">굵기 · 작업</button>
         </div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2">
         {panel === "color" ? <>
           <p className="mb-3 text-sm font-semibold">그림 색상</p>
           <div className="grid grid-cols-3 justify-items-center gap-2" role="group" aria-label="빠른 색상 선택">
@@ -57,11 +61,10 @@ export function DrawingToolbar({
             <input type="color" value={strokeColor} disabled={disabled} onChange={(event) => onStrokeColorChange(event.target.value)} className="h-11 w-11 cursor-pointer rounded-xl border border-slate-200 bg-white p-1" />
           </label>
         </> : <>
-          <div className="space-y-4">
-            {[
-              { label: "펜 굵기", value: penWidth, onChange: onPenWidthChange, color: strokeColor, presets: [2, 4, 12] },
-              { label: "지우개 굵기", value: eraserWidth, onChange: onEraserWidthChange, color: "#64748b", presets: [8, 16, 30] },
-            ].map(({ label, value, onChange, color, presets }) => (
+          <div className="mb-3 grid grid-cols-2 gap-2" role="group" aria-label="굵기를 조절할 도구">
+            {(["pen", "eraser"] as const).map((value) => <button key={value} type="button" aria-label={value === "pen" ? "펜 굵기 선택" : "지우개 굵기 선택"} aria-pressed={tool === value} disabled={disabled} onClick={() => onToolChange(value)} className="tool-toggle w-full! border border-slate-200"><ToolIcon name={value} />{value === "pen" ? "펜" : "지우개"}</button>)}
+          </div>
+            {[widthSettings].map(({ label, value, onChange, color, presets }) => (
               <div key={label} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <label className="text-sm font-semibold" htmlFor={label === "펜 굵기" ? "pen-width" : "eraser-width"}>{label}</label>
@@ -78,14 +81,14 @@ export function DrawingToolbar({
                 </div>
               </div>
             ))}
+          <div className={`mt-4 grid gap-2 ${canDownload ? "grid-cols-3" : "grid-cols-2"}`}>
+            <button type="button" onClick={onRedo} disabled={disabled || undoneStrokeCount === 0} className="button-secondary px-2 text-xs">다시 실행</button>
+            <button type="button" onClick={onClear} disabled={disabled || (!strokeCount && !undoneStrokeCount)} className="button-secondary px-2 text-xs">전체 지우기</button>
+            {canDownload && <button type="button" onClick={onDownload} disabled={disabled || strokeCount === 0} className="button-secondary px-2 text-xs">PNG 저장</button>}
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button type="button" onClick={onRedo} disabled={disabled || undoneStrokeCount === 0} className="icon-button" aria-label="다시 실행" title="다시 실행"><ToolIcon name="redo" /></button>
-            <button type="button" onClick={onClear} disabled={disabled || (!strokeCount && !undoneStrokeCount)} className="button-secondary"><ToolIcon name="trash" />전체 지우기</button>
-            {canDownload && <button type="button" onClick={onDownload} disabled={disabled || strokeCount === 0} className="button-secondary"><ToolIcon name="download" />PNG 저장</button>}
-          </div>
-          <p className="mt-3 text-sm leading-6 text-slate-600">펜과 지우개 굵기는 각각 기억해요. 설정을 닫아도 그림 크기는 유지돼요.</p>
+          <p className="mt-3 text-sm leading-6 text-slate-600">선택한 도구의 굵기만 조절해요. 펜과 지우개 설정은 따로 기억해요.</p>
         </>}
+        </div>
       </OverlayDialog>
     </div>
   );

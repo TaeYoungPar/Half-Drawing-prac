@@ -51,9 +51,10 @@ async function waitToolsClosed(page){await page.getByRole('dialog',{name:'그림
  await h.getByRole('button', {name:'굵기 · 더 많은 도구', exact:true}).click();
  const penSlider=h.getByRole('slider',{name:'펜 굵기',exact:true});
  const eraserSlider=h.getByRole('slider',{name:'지우개 굵기',exact:true});
- assert.equal(await penSlider.inputValue(),'4');assert.equal(await eraserSlider.inputValue(),'16');
- await penSlider.focus();await penSlider.press('Home');await penSlider.press('ArrowRight');await eraserSlider.focus();await eraserSlider.press('End');
- assert.equal(await penSlider.inputValue(),'2');assert.equal(await eraserSlider.inputValue(),'30');
+ assert.equal(await penSlider.inputValue(),'4');assert.equal(await eraserSlider.count(),0);
+ await penSlider.focus();await penSlider.press('Home');await penSlider.press('ArrowRight');assert.equal(await penSlider.inputValue(),'2');
+ await h.getByRole('button',{name:'지우개 굵기 선택',exact:true}).click();assert.equal(await eraserSlider.inputValue(),'16');assert.equal(await penSlider.count(),0);await eraserSlider.focus();await eraserSlider.press('End');assert.equal(await eraserSlider.inputValue(),'30');
+ await h.getByRole('button',{name:'펜 굵기 선택',exact:true}).click();assert.equal(await penSlider.inputValue(),'2');
  await h.getByRole('button',{name:'그림 도구 닫기',exact:true}).click();await waitToolsClosed(h);
  await h.getByRole('button',{name:'색상 팔레트',exact:true}).click();await h.screenshot({path:`${out}/palette-mobile.png`,fullPage:true});
  await h.getByLabel('직접 고르기').evaluate(el=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,'#2563eb');el.dispatchEvent(new Event('input',{bubbles:true}));});
