@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { RoomThumbnail, type ThumbnailCache } from "./RoomThumbnail";
 import { useMyRooms } from "../hooks/useMyRooms";
 import { MY_ROOMS_PAGE_SIZE, type RoomScope } from "../lib/rooms/getMyRooms";
 import { copyRoomCode } from "../utils/copyRoomCode";
@@ -17,6 +18,7 @@ const STATUS: Record<DrawingStatus, { label: string; className: string; descript
 export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) {
   const { rooms, total, page, scope, changeScope, isLoading, isRefreshing, error, refresh, changePage, hasNextPage } = state;
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const [thumbnails] = useState<ThumbnailCache>(() => new Map());
   async function copyCode(code: string) {
     try { await copyRoomCode(code); setCopyMessage("참여 코드를 복사했어요. 친구에게 보내주세요."); }
     catch (reason) { setCopyMessage(reason instanceof Error ? reason.message : "복사하지 못했습니다."); }
@@ -39,7 +41,10 @@ export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) 
             className={`${scope === value ? "button-primary" : "button-secondary"} min-w-0 px-2 text-xs sm:text-sm`}>{label}</button>
         ))}
       </div>
-      <details className="mt-2 text-sm text-slate-600"><summary className="min-h-11 cursor-pointer py-3">내 그림을 다시 찾으려면</summary><p className="pb-2 text-sm leading-6">그림을 시작한 브라우저로 돌아와 주세요. 화면이 열려 있으면 상태를 자동으로 확인해요. 브라우저 데이터를 지우면 이전 방을 찾지 못할 수 있어요.</p></details>
+      <aside aria-label="보관함 이용 안내" className="mt-4 rounded-xl border border-slate-200 bg-[#fffdf3] px-4 py-3 text-sm leading-6 text-slate-700">
+        <p className="font-semibold">내 그림은 이 브라우저에서 다시 볼 수 있어요.</p>
+        <p className="mt-1 text-xs leading-5">다른 기기·브라우저에서는 목록이 달라져요. 브라우저 데이터를 지우면 기존 보관함에 접근할 수 없어요. 소중한 그림은 PNG로 저장해주세요.</p>
+      </aside>
       {copyMessage && <p role="status" className="mt-3 text-sm text-indigo-700">{copyMessage}</p>}
       {error && <div role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">
         <p>{error} {rooms.length > 0 && "아래 목록은 마지막으로 확인한 상태예요."}</p>
@@ -56,6 +61,7 @@ export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) 
             return <article key={room.id} className="panel room-card flex flex-col items-start p-4 sm:p-5">
               <p className="mb-2 text-xs font-semibold text-slate-500">{room.participantRole === "host" ? "내가 시작한 그림" : "내가 참여한 그림"}</p>
               <span className={`rounded-full px-3 py-1 text-xs font-bold ${status.className}`}>{room.status === "guest_joined" && room.participantRole === "guest" ? "이어 그릴 차례" : status.label}</span>
+              {room.status === "completed" && <Link href={`/rooms/${room.id}`} aria-label={`${room.prompt} 완성 그림 열기`} className="block w-full rounded-xl"><RoomThumbnail roomId={room.id} prompt={room.prompt} cache={thumbnails} /></Link>}
               <div className="room-topic mt-4"><p className="text-xs font-semibold text-slate-600">그림 주제</p><h3 className="mt-2 break-words text-lg font-bold">{room.prompt}</h3></div>
               <time dateTime={room.created_at} className="mt-1 text-xs text-slate-500">
                 {new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeZone: "Asia/Seoul" }).format(new Date(room.created_at))} 시작

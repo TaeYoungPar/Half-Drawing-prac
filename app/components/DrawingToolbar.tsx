@@ -26,9 +26,8 @@ export function DrawingToolbar({
   function showPanel(next: "width" | "color") { setPanel(next); setOpen(true); }
   function chooseColor(color: string) { onStrokeColorChange(color); setOpen(false); }
   return (
-    <div className="panel flex flex-col gap-2 p-3" aria-label="그림 도구">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="flex gap-1 rounded-xl bg-[#f1e5c8] p-1" role="group" aria-label="그리기 도구 선택">
+    <div className="panel drawing-toolbar flex flex-wrap items-center gap-1 p-2 sm:gap-2 sm:p-3" aria-label="그림 도구">
+        <div className="flex gap-0 rounded-xl bg-[#f1e5c8] sm:gap-1 sm:p-1" role="group" aria-label="그리기 도구 선택">
           {(["pen", "eraser"] as const).map((value) => (
             <button key={value} type="button" onClick={() => onToolChange(value)} aria-pressed={tool === value} disabled={disabled} className="tool-toggle">
               <ToolIcon name={value} />{value === "pen" ? "펜" : "지우개"}
@@ -40,8 +39,7 @@ export function DrawingToolbar({
           aria-expanded={open && panel === "color"} className="icon-button relative">
           <ToolIcon name="palette" /><span aria-hidden="true" className="absolute bottom-1 right-1 h-2.5 w-2.5 rounded-full border border-white" style={{ backgroundColor: strokeColor }} />
         </button>
-      </div>
-      <button type="button" onClick={() => showPanel("width")} disabled={disabled} className="min-h-11 rounded-xl px-2 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50">굵기 · 더 많은 도구</button>
+      <button type="button" onClick={() => showPanel("width")} disabled={disabled} aria-label="굵기 · 더 많은 도구" title="굵기 · 더 많은 도구" aria-expanded={open && panel === "width"} className="toolbar-settings icon-button sm:w-auto sm:gap-2 sm:px-3"><ToolIcon name="settings" /><span className="toolbar-settings-label sr-only sm:not-sr-only">굵기 · 더 많은 도구</span></button>
       <OverlayDialog open={open} setOpen={setOpen} title="그림 도구">
         <div className="mb-4 grid grid-cols-2 gap-2" role="group" aria-label="도구 설정 선택">
           <button type="button" aria-pressed={panel === "width"} onClick={() => setPanel("width")} className={panel === "width" ? "button-primary" : "button-secondary"}>굵기 · 작업</button>

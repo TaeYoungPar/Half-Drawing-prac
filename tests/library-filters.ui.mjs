@@ -19,6 +19,7 @@ try {
     let failGuestOnce = false;
     await context.route('**/rest/v1/rooms*', async route => {
       const query = new URL(route.request().url()).searchParams;
+      if (query.has('id')) return route.fallback(); // Thumbnail reads are separate from metadata prefetches.
       requests[query.has('host_id') ? 'host' : query.has('guest_id') ? 'guest' : 'all']++;
       if (query.has('guest_id') && guestGate) await guestGate;
       await new Promise(resolve => setTimeout(resolve, 650));
@@ -72,8 +73,8 @@ try {
 
     // Automatic revalidation leaves both the button and the current list unchanged.
     await page.evaluate(() => new Promise(requestAnimationFrame));
-    const backgroundRequest = page.waitForRequest(r => new URL(r.url()).pathname === '/rest/v1/rooms');
-    const backgroundResponse = page.waitForResponse(r => new URL(r.url()).pathname === '/rest/v1/rooms');
+    const backgroundRequest = page.waitForRequest(r => new URL(r.url()).pathname === '/rest/v1/rooms' && !new URL(r.url()).searchParams.has('id'));
+    const backgroundResponse = page.waitForResponse(r => new URL(r.url()).pathname === '/rest/v1/rooms' && !new URL(r.url()).searchParams.has('id'));
     await page.evaluate(() => window.dispatchEvent(new Event('focus')));
     await backgroundRequest;
     assert.equal(await refresh.isEnabled(), true);

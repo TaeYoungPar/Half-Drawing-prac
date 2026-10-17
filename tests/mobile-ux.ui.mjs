@@ -49,7 +49,7 @@ async function swipe(context, page, x, y, dx, dy) {
     const first = await stage.boundingBox();
     await page.screenshot({ path: `${out}/default-drawing-${width}.png` });
     assert.ok(first.height >= 350, 'explicit large view shows the larger active half');
-    await page.getByText('굵기 · 더 많은 도구').click();
+    await page.getByRole('button', {name:'굵기 · 더 많은 도구', exact:true}).click();
     await page.getByRole('dialog', { name: '그림 도구', exact: true }).waitFor();
     assert.equal(Math.round((await stage.boundingBox()).height), Math.round(first.height), 'tool sheet must not resize canvas');
     await page.getByRole('button', { name: '펜 굵기 얇게', exact: true }).click();
@@ -99,7 +99,7 @@ async function swipe(context, page, x, y, dx, dy) {
     assert.equal(await ink(page), true);
     assert.equal(await page.locator('#room-prompt').inputValue(), '설정과 그림 복원');
     assert.equal(await page.getByRole('button', { name: '색상 팔레트', exact: true }).locator('span').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(147, 51, 234)');
-    await page.getByText('굵기 · 더 많은 도구').click();
+    await page.getByRole('button', {name:'굵기 · 더 많은 도구', exact:true}).click();
     assert.equal(await page.getByRole('slider', { name: '펜 굵기', exact: true }).inputValue(), '2');
     assert.equal(await page.getByRole('slider', { name: '지우개 굵기', exact: true }).inputValue(), '30');
     await closeTools(page);

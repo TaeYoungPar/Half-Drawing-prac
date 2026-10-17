@@ -18,7 +18,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             <figcaption className="sr-only">두 사람이 반쪽씩 그려 함께 완성한 예시 그림</figcaption>
           </figure>
           <div className="home-copy mt-4 text-center">
-            <p className="text-sm font-semibold leading-6 text-slate-800 sm:text-base">나는 왼쪽, 친구는 오른쪽.<br className="sm:hidden" /> 작은 힌트로 한 장의 그림을 완성해요.</p>
+            <p className="text-sm font-semibold leading-6 text-slate-800 sm:text-base">나는 왼쪽, 친구는 오른쪽.<br className="sm:hidden" /> 경계 힌트만 보고 이어 그려요.</p>
             <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
               <Link href="/draw" className="button-primary"><ToolIcon name="pen" />그림 시작하기</Link>
               <Link href="/join" className="button-secondary">참여 코드 입력하기 <span aria-hidden="true">↗</span></Link>
@@ -33,7 +33,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         <div className="mt-5 grid gap-4 sm:grid-cols-3 sm:gap-5">
           {[
             ["01", "반쪽을 그려요", "왼쪽에 그리고, 그림 주제를 적어요."],
-            ["02", "친구를 초대해요", "초대 링크를 보내면 친구가 오른쪽을 그려요."],
+            ["02", "친구를 초대해요", "친구는 경계 힌트만 보고 오른쪽을 이어 그려요."],
             ["03", "함께 열어봐요", "완성된 그림을 확인하고 저장·공유해요."],
           ].map(([number, title, text], index) => (
             <div key={number} className={`panel flex items-start gap-4 p-5 sm:flex-col sm:gap-4 sm:p-6 ${index === 1 ? "bg-[#f9dce0]!" : index === 2 ? "bg-[#dcedd5]!" : "bg-[#fff0bd]!"}`}>

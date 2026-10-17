@@ -12,6 +12,7 @@
     "test:mobile": "node tests/mobile-ux.ui.mjs",
     "test:finish": "node tests/finish-review.ui.mjs",
     "test:library": "node tests/library-filters.ui.mjs",
+    "test:release": "node tests/release-ux.ui.mjs",
     "assets:share": "node scripts/generate-share-preview.mjs",
     "test:share": "node tests/share-preview.ui.mjs"
   },

@@ -1,6 +1,7 @@
-type IconName = "pen" | "eraser" | "undo" | "redo" | "trash" | "download" | "palette";
+type IconName = "pen" | "eraser" | "undo" | "redo" | "trash" | "download" | "palette" | "settings";
 
 const paths: Record<IconName, string[]> = {
+  settings: ["M4 7h5m4 0h7M4 17h9m4 0h3", "M9 4v6M13 14v6"],
   palette: ["M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 0-4h-1a1.5 1.5 0 0 1 0-3h3a6 6 0 0 0 0-12Z", "M7 9h.01M10 6h.01M15 6h.01M6 13h.01"],
   pen: ["m16 3 5 5-13 13H3v-5L16 3Z", "m13 6 5 5"],
   eraser: ["m15 3 6 6-11 12H6l-5-5L15 3Z", "m8 10 6 6", "M10 21h11"],

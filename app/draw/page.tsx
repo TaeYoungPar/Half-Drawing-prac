@@ -1,16 +1,13 @@
-import Link from "next/link";
 import { DrawingCanvas } from "../components/DrawingCanvas";
 
 export default function DrawPage() {
   return (
-    <main className="workspace">
-      <Link href="/" className="inline-flex min-h-11 self-start items-center rounded-xl px-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100">← 홈으로</Link>
-
-      <span className="eyebrow">STEP 1 · 내 반쪽 그리기</span>
-      <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl">어떤 상상을 시작해볼까요?</h1>
-
-      <p className="text-sm leading-6 text-slate-600">왼쪽을 그리고 주제를 적으면, 친구에게 보낼 초대 링크가 생겨요.</p>
-
+    <main className="workspace drawing-workspace">
+      <div className="space-y-2">
+        <span className="eyebrow">STEP 1 · 내 반쪽 그리기</span>
+        <h1 className="text-xl font-extrabold tracking-tight sm:text-4xl">어떤 상상을 시작해볼까요?</h1>
+        <p className="text-sm leading-6 text-slate-600">왼쪽을 그린 뒤, 주제를 적고 친구를 초대해요.</p>
+      </div>
       <DrawingCanvas drawingSide="left" />
     </main>
   );

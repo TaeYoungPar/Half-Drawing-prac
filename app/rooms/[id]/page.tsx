@@ -315,37 +315,33 @@ export default function RoomPage() {
         <span className="eyebrow">내 반쪽 등록 완료</span>
         <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl">이제 친구의 차례예요.</h1>
         <DrawingPrompt prompt={room.prompt} />
-        <div className="panel max-w-[800px] p-5">
-          <p className="text-sm text-slate-500">친구에게 전달할 참여 코드</p>
-          <p className="mt-2 break-all font-mono text-3xl font-bold tracking-widest text-indigo-700">{room.code}</p>
-          <p className="mt-3 text-xs leading-5 text-slate-500">아래 버튼으로 초대 링크를 보내면 코드가 자동 입력돼요. 다른 기기나 브라우저에서 참여할 수 있어요.</p>
-        </div>
-        <button type="button" onClick={handleShareInvitation} className="button-primary self-start">친구에게 초대 링크 공유</button>
-        <button
-          type="button"
-          onClick={handleCopyCode}
-          className="button-secondary self-start"
-        >
-          참여 코드 복사
-        </button>
-        {copyMessage && <p role="status" className="text-sm text-gray-700">{copyMessage}</p>}
-        <p className="text-sm text-gray-600">
-          {room.guest_id ? "친구가 참여했어요. 완성하면 여기서 확인할 수 있어요." : "참여 코드를 친구에게 전달해주세요."}
-        </p>
-        <p className="text-xs text-gray-500">완성 여부는 약 7초마다 자동으로 확인합니다. 이 방 주소를 북마크하면 나중에 다시 볼 수 있어요.</p>
-        <p className="text-xs text-slate-500">브라우저 데이터를 지우면 익명 계정이 사라져 방에 돌아오지 못할 수 있어요.</p>
+        <section aria-labelledby="invite-heading" className="panel max-w-[800px] space-y-4 p-4 sm:p-6">
+          <div>
+            <h2 id="invite-heading" className="text-lg font-extrabold">친구 초대</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">링크를 보내면 친구의 참여 코드가 자동으로 입력돼요.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button type="button" onClick={handleShareInvitation} className="button-primary">친구에게 초대 링크 공유</button>
+            <button type="button" onClick={handleCopyCode} className="button-secondary">참여 코드 복사</button>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <p className="text-xs font-semibold text-slate-600">참여 코드</p>
+            <p className="mt-1 break-all font-mono text-2xl font-bold tracking-widest text-indigo-700">{room.code}</p>
+            <p className="mt-2 text-xs leading-5 text-slate-600">초대 기한: <time dateTime={room.expires_at}>{new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Seoul" }).format(new Date(room.expires_at))}</time> (한국 시간)</p>
+          </div>
+          {copyMessage && <p role="status" className="text-sm font-semibold text-indigo-700">{copyMessage}</p>}
+        </section>
+        <section aria-labelledby="progress-heading" className="panel max-w-[800px] space-y-3 p-4 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="progress-heading" className="text-lg font-extrabold">{room.guest_id ? "친구가 이어 그릴 차례예요" : "친구를 기다리고 있어요"}</h2>
+            <button type="button" onClick={refreshRoom} disabled={isRefreshing} className="button-secondary">{isRefreshing ? "확인 중..." : "완성 여부 확인"}</button>
+          </div>
+          <p role="status" className="text-sm leading-6 text-slate-700">{room.guest_id ? "친구가 참여했어요. 완성하면 여기서 확인할 수 있어요." : "초대 링크를 보내고 잠시 기다려주세요."}</p>
+          <p className="text-xs leading-5 text-slate-600">이 화면에서는 약 7초마다 자동 확인해요. 나중에는 내 보관함에서 다시 열 수 있어요.</p>
+          {roomError && <p role="alert" className="text-sm text-red-700">{roomError}</p>}
+        </section>
+        <p className="max-w-[800px] text-xs leading-5 text-slate-600">그림을 시작한 브라우저로 돌아와 주세요. 브라우저 데이터를 지우면 기존 보관함에 접근할 수 없어요.</p>
         <DrawingWaitingCanvas strokes={leftDrawing.strokes} />
-        {roomError && (
-          <p role="alert" className="text-sm text-red-600">{roomError}</p>
-        )}
-        <button
-          type="button"
-          onClick={refreshRoom}
-          disabled={isRefreshing}
-          className="button-secondary self-start"
-        >
-          {isRefreshing ? "확인 중..." : "완성 여부 확인"}
-        </button>
       </main>
     );
   }
@@ -359,15 +355,15 @@ export default function RoomPage() {
   }
 
   return (
-    <main className="workspace">
-      <h1 className="text-2xl font-bold">
+    <main className="workspace drawing-workspace">
+      <h1 className="text-xl font-extrabold sm:text-2xl">
         이어 그리기
       </h1>
 
       <DrawingPrompt prompt={room.prompt} />
 
-      <p className="text-sm text-gray-600">
-        왼쪽 그림은 경계 부분만 보입니다. 오른쪽을 이어 그린 뒤 완료하면 전체 그림을 볼 수 있어요.
+      <p className="text-sm leading-6 text-slate-600">
+        경계 힌트만 보고 오른쪽을 그려요. 완성하면 전체가 공개돼요.
       </p>
       {roomError && <p role="alert" className="text-sm text-red-600">{roomError}</p>}
 

@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Link from "next/link";
-import { SiteNavigation } from "./components/SiteNavigation";
+import { SiteHeader } from "./components/SiteHeader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,15 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <header className="site-header">
-          <nav aria-label="주 메뉴" className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-3 sm:gap-3 sm:px-8 sm:py-5">
-            <Link href="/" aria-label="반쪽그림 홈으로" className="flex min-h-11 items-center gap-2">
-              <span aria-hidden="true" className="text-2xl text-[#d99152]">✦</span>
-              <span className="brand-title text-[24px] sm:text-[28px]">Half Drawing<br /><span className="ml-5">Practice</span></span>
-            </Link>
-            <SiteNavigation />
-          </nav>
-        </header>
+        <SiteHeader />
         {children}
         <footer className="mt-auto border-t border-[#c8b99b] bg-[#fffbed]/90 px-5 py-8 text-center text-xs leading-6 text-slate-500 sm:py-10">
           두 사람의 상상이 만나는 곳, 반쪽그림<br />

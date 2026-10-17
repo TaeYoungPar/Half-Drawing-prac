@@ -391,7 +391,7 @@ export function DrawingCanvas({
   }
 
   return (
-    <section ref={sectionRef} className={`flex w-full flex-col gap-4 ${isExpanded ? "drawing-expanded" : ""}`}
+    <section ref={sectionRef} className={`drawing-editor flex w-full flex-col gap-3 sm:gap-4 ${isExpanded ? "drawing-expanded" : ""}`}
       role={isExpanded ? "dialog" : undefined} aria-modal={isExpanded || undefined} aria-label={isExpanded ? "내 반쪽 크게 그리기" : undefined} data-drawing-side={drawingSide}>
       {(saveError || successMessage) && (
         <DrawingNotice message={saveError ?? successMessage ?? ""} isError={Boolean(saveError)} onClose={closeToast} />
@@ -437,16 +437,12 @@ export function DrawingCanvas({
       />
       </div>
 
-      <p className="text-sm font-medium text-slate-700">
-        {drawingSide === "left"
-          ? "왼쪽 절반에 그림을 그려주세요."
-          : "오른쪽 절반에 그림을 이어 그려주세요."}
-      </p>
       {readOnly && (createdRoom || isDrawingSubmitted) && (
         <p className="text-sm text-slate-600">저장된 그림은 수정할 수 없습니다.</p>
       )}
 
       <div className="drawing-view-controls flex flex-wrap items-center gap-2">
+        {!isExpanded && <p className="mr-auto text-sm font-semibold text-slate-700">{drawingSide === "left" ? "왼쪽에 그려요" : "오른쪽에 이어 그려요"}</p>}
         {isExpanded && (prompt || roomPrompt.trim()) && <DrawingPrompt prompt={prompt || roomPrompt.trim()} compact />}
         <button data-view-toggle type="button" aria-pressed={isExpanded} disabled={isDrawing} onClick={() => { setReviewRequested(false); setIsExpanded(!isExpanded); }} className="button-secondary">{isExpanded ? "그리기 화면으로 돌아가기" : "내 반쪽 크게 그리기"}</button>
         {isExpanded && <button type="button" onClick={finishFocusedDrawing} disabled={readOnly || isDrawing || !hasInk} className="button-primary">다 그렸어요</button>}
