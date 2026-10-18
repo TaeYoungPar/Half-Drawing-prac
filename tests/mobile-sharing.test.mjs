@@ -68,7 +68,19 @@ test("image sharing sends a PNG with a white background", async () => {
   assert.deepEqual(calls, ["white", "drawing"]);
   assert.equal(shared.files[0].type, "image/png");
   assert.equal(shared.files[0].name, "half-drawing.png");
-  assert.ok(shared.title.length > 0 && shared.text.length > 0);
+  assert.deepEqual(Object.keys(shared), ["files", "text"]);
+  assert.equal(shared.text, "서로의 그림을 모른 채 반쪽씩 그렸어. 반쪽그림에서 너랑도 한 장 완성해볼래?");
+});
+
+test("image captions end at their last character without trailing whitespace or newlines", async () => {
+  let shared;
+  const { shareCanvasImage } = imageHarness({ canShare: () => true, share: async (data) => { shared = data; } });
+  await shareCanvasImage({ width: 1200, height: 1200 }, {
+    filename: "half-drawing-card.png",
+    text: "서로의 그림을 모른 채 반쪽씩 그렸어. 반쪽그림에서 너랑도 한 장 완성해볼래? \r\n\n\u00a0",
+  });
+  assert.equal(shared.text, "서로의 그림을 모른 채 반쪽씩 그렸어. 반쪽그림에서 너랑도 한 장 완성해볼래?");
+  assert.deepEqual(Object.keys(shared), ["files", "text"]);
 });
 
 test("unsupported image sharing requests download; cancellation does not", async () => {
