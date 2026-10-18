@@ -293,6 +293,7 @@ export default function RoomPage() {
         <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl">이런 그림이 될 줄 알았나요?</h1>
         <DrawingPrompt prompt={room.prompt} />
         <DrawingResultCanvas
+          prompt={room.prompt}
           leftStrokes={leftDrawing.strokes}
           rightStrokes={rightDrawing.strokes}
         />

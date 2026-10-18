@@ -32,7 +32,7 @@ function createExportCanvas(canvas: HTMLCanvasElement | null): HTMLCanvasElement
     return exportCanvas;
 }
 
-export function downloadCanvasImage(canvas: HTMLCanvasElement | null) {
+export function downloadCanvasImage(canvas: HTMLCanvasElement | null, filename = "half-drawing.png") {
     const exportCanvas = createExportCanvas(canvas);
     if (!exportCanvas) return;
 
@@ -42,26 +42,26 @@ export function downloadCanvasImage(canvas: HTMLCanvasElement | null) {
     const link = document.createElement("a");
 
     link.href = imageUrl;
-    link.download = "half-drawing.png";
+    link.download = filename;
     link.click();
 }
 
-export async function shareCanvasImage(canvas: HTMLCanvasElement | null): Promise<string | null> {
+export async function shareCanvasImage(canvas: HTMLCanvasElement | null, options: { filename?: string; title?: string; text?: string } = {}): Promise<string | null> {
     const exportCanvas = createExportCanvas(canvas);
     if (!exportCanvas) throw new Error("그림을 준비하지 못했습니다. 다시 시도해주세요.");
     const blob = await new Promise<Blob>((resolve, reject) => {
         exportCanvas.toBlob((value) => value ? resolve(value) : reject(new Error("이미지를 만들지 못했습니다.")), "image/png");
     });
-    const file = new File([blob], "half-drawing.png", { type: "image/png" });
+    const file = new File([blob], options.filename ?? "half-drawing.png", { type: "image/png" });
     if (navigator.share && navigator.canShare?.({ files: [file] })) {
         try {
-            await navigator.share({ files: [file], title: "반쪽씩 그렸는데, 이런 그림이 됐어! 🎨", text: "서로의 그림을 모른 채 반쪽씩 그렸어. 반쪽그림에서 너랑도 한 장 완성해볼래?" });
+            await navigator.share({ files: [file], title: options.title ?? "반쪽씩 그렸는데, 이런 그림이 됐어! 🎨", text: options.text ?? "서로의 그림을 모른 채 반쪽씩 그렸어. 반쪽그림에서 너랑도 한 장 완성해볼래?" });
             return "그림을 공유했습니다.";
         } catch (error) {
             if (error instanceof Error && error.name === "AbortError") return null;
             throw new Error("공유하지 못했습니다. PNG 저장 버튼으로 저장해주세요.");
         }
     }
-    downloadCanvasImage(canvas);
+    downloadCanvasImage(canvas, options.filename);
     return "이미지 공유를 지원하지 않아 PNG 다운로드를 요청했습니다. 브라우저 다운로드 항목을 확인해주세요.";
 }

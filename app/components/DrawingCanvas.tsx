@@ -16,6 +16,7 @@ import { hasCanvasInk } from "../utils/visibleInk";
 import { DrawingToolbar } from "./DrawingToolbar";
 import { DrawingNotice } from "./DrawingNotice";
 import { DrawingPrompt } from "./DrawingPrompt";
+import { TopicSuggestions } from "./TopicSuggestions";
 import { downloadCanvasImage } from "../utils/downloadCanvasImage";
 import { copyRoomCode } from "../utils/copyRoomCode";
 
@@ -237,8 +238,22 @@ export function DrawingCanvas({
     // Repeat after a late history traversal so its saved position cannot win.
     window.addEventListener("popstate", scrollToReview, { once: true });
     scrollToReview();
+    // Some browsers restore the old scroll position after our first paint even
+    // when popstate is swallowed. Retry once, unless the user has moved on.
+    const retry = window.setTimeout(() => {
+      if (document.activeElement === reviewRef.current) scrollToReview();
+    }, 300);
+    const cancelRetry = () => {
+      window.clearTimeout(retry);
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("popstate", scrollToReview);
+    };
+    const interactionEvents = ["pointerdown", "touchstart", "wheel", "keydown"] as const;
+    for (const name of interactionEvents) window.addEventListener(name, cancelRetry, { once: true, passive: true });
     return () => {
       window.cancelAnimationFrame(frame);
+      window.clearTimeout(retry);
+      for (const name of interactionEvents) window.removeEventListener(name, cancelRetry);
       window.removeEventListener("popstate", scrollToReview);
     };
   }, [isExpanded, reviewRequested]);
@@ -412,6 +427,8 @@ export function DrawingCanvas({
       </div>}
 
       {draftError && <p role="alert" className="text-sm text-amber-700">{draftError}</p>}
+
+      {drawingSide === "left" && <TopicSuggestions value={roomPrompt} onChange={setRoomPrompt} disabled={readOnly || isDrawing || !isPromptRestored} />}
 
       <div className="drawing-tools">
       <DrawingToolbar

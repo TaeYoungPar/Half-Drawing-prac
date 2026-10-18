@@ -8,36 +8,25 @@ import {
 
 import type { Stroke } from "../types/drawing";
 import { OverlayDialog } from "./OverlayDialog";
+import { CompletedShareOptions } from "./CompletedShareOptions";
 import { drawHalfStrokes } from "../utils/drawHalfStrokes";
 import Link from "next/link";
-import { downloadCanvasImage, shareCanvasImage } from "../utils/downloadCanvasImage";
+import { downloadCanvasImage } from "../utils/downloadCanvasImage";
 
 type DrawingResultCanvasProps = {
+  prompt: string;
   leftStrokes: Stroke[];
   rightStrokes: Stroke[];
 };
 
 export function DrawingResultCanvas({
+  prompt,
   leftStrokes,
   rightStrokes,
 }: DrawingResultCanvasProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const previewRef = useRef<HTMLCanvasElement>(null);
-  const [shareMessage, setShareMessage] = useState<string | null>(null);
-  const [isSharing, setIsSharing] = useState(false);
-  async function handleShare() {
-    if (isSharing) return;
-    setIsSharing(true);
-    setShareMessage(null);
-    try {
-      setShareMessage(await shareCanvasImage(canvasRef.current));
-    } catch (error) {
-      setShareMessage(error instanceof Error ? error.message : "이미지를 공유하지 못했습니다.");
-    } finally {
-      setIsSharing(false);
-    }
-  }
   const canvasRef =
     useRef<HTMLCanvasElement>(null);
 
@@ -75,8 +64,7 @@ export function DrawingResultCanvas({
         </div>
         <p className="mt-3 text-sm leading-6 text-slate-600">확대한 뒤 손가락으로 움직여 세부를 확인하세요. 그림 파일 크기는 그대로예요.</p>
       </OverlayDialog>
-      <button type="button" onClick={handleShare} disabled={isSharing} className="button-primary self-start">{isSharing ? "이미지 준비 중…" : "완성 그림 공유"}</button>
-      {shareMessage && <p role="status" className="text-sm text-slate-600">{shareMessage}</p>}
+      <CompletedShareOptions drawingRef={canvasRef} prompt={prompt} />
       <button
         type="button"
         onClick={() => downloadCanvasImage(canvasRef.current)}

@@ -35,7 +35,10 @@ try {
         await page.waitForFunction(() => !Array.from(document.querySelectorAll('button')).find(b => b.textContent === '다 그렸어요')?.disabled);
         await page.evaluate(mode => {
           if (mode === 'missing-popstate') {
-            window.addEventListener('popstate', event => event.stopImmediatePropagation(), { capture: true, once: true });
+            window.addEventListener('popstate', event => {
+              event.stopImmediatePropagation();
+              setTimeout(() => window.scrollTo(0, 0), 120);
+            }, { capture: true, once: true });
           }
           if (mode === 'late-restoration') {
             const back = history.back.bind(history);
@@ -46,6 +49,7 @@ try {
         await finish.click();
         await page.getByRole('dialog', { name: '내 반쪽 크게 그리기', exact: true }).waitFor({ state: 'hidden' });
         await page.waitForFunction(() => !(history.state?.halfDrawingOverlays || []).some(entry => entry.kind === 'drawing'));
+        if (mode === 'missing-popstate') await page.waitForTimeout(350);
         await page.waitForFunction(() => Math.abs(document.documentElement.scrollHeight - innerHeight - scrollY) <= 2);
         const action = page.getByRole('button', { name: side === 'left' ? '반쪽 그림 등록' : '이어 그리기 완료', exact: true });
         const actionBox = await action.boundingBox();
@@ -55,6 +59,13 @@ try {
         assert.equal(fixture.writes, 0, 'finishing the large view never submits');
         assert.equal(await canvas.evaluate(el => Array.from(el.getContext('2d').getImageData(0, 0, 800, 500).data).some((v, i) => i % 4 === 3 && v > 0)), true, 'drawing is preserved');
         await page.screenshot({ path: `${out}/${side}-${width}-${mode}.png` });
+        if (side === 'left' && width === 320 && mode === 'normal') {
+          const bottom = await page.evaluate(() => scrollY);
+          await page.mouse.wheel(0, -120);
+          await page.waitForFunction(y => scrollY < y - 20, bottom);
+          await page.waitForTimeout(350);
+          assert.ok(await page.evaluate(y => scrollY < y - 20, bottom), 'manual scrolling cancels the delayed correction');
+        }
         console.log(`${side}/${width}/${mode}: finish reaches bottom, action visible, ink preserved, no submission PASS`);
         await context.close();
       }
