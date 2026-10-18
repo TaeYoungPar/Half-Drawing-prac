@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import type { DrawingSide, DrawingTool, Point, Stroke } from "../types/drawing";
 import { drawHalfStrokes } from "../utils/drawHalfStrokes";
+import { createFillStrokes } from "../utils/fillRegion";
 
 type UseCanvasDrawingOptions = {
   backgroundStrokes: Stroke[];
@@ -13,6 +14,7 @@ type UseCanvasDrawingOptions = {
   drawingSide: DrawingSide;
   readOnly: boolean;
   onStrokeComplete: (stroke: Stroke) => void;
+  onFillComplete: (strokes: Stroke[]) => void;
 };
 
 function getCanvasPoint(canvas: HTMLCanvasElement, event: PointerEvent<HTMLCanvasElement>): Point {
@@ -31,7 +33,7 @@ function getCanvasPoint(canvas: HTMLCanvasElement, event: PointerEvent<HTMLCanva
 }
 
 export function useCanvasDrawing({ backgroundStrokes, strokes, lineWidth, strokeColor,
-  tool, drawingSide, readOnly, onStrokeComplete }: UseCanvasDrawingOptions) {
+  tool, drawingSide, readOnly, onStrokeComplete, onFillComplete }: UseCanvasDrawingOptions) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const currentStrokeRef = useRef<Stroke | null>(null);
   const activePointerRef = useRef<number | null>(null);
@@ -60,7 +62,7 @@ export function useCanvasDrawing({ backgroundStrokes, strokes, lineWidth, stroke
     setIsDrawing(true);
     const stroke: Stroke = { points: [point], color: strokeColor, lineWidth, tool };
     currentStrokeRef.current = stroke;
-    drawHalfStrokes(context, [stroke], drawingSide);
+    if (tool !== "fill") drawHalfStrokes(context, [stroke], drawingSide);
   }
 
   function handlePointerMove(event: PointerEvent<HTMLCanvasElement>) {
@@ -68,7 +70,7 @@ export function useCanvasDrawing({ backgroundStrokes, strokes, lineWidth, stroke
     const canvas = canvasRef.current;
     const stroke = currentStrokeRef.current;
     const context = canvas?.getContext("2d");
-    if (!canvas || !context || !stroke) return;
+    if (!canvas || !context || !stroke || stroke.tool === "fill") return;
     const point = getCanvasPoint(canvas, event);
     // Capture keeps receiving movement outside the canvas; clamp to own half.
     point.x = Math.max(drawingSide === "left" ? 0 : canvas.width / 2,
@@ -93,7 +95,18 @@ export function useCanvasDrawing({ backgroundStrokes, strokes, lineWidth, stroke
     if (canvasRef.current?.hasPointerCapture(event.pointerId)) {
       canvasRef.current.releasePointerCapture(event.pointerId);
     }
-    if (stroke) onStrokeComplete(stroke);
+    if (stroke?.tool === "fill") {
+      if (event.type !== "pointerup") return;
+      const canvas = canvasRef.current;
+      const context = canvas?.getContext("2d");
+      if (!canvas || !context) return;
+      const image = context.getImageData(drawingSide === "left" ? 0 : canvas.width / 2, 0, canvas.width / 2, canvas.height);
+      const fill = createFillStrokes(image, stroke.points[0], stroke.color, drawingSide, crypto.randomUUID());
+      if (fill.length) {
+        drawHalfStrokes(context, fill, drawingSide);
+        onFillComplete(fill);
+      }
+    } else if (stroke) onStrokeComplete(stroke);
   }
 
   return { canvasRef, handlePointerDown, handlePointerMove, handlePointerUp, isDrawing };

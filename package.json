@@ -18,7 +18,8 @@
     "test:topics-card": "node tests/topics-and-card.ui.mjs",
     "assets:share": "node scripts/generate-share-preview.mjs",
     "test:share": "node tests/share-preview.ui.mjs",
-    "test:ads": "node tests/ads.ui.mjs"
+    "test:ads": "node tests/ads.ui.mjs",
+    "test:fill": "node tests/fill.ui.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

@@ -41,7 +41,7 @@ try {
       assert.ok(box.width >= 44 && box.height >= 44, 'all preset targets are at least 44px');
     }
     assert.equal(await recent.getByRole('button').count(), 0);
-    await recent.getByText('선으로 그린 색이 여기에 모여요.', { exact: true }).waitFor();
+    await recent.getByText('그리거나 채운 색이 여기에 모여요.', { exact: true }).waitFor();
     await page.screenshot({ path: `${out}/empty-${width}x${height}.png` });
     for (const name of ['검정', '빨강', '노랑', '초록', '파랑', '보라', '살구', '분홍', '연노랑', '민트', '하늘', '라벤더']) {
       const choice = quick.getByRole('button', { name: `${name} 선택`, exact: true });

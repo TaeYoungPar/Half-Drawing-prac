@@ -20,7 +20,7 @@ export function parseDrawingSettings(value: unknown): typeof DEFAULT_SETTINGS {
     penWidth: validWidth(settings.penWidth) ? settings.penWidth : DEFAULT_SETTINGS.penWidth,
     eraserWidth: validWidth(settings.eraserWidth) ? settings.eraserWidth : DEFAULT_SETTINGS.eraserWidth,
     strokeColor: isColor(settings.strokeColor) ? settings.strokeColor : DEFAULT_SETTINGS.strokeColor,
-    tool: settings.tool === "eraser" ? "eraser" : "pen",
+    tool: settings.tool === "eraser" || settings.tool === "fill" ? settings.tool : "pen",
     recentColors: parseRecentColors(settings.recentColors),
   };
 }

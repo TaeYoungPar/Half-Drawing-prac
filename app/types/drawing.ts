@@ -4,13 +4,15 @@ export type Point = {
 };
 
 export type DrawingTool =
-  "pen" | "eraser";
+  "pen" | "eraser" | "fill";
 
 export type Stroke = {
   points: Point[];
   color: string;
   lineWidth: number;
   tool: DrawingTool;
+  /** Tiles from one bucket tap form one undoable action. */
+  fillId?: string;
 };
 
 export type DrawingSide =

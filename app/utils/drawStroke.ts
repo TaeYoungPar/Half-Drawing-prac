@@ -15,6 +15,14 @@ export function drawStroke(
     ? "destination-out"
     : "source-over";
 
+  if (stroke.tool === "fill") {
+    context.fillStyle = stroke.color;
+    for (const point of stroke.points) {
+      context.fillRect(point.x - stroke.lineWidth / 2, point.y - stroke.lineWidth / 2, stroke.lineWidth, stroke.lineWidth);
+    }
+    return;
+  }
+
   context.beginPath();
   context.lineWidth = stroke.lineWidth;
   context.strokeStyle = stroke.color;

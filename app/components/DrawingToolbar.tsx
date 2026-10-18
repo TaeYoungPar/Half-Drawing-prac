@@ -24,21 +24,22 @@ export function DrawingToolbar({
 }: DrawingToolbarProps) {
   const [open, setOpen] = useState(false);
   const [panel, setPanel] = useState<"width" | "color">("width");
-  const widthSettings = tool === "pen"
+  const toolNames = { pen: "펜", eraser: "지우개", fill: "채우기" };
+  const widthSettings = tool === "fill" ? null : tool === "pen"
     ? { label: "펜 굵기", value: penWidth, onChange: onPenWidthChange, color: strokeColor, presets: [2, 4, 12] }
     : { label: "지우개 굵기", value: eraserWidth, onChange: onEraserWidthChange, color: "#64748b", presets: [8, 16, 30] };
   function showPanel(next: "width" | "color") { setPanel(next); setOpen(true); }
   function chooseColor(color: string) { onStrokeColorChange(color); }
   return (
     <div className="panel drawing-toolbar flex flex-wrap items-center gap-1 p-2 sm:gap-2 sm:p-3" aria-label="그림 도구">
-        <div className="flex gap-0 rounded-xl bg-[#f1e5c8] sm:gap-1 sm:p-1" role="group" aria-label="그리기 도구 선택">
-          {(["pen", "eraser"] as const).map((value) => (
+        <div className="drawing-tool-buttons flex gap-0 rounded-xl bg-[#f1e5c8] sm:gap-1 sm:p-1" role="group" aria-label="그리기 도구 선택">
+          {(["pen", "eraser", "fill"] as const).map((value) => (
             <button key={value} type="button" onClick={() => onToolChange(value)} aria-pressed={tool === value} disabled={disabled} className="tool-toggle">
-              <ToolIcon name={value} />{value === "pen" ? "펜" : "지우개"}
+              <ToolIcon name={value} />{toolNames[value]}
             </button>
           ))}
         </div>
-        <button type="button" onClick={onUndo} disabled={disabled || strokeCount === 0} className="icon-button" aria-label="마지막 선 실행 취소" title="실행 취소"><ToolIcon name="undo" /></button>
+        <button type="button" onClick={onUndo} disabled={disabled || strokeCount === 0} className="icon-button" aria-label="마지막 작업 실행 취소" title="실행 취소"><ToolIcon name="undo" /></button>
         <button type="button" onClick={() => showPanel("color")} disabled={disabled || tool === "eraser"} aria-label="색상 팔레트" title="색상 팔레트"
           aria-expanded={open && panel === "color"} className="icon-button relative">
           <ToolIcon name="palette" /><span aria-hidden="true" className="absolute bottom-1 right-1 h-2.5 w-2.5 rounded-full border border-white" style={{ backgroundColor: strokeColor }} />
@@ -67,14 +68,14 @@ export function DrawingToolbar({
             <p className="mb-2 text-xs font-semibold text-slate-700">최근 사용한 색</p>
             <div role="group" aria-label="최근 사용한 색" className="grid min-h-11 grid-cols-5 gap-1">
               {recentColors.length ? recentColors.map((color) => <button key={color} type="button" aria-label={`최근 색 ${color} 선택`} title={color} aria-pressed={strokeColor.toLowerCase() === color} disabled={disabled} onClick={() => chooseColor(color)} className="color-swatch w-full"><span className="h-6 w-6 rounded-full border border-black/10" style={{ backgroundColor: color }} /></button>)
-                : <p className="col-span-5 flex items-center text-xs leading-5 text-slate-600">선으로 그린 색이 여기에 모여요.</p>}
+                : <p className="col-span-5 flex items-center text-xs leading-5 text-slate-600">그리거나 채운 색이 여기에 모여요.</p>}
             </div>
           </div>
         </> : <>
-          <div className="mb-3 grid grid-cols-2 gap-2" role="group" aria-label="굵기를 조절할 도구">
-            {(["pen", "eraser"] as const).map((value) => <button key={value} type="button" aria-label={value === "pen" ? "펜 굵기 선택" : "지우개 굵기 선택"} aria-pressed={tool === value} disabled={disabled} onClick={() => onToolChange(value)} className="tool-toggle w-full! border border-slate-200"><ToolIcon name={value} />{value === "pen" ? "펜" : "지우개"}</button>)}
+          <div className="mb-3 grid grid-cols-3 gap-2" role="group" aria-label="작업 도구 선택">
+            {(["pen", "eraser", "fill"] as const).map((value) => <button key={value} type="button" aria-label={value === "pen" ? "펜 굵기 선택" : value === "eraser" ? "지우개 굵기 선택" : "영역 채우기 선택"} aria-pressed={tool === value} disabled={disabled} onClick={() => onToolChange(value)} className="tool-toggle w-full! border border-slate-200"><ToolIcon name={value} />{toolNames[value]}</button>)}
           </div>
-            {[widthSettings].map(({ label, value, onChange, color, presets }) => (
+            {widthSettings ? [widthSettings].map(({ label, value, onChange, color, presets }) => (
               <div key={label} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <label className="text-sm font-semibold" htmlFor={label === "펜 굵기" ? "pen-width" : "eraser-width"}>{label}</label>
@@ -90,23 +91,27 @@ export function DrawingToolbar({
                   <button type="button" aria-label={`${label} 늘리기`} disabled={disabled || value >= 30} onClick={() => onChange(value + 1)} className="icon-button">+</button>
                 </div>
               </div>
-            ))}
+            )) : <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center gap-2 font-semibold"><ToolIcon name="fill" />한 번 눌러 색 채우기<span aria-hidden="true" className="ml-auto h-7 w-7 shrink-0 rounded-lg border border-black/10" style={{ backgroundColor: strokeColor }} /></div>
+              <p className="mt-3 text-sm leading-6 text-slate-600">색을 고른 뒤 닫힌 영역 안을 눌러주세요. 내 반쪽 안에서만 채워져요.</p>
+              <button type="button" onClick={() => setPanel("color")} className="button-secondary mt-3">채울 색 고르기</button>
+            </div>}
           <div className={`mt-4 grid gap-2 ${canDownload ? "grid-cols-3" : "grid-cols-2"}`}>
             <button type="button" onClick={onRedo} disabled={disabled || undoneStrokeCount === 0} className="button-secondary px-2 text-xs">다시 실행</button>
             <button type="button" onClick={onClear} disabled={disabled || (!strokeCount && !undoneStrokeCount)} className="button-secondary px-2 text-xs">전체 지우기</button>
             {canDownload && <button type="button" onClick={onDownload} disabled={disabled || strokeCount === 0} className="button-secondary px-2 text-xs">PNG 저장</button>}
           </div>
-          <p className="mt-3 text-sm leading-6 text-slate-600">선택한 도구의 굵기만 조절해요. 펜과 지우개 설정은 따로 기억해요.</p>
+          <p className="mt-3 text-sm leading-6 text-slate-600">{tool === "fill" ? "선에 틈이 있으면 바깥까지 채워질 수 있어요. 잘못 채웠다면 실행 취소로 되돌리세요." : "선택한 도구의 굵기만 조절해요. 펜과 지우개 설정은 따로 기억해요."}</p>
         </>}
         </div>
         {panel === "color" && <div className="color-preview-footer mt-2 grid shrink-0 gap-2 border-t border-slate-200 pt-2">
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-            <div className="flex items-center justify-between gap-2 text-xs"><p className="font-semibold text-slate-700">선 미리보기</p><span className="font-mono text-slate-600">{strokeColor.toUpperCase()} · {penWidth}</span></div>
-            <svg role="img" aria-label={`${strokeColor} 색상, 펜 굵기 ${penWidth} 선 미리보기`} viewBox="0 0 240 40" className="mt-1 h-8 w-full" data-color={strokeColor} data-pen-width={penWidth}>
-              <path d="M16 25 C48 4 72 36 104 20 S160 7 188 22 S216 27 224 15" fill="none" stroke={strokeColor} strokeWidth={penWidth} strokeLinecap="round" strokeLinejoin="round" />
+            <div className="flex items-center justify-between gap-2 text-xs"><p className="font-semibold text-slate-700">{tool === "fill" ? "채우기 미리보기" : "선 미리보기"}</p><span className="font-mono text-slate-600">{strokeColor.toUpperCase()}{tool !== "fill" && ` · ${penWidth}`}</span></div>
+            <svg role="img" aria-label={tool === "fill" ? `${strokeColor} 채우기 미리보기` : `${strokeColor} 색상, 펜 굵기 ${penWidth} 선 미리보기`} viewBox="0 0 240 40" className="mt-1 h-8 w-full" data-color={strokeColor} data-pen-width={tool === "fill" ? undefined : penWidth}>
+              {tool === "fill" ? <rect x="8" y="2" width="224" height="36" rx="8" fill={strokeColor} /> : <path d="M16 25 C48 4 72 36 104 20 S160 7 188 22 S216 27 224 15" fill="none" stroke={strokeColor} strokeWidth={penWidth} strokeLinecap="round" strokeLinejoin="round" />}
             </svg>
           </div>
-          <button type="button" onClick={() => setOpen(false)} disabled={disabled} className="button-primary w-full">이 색으로 그리기</button>
+          <button type="button" onClick={() => setOpen(false)} disabled={disabled} className="button-primary w-full">{tool === "fill" ? "이 색으로 채우기" : "이 색으로 그리기"}</button>
         </div>}
       </OverlayDialog>
     </div>

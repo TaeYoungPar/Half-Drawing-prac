@@ -12,7 +12,9 @@ export function isStroke(value: unknown): value is Stroke {
     typeof stroke.color === "string" && /^#[0-9a-f]{6}$/i.test(stroke.color) &&
     typeof stroke.lineWidth === "number" && Number.isFinite(stroke.lineWidth) &&
     stroke.lineWidth >= 1 && stroke.lineWidth <= 30 &&
-    (stroke.tool === "pen" || stroke.tool === "eraser");
+    (stroke.tool === "pen" || stroke.tool === "eraser" || stroke.tool === "fill") &&
+    (stroke.tool !== "fill" || [1, 2, 4, 8, 16].includes(stroke.lineWidth)) &&
+    (stroke.fillId === undefined || (stroke.tool === "fill" && typeof stroke.fillId === "string" && stroke.fillId.length > 0 && stroke.fillId.length <= 64));
 }
 
 export function isStrokeArray(value: unknown): value is Stroke[] {

@@ -157,7 +157,7 @@ button:not(:disabled), a { cursor: pointer; }
 .overlay-dialog { border: 2px solid var(--ink); background: var(--paper); box-shadow: 6px 6px 0 #49312750; }
 @media (max-width: 639px) {
   .drawing-workspace { padding: 12px 12px 24px; gap: 12px; }
-  .drawing-toolbar .tool-toggle { width: 64px; white-space: nowrap; font-size: 12px; }
+  .drawing-tool-buttons .tool-toggle { width: 44px; flex-direction: column; gap: 0; white-space: nowrap; font-size: 11px; line-height: 14px; }
   .drawing-expanded .drawing-tools > div { padding: 8px; gap: 4px; }
   .board-shell { padding: 30px 12px 16px; border-radius: 18px; box-shadow: 4px 5px 0 #90b3bd; }
   .board-label { padding: 8px 16px; }

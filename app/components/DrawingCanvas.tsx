@@ -62,6 +62,7 @@ export function DrawingCanvas({
     strokes,
     undoneStrokes,
     addStroke,
+    addStrokes,
     undo,
     redo,
     clear,
@@ -74,7 +75,7 @@ export function DrawingCanvas({
   const [hasInk, setHasInk] = useState(false);
   useOverlayHistory(isExpanded, setIsExpanded, "drawing");
 
-  const lineWidth = tool === "pen" ? penWidth : eraserWidth;
+  const lineWidth = tool === "eraser" ? eraserWidth : penWidth;
   const reviewRef = useRef<HTMLDivElement>(null);
   const [reviewRequested, setReviewRequested] = useState(false);
 
@@ -128,6 +129,10 @@ export function DrawingCanvas({
     onStrokeComplete: (stroke) => {
       addStroke(stroke);
       if (stroke.tool === "pen") rememberStrokeColor(stroke.color);
+    },
+    onFillComplete: (fill) => {
+      addStrokes(fill);
+      rememberStrokeColor(fill[0].color);
     },
   });
 
@@ -463,7 +468,7 @@ export function DrawingCanvas({
       )}
 
       <div className="drawing-view-controls flex flex-wrap items-center gap-2">
-        {!isExpanded && <p className="mr-auto text-sm font-semibold text-slate-700">{drawingSide === "left" ? "왼쪽에 그려요" : "오른쪽에 이어 그려요"}</p>}
+        {!isExpanded && <p className="mr-auto text-sm font-semibold text-slate-700">{tool === "fill" ? "채울 곳을 눌러요" : drawingSide === "left" ? "왼쪽에 그려요" : "오른쪽에 이어 그려요"}</p>}
         {isExpanded && (prompt || roomPrompt.trim()) && <DrawingPrompt prompt={prompt || roomPrompt.trim()} compact />}
         <button data-view-toggle type="button" aria-pressed={isExpanded} disabled={isDrawing} onClick={() => { setReviewRequested(false); setIsExpanded(!isExpanded); }} className="button-secondary">{isExpanded ? "그리기 화면으로 돌아가기" : "내 반쪽 크게 그리기"}</button>
         {isExpanded && <button type="button" onClick={finishFocusedDrawing} disabled={readOnly || isDrawing || !hasInk} className="button-primary">다 그렸어요</button>}
@@ -472,7 +477,7 @@ export function DrawingCanvas({
           {errorMessage && <button type="button" onClick={retry} className="button-secondary ml-2">연결 다시 시도</button>}
         </div>}
         {isExpanded && !hasInk && strokes.length > 0 && <p role="status" className="text-sm text-amber-800">남은 그림이 없어요. 다시 그려주세요.</p>}
-        {isExpanded && <p className="text-xs text-slate-500">{drawingSide === "left" ? "오른쪽 점선까지 그리면 친구 그림과 이어져요." : "왼쪽의 얇은 힌트를 보고 점선부터 이어 그려요."}</p>}
+        {isExpanded && <p className="text-xs text-slate-500">{tool === "fill" ? "닫힌 영역을 누르면 내 반쪽 안에서만 채워져요." : drawingSide === "left" ? "오른쪽 점선까지 그리면 친구 그림과 이어져요." : "왼쪽의 얇은 힌트를 보고 점선부터 이어 그려요."}</p>}
       </div>
       <div className="drawing-stage w-full max-w-[800px]">
       <div className="drawing-frame relative w-full overflow-hidden rounded-xl border border-slate-300" aria-label="그림 작업 영역">
@@ -629,7 +634,7 @@ export function DrawingCanvas({
                 : "이어 그리기 완료"}
             </button>
             {strokes.length > 0 && !hasInk && <p role="status" className="text-sm text-amber-800">남은 그림이 없어요. 다시 그려주세요.</p>}
-            {!hasInk && <p className="text-sm text-slate-600">펜으로 선을 그리면 완료할 수 있어요.</p>}
+            {!hasInk && <p className="text-sm text-slate-600">그리거나 색을 채우면 완료할 수 있어요.</p>}
             <p className="text-xs leading-5 text-slate-500">완료하면 수정할 수 없어요. 두 사람의 그림이 합쳐진 결과를 바로 확인해요.</p>
           </div>
         )}

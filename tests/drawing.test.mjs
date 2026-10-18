@@ -26,11 +26,11 @@ export function loadTS(filename, mocks = {}) {
     }
     return requireModule(name);
   };
-  vm.runInNewContext("(function(exports, require) {" + source + "\n})", {}, { filename: full })(exports, requireLocal);
+  vm.runInNewContext("(function(exports, require) {" + source + "\n})", { crypto: globalThis.crypto }, { filename: full })(exports, requireLocal);
   return exports;
 }
 
-function setup(readOnly = false, dimensions = {}, drawingSide = "left") {
+function setup(readOnly = false, dimensions = {}, drawingSide = "left", tool = "pen") {
   const calls = [];
   const captures = new Set();
   const context = {};
@@ -44,22 +44,27 @@ function setup(readOnly = false, dimensions = {}, drawingSide = "left") {
     ...dimensions,
   };
   context.canvas = canvas;
-  for (const method of ["save", "restore", "beginPath", "rect", "clip", "arc", "fill", "moveTo", "lineTo", "stroke", "clearRect"]) {
+  for (const method of ["save", "restore", "beginPath", "rect", "clip", "arc", "fill", "fillRect", "moveTo", "lineTo", "stroke", "clearRect"]) {
     context[method] = (...args) => calls.push([method, ...args]);
   }
+  context.getImageData = (x, y, width, height) => {
+    calls.push(["getImageData", x, y, width, height]);
+    return { width, height, data: new Uint8ClampedArray(width * height * 4) };
+  };
   let refIndex = 0;
   const stateUpdates = [];
   const react = { useRef: (value) => ({ current: refIndex++ === 0 ? canvas : value }), useEffect: (fn) => fn(), useState: (value) => [value, (next) => stateUpdates.push(next)] };
   const { useCanvasDrawing } = loadTS("app/hooks/useCanvasDrawing.ts", { react });
   const completed = [];
+  const fills = [];
   const handlers = useCanvasDrawing({
     backgroundStrokes: [], strokes: [], lineWidth: 4, strokeColor: "#111827",
-    tool: "pen", drawingSide, readOnly, onStrokeComplete: (stroke) => completed.push(stroke),
+    tool, drawingSide, readOnly, onStrokeComplete: (stroke) => completed.push(stroke), onFillComplete: (strokes) => fills.push(strokes),
   });
   const event = (x, y = 100, pointerId = 1, button = 0) => ({
     clientX: x + 11, clientY: y + 21, pointerId, button, type: "pointerup", preventDefault() {},
   });
-  return { handlers, completed, calls, captures, event, stateUpdates };
+  return { handlers, completed, fills, calls, captures, event, stateUpdates };
 }
 
 test("phone-size input reaches the same bitmap seam for both artists", () => {
@@ -433,4 +438,93 @@ test("reusing a recent color promotes it while retaining five unique colors with
   assert.deepEqual(Array.from(addRecentColor(promoted, '#ffc798')), ['#ffc798', '#2563eb', '#dc2626', '#a8d5ba', '#16a34a']);
   assert.deepEqual(before, ['#dc2626', '#a8d5ba', '#2563eb', '#16a34a', '#f59e0b']);
   assert.deepEqual(Array.from(addRecentColor(before, 'invalid')), before);
+});
+
+function filledPixels(strokes) {
+  const { drawStroke } = loadTS('app/utils/drawStroke.ts');
+  const pixels = new Set();
+  const context = { fillRect(x, y, width, height) {
+    assert.ok([x, y, width, height].every(Number.isInteger), 'fill tiles land on exact pixel boundaries');
+    for (let row = y; row < y + height; row++) for (let column = x; column < x + width; column++) pixels.add(`${column},${row}`);
+  } };
+  for (const stroke of strokes) drawStroke(context, stroke);
+  return pixels;
+}
+test('bucket fills only a connected enclosed area and replays its exact pixels', () => {
+  const { createFillStrokes } = loadTS('app/utils/fillRegion.ts');
+  const image = { width: 400, height: 500, data: new Uint8ClampedArray(400 * 500 * 4) };
+  for (let y = 50; y <= 150; y++) for (let x = 50; x <= 150; x++) {
+    if (x === 50 || x === 150 || y === 50 || y === 150) image.data[(y * 400 + x) * 4 + 3] = 255;
+  }
+  const strokes = createFillStrokes(image, { x: 100, y: 100 }, '#dc2626', 'left', 'one-tap');
+  assert.ok(strokes.every(loadTS('app/utils/validateStroke.ts').isStroke));
+  const pixels = filledPixels(strokes);
+  assert.equal(pixels.size, 99 * 99);
+  for (let y = 51; y < 150; y++) for (let x = 51; x < 150; x++) assert.equal(pixels.has(`${x},${y}`), true);
+  assert.equal(pixels.has('50,100'), false);
+  assert.equal(pixels.has('20,20'), false);
+});
+test('full-half fills stay compact and existing hint filtering preserves exactly the 24px strip', () => {
+  const { createFillStrokes } = loadTS('app/utils/fillRegion.ts');
+  const image = { width: 400, height: 500, data: new Uint8ClampedArray(400 * 500 * 4) };
+  const strokes = createFillStrokes(image, { x: 400, y: 500 }, '#a8d5ba', 'left', 'edge-tap');
+  assert.ok(JSON.stringify(strokes).length < 100000, 'background fills must fit comfortably in browser drafts');
+  const hint = strokes.map(stroke => ({ ...stroke, points: stroke.points.filter(point => point.x >= 376 && point.x <= 400) })).filter(stroke => stroke.points.length);
+  const pixels = filledPixels(hint);
+  assert.equal(pixels.size, 24 * 500);
+  assert.ok([...pixels].every(pixel => Number(pixel.split(',')[0]) >= 376 && Number(pixel.split(',')[0]) < 400));
+  const right = filledPixels(createFillStrokes(image, { x: 400, y: 0 }, '#2563eb', 'right', 'guest-tap'));
+  assert.equal(right.size, 400 * 500);
+  assert.ok([...right].every(pixel => Number(pixel.split(',')[0]) >= 400 && Number(pixel.split(',')[0]) < 800));
+});
+test('bucket compares transparent pixels on white, does not cross diagonal gaps, and skips unchanged color', () => {
+  const { createFillStrokes } = loadTS('app/utils/fillRegion.ts');
+  const image = { width: 2, height: 2, data: new Uint8ClampedArray([255, 0, 0, 255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 255]) };
+  const red = createFillStrokes(image, { x: 0, y: 0 }, '#2563eb', 'left', 'red');
+  assert.deepEqual([...filledPixels(red)], ['0,0']);
+  assert.equal(createFillStrokes(image, { x: 1, y: 0 }, '#ffffff', 'left', 'white').length, 0);
+  assert.equal(createFillStrokes(image, { x: 0, y: 0 }, '#ff0000', 'left', 'unchanged').length, 0);
+  const erased = { width: 3, height: 1, data: new Uint8ClampedArray([0, 0, 0, 255, 220, 38, 38, 128, 0, 0, 0, 0]) };
+  assert.deepEqual([...filledPixels(createFillStrokes(erased, { x: 2, y: 0 }, '#dc2626', 'left', 'restore-edge'))].sort(), ['1,0', '2,0']);
+});
+test('one bucket tap undoes and redoes all tiles together without affecting adjacent pen or fill actions', () => {
+  const { historyReducer } = loadTS('app/hooks/useDrawingHistory.ts');
+  const pen = sampleStroke();
+  const tiles = [16, 8, 1].map(lineWidth => ({ ...pen, tool: 'fill', lineWidth, fillId: 'first' }));
+  let state = historyReducer({ strokes: [pen], undoneStrokes: [] }, { type: 'addMany', strokes: tiles });
+  state = historyReducer(state, { type: 'undo' });
+  assert.equal(state.strokes.length, 1);
+  assert.equal(state.strokes[0], pen);
+  assert.equal(state.undoneStrokes.length, 3);
+  state = historyReducer(state, { type: 'redo' });
+  assert.deepEqual(Array.from(state.strokes), [pen, ...tiles]);
+  state = historyReducer(state, { type: 'addMany', strokes: [{ ...tiles[0], fillId: 'second' }] });
+  state = historyReducer(state, { type: 'undo' });
+  assert.deepEqual(Array.from(state.strokes), [pen, ...tiles]);
+  state = historyReducer(state, { type: 'add', stroke: pen });
+  assert.equal(state.undoneStrokes.length, 0);
+});
+test('bucket gestures commit once on release, ignore dragging/second fingers, and cancel without paint', () => {
+  const run = setup(false, {}, 'right', 'fill');
+  run.handlers.handlePointerDown(run.event(600));
+  run.handlers.handlePointerMove(run.event(700));
+  run.handlers.handlePointerDown(run.event(650, 100, 2));
+  assert.equal(run.fills.length, 0);
+  run.handlers.handlePointerUp(run.event(700));
+  run.handlers.handlePointerUp(run.event(700));
+  assert.equal(run.fills.length, 1);
+  assert.equal(run.completed.length, 0);
+  assert.deepEqual(run.calls.find(([name]) => name === 'getImageData'), ['getImageData', 400, 0, 400, 500]);
+  const cancelled = setup(false, {}, 'left', 'fill');
+  cancelled.handlers.handlePointerDown(cancelled.event(100));
+  cancelled.handlers.handlePointerUp({ ...cancelled.event(100), type: 'pointercancel' });
+  assert.equal(cancelled.fills.length, 0);
+  assert.equal(cancelled.captures.size, 0);
+});
+test('fill preferences restore without changing pen/eraser widths and invalid fill records are rejected', () => {
+  const settings = loadTS('app/utils/drawingSettings.ts').parseDrawingSettings({ tool: 'fill', penWidth: 2, eraserWidth: 30 });
+  assert.equal(settings.tool, 'fill'); assert.equal(settings.penWidth, 2); assert.equal(settings.eraserWidth, 30);
+  const { isStroke } = loadTS('app/utils/validateStroke.ts');
+  assert.equal(isStroke({ ...sampleStroke(), tool: 'fill', lineWidth: 3 }), false);
+  assert.equal(isStroke({ ...sampleStroke(), tool: 'fill', fillId: 123 }), false);
 });

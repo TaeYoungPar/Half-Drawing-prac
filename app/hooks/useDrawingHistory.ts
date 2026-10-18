@@ -15,6 +15,10 @@ type DrawingAction =
         stroke: Stroke;
     }
     | {
+        type: "addMany";
+        strokes: Stroke[];
+    }
+    | {
         type: "undo";
     }
     | {
@@ -33,11 +37,22 @@ const initialHistory: DrawingHistory = {
     undoneStrokes: []
 };
 
+function lastActionStart(strokes: Stroke[]) {
+    let start = strokes.length - 1;
+    const last = strokes[start];
+    if (last?.tool === "fill" && last.fillId) {
+        while (start > 0 && strokes[start - 1].tool === "fill" && strokes[start - 1].fillId === last.fillId) start--;
+    }
+    return start;
+}
+
 export function historyReducer(
     state: DrawingHistory,
     action: DrawingAction
 ): DrawingHistory {
     switch (action.type) {
+        case "addMany":
+            return action.strokes.length ? { strokes: [...state.strokes, ...action.strokes], undoneStrokes: [] } : state;
         case "add":
             return {
                 strokes: [
@@ -66,10 +81,10 @@ export function historyReducer(
 
 
             return {
-                strokes: state.strokes.slice(0, -1),
+                strokes: state.strokes.slice(0, lastActionStart(state.strokes)),
                 undoneStrokes: [
                     ...state.undoneStrokes,
-                    lastStroke,
+                    ...state.strokes.slice(lastActionStart(state.strokes)).reverse(),
                 ],
             };
         }
@@ -85,8 +100,8 @@ export function historyReducer(
             }
 
             return {
-                strokes: [...state.strokes, restoredStroke],
-                undoneStrokes: state.undoneStrokes.slice(0, -1),
+                strokes: [...state.strokes, ...state.undoneStrokes.slice(lastActionStart(state.undoneStrokes)).reverse()],
+                undoneStrokes: state.undoneStrokes.slice(0, lastActionStart(state.undoneStrokes)),
 
 
             };
@@ -193,6 +208,7 @@ export function useDrawingHistory(storageKey: string) {
         strokes: history.strokes,
         undoneStrokes: history.undoneStrokes,
         addStroke,
+        addStrokes: (strokes: Stroke[]) => dispatch({ type: "addMany", strokes }),
         undo,
         redo,
         clear,

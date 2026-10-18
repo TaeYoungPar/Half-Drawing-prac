@@ -58,8 +58,9 @@ try {
       assert.ok(canvas.y <= 420, `mobile canvas should appear early beneath the shared header and topic picker, received ${canvas.y}`);
       assert.ok(canvas.y + canvas.height <= height, 'entire normal canvas fits in the first screen');
       assert.equal(await page.getByRole('dialog', { name: '내 반쪽 크게 그리기', exact: true }).count(), 0);
-      const toolBoxes = await Promise.all(['펜', '지우개', '마지막 선 실행 취소', '색상 팔레트', '굵기 · 더 많은 도구'].map(name => page.getByRole('button', { name, exact: true }).boundingBox()));
+      const toolBoxes = await Promise.all(['펜', '지우개', '채우기', '마지막 작업 실행 취소', '색상 팔레트', '굵기 · 더 많은 도구'].map(name => page.getByRole('button', { name, exact: true }).boundingBox()));
       assert.equal(toolBoxes[0].width, toolBoxes[1].width, 'pen and eraser retain identical dimensions');
+      assert.equal(toolBoxes[0].width, toolBoxes[2].width, 'fill matches the drawing tools');
       for (const box of toolBoxes) assert.ok(box.width >= 44 && box.height >= 44);
       assert.ok(toolBoxes.every(box => Math.abs(box.y - toolBoxes[0].y) < 1), 'primary tools fit one row');
     }
