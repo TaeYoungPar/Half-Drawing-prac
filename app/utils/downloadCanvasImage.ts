@@ -46,7 +46,7 @@ export function downloadCanvasImage(canvas: HTMLCanvasElement | null, filename =
     link.click();
 }
 
-export async function shareCanvasImage(canvas: HTMLCanvasElement | null, options: { filename?: string; text?: string } = {}): Promise<string | null> {
+export async function shareCanvasImage(canvas: HTMLCanvasElement | null, options: { filename?: string } = {}): Promise<string | null> {
     const exportCanvas = createExportCanvas(canvas);
     if (!exportCanvas) throw new Error("그림을 준비하지 못했습니다. 다시 시도해주세요.");
     const blob = await new Promise<Blob>((resolve, reject) => {
@@ -55,9 +55,7 @@ export async function shareCanvasImage(canvas: HTMLCanvasElement | null, options
     const file = new File([blob], options.filename ?? "half-drawing.png", { type: "image/png" });
     if (navigator.share && navigator.canShare?.({ files: [file] })) {
         try {
-            // 별도 제목 없이 문구를 보내고, 마지막 글자 뒤의 공백·줄바꿈을 제거합니다.
-            const text = (options.text ?? "서로의 그림을 모른 채 반쪽씩 그렸어. 반쪽그림에서 너랑도 한 장 완성해볼래?").trimEnd();
-            await navigator.share({ files: [file], text });
+            await navigator.share({ files: [file] });
             return "그림을 공유했습니다.";
         } catch (error) {
             if (error instanceof Error && error.name === "AbortError") return null;

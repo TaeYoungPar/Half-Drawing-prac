@@ -61,26 +61,14 @@ function imageHarness(navigator) {
   return { ...load("downloadCanvasImage", { navigator, document }), calls, downloads };
 }
 
-test("image sharing sends a PNG with a white background", async () => {
+test("image sharing sends only a PNG with a white background and no chat caption", async () => {
   let shared;
   const { shareCanvasImage, calls } = imageHarness({ canShare: () => true, share: async (data) => { shared = data; } });
   await shareCanvasImage({ width: 800, height: 500 });
   assert.deepEqual(calls, ["white", "drawing"]);
   assert.equal(shared.files[0].type, "image/png");
   assert.equal(shared.files[0].name, "half-drawing.png");
-  assert.deepEqual(Object.keys(shared), ["files", "text"]);
-  assert.equal(shared.text, "서로의 그림을 모른 채 반쪽씩 그렸어. 반쪽그림에서 너랑도 한 장 완성해볼래?");
-});
-
-test("image captions end at their last character without trailing whitespace or newlines", async () => {
-  let shared;
-  const { shareCanvasImage } = imageHarness({ canShare: () => true, share: async (data) => { shared = data; } });
-  await shareCanvasImage({ width: 1200, height: 1200 }, {
-    filename: "half-drawing-card.png",
-    text: "서로의 그림을 모른 채 반쪽씩 그렸어. 반쪽그림에서 너랑도 한 장 완성해볼래? \r\n\n\u00a0",
-  });
-  assert.equal(shared.text, "서로의 그림을 모른 채 반쪽씩 그렸어. 반쪽그림에서 너랑도 한 장 완성해볼래?");
-  assert.deepEqual(Object.keys(shared), ["files", "text"]);
+  assert.deepEqual(Object.keys(shared), ["files"]);
 });
 
 test("unsupported image sharing requests download; cancellation does not", async () => {
@@ -98,6 +86,7 @@ test("share cards keep their own filename in native sharing and download fallbac
   await native.shareCanvasImage({ width: 1200, height: 1200 }, { filename: 'half-drawing-card.png' });
   assert.equal(shared.files[0].name, 'half-drawing-card.png');
   assert.equal(shared.files[0].type, 'image/png');
+  assert.deepEqual(Object.keys(shared), ['files']);
   const fallback = imageHarness({});
   await fallback.shareCanvasImage({ width: 1200, height: 1200 }, { filename: 'half-drawing-card.png' });
   assert.deepEqual(fallback.downloads, ['half-drawing-card.png']);
