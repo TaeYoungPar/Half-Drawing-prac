@@ -69,7 +69,7 @@ export function DrawingCanvas({
     draftError,
   } = useDrawingHistory(storageKey);
 
-  const { penWidth, eraserWidth, strokeColor, tool, setPenWidth, setEraserWidth, setStrokeColor, setTool, restored: settingsRestored } = useDrawingSettings();
+  const { penWidth, eraserWidth, strokeColor, tool, recentColors, rememberStrokeColor, setPenWidth, setEraserWidth, setStrokeColor, setTool, restored: settingsRestored } = useDrawingSettings();
   const [hasInk, setHasInk] = useState(false);
   useOverlayHistory(isExpanded, setIsExpanded, "drawing");
 
@@ -124,7 +124,10 @@ export function DrawingCanvas({
     tool,
     drawingSide,
     readOnly,
-    onStrokeComplete: addStroke,
+    onStrokeComplete: (stroke) => {
+      addStroke(stroke);
+      if (stroke.tool === "pen") rememberStrokeColor(stroke.color);
+    },
   });
 
   useEffect(() => {
@@ -416,6 +419,7 @@ export function DrawingCanvas({
         penWidth={penWidth}
         eraserWidth={eraserWidth}
         strokeColor={strokeColor}
+        recentColors={recentColors}
         onPenWidthChange={setPenWidth}
         onEraserWidthChange={setEraserWidth}
         onStrokeColorChange={

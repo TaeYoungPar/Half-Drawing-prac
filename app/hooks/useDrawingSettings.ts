@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DEFAULT_SETTINGS, SETTINGS_KEY, parseDrawingSettings } from "../utils/drawingSettings";
+import { DEFAULT_SETTINGS, SETTINGS_KEY, addRecentColor, parseDrawingSettings } from "../utils/drawingSettings";
 import type { DrawingTool } from "../types/drawing";
 
 export function useDrawingSettings() {
@@ -26,5 +26,10 @@ export function useDrawingSettings() {
     setEraserWidth: (eraserWidth: number) => setSettings((previous) => ({ ...previous, eraserWidth })),
     setStrokeColor: (strokeColor: string) => setSettings((previous) => ({ ...previous, strokeColor })),
     setTool: (tool: DrawingTool) => setSettings((previous) => ({ ...previous, tool })),
+    rememberStrokeColor: (color: string) => setSettings((previous) => {
+      const recentColors = addRecentColor(previous.recentColors, color);
+      return recentColors.length === previous.recentColors.length && recentColors.every((item, index) => item === previous.recentColors[index])
+        ? previous : { ...previous, recentColors };
+    }),
   };
 }

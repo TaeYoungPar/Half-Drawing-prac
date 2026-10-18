@@ -7,6 +7,7 @@ import type { DrawingTool } from "../types/drawing";
 
 type DrawingToolbarProps = {
   penWidth: number; eraserWidth: number; strokeColor: string; tool: DrawingTool;
+  recentColors: string[];
   onDownload: () => void; canDownload?: boolean; disabled?: boolean;
   onToolChange: (tool: DrawingTool) => void;
   onPenWidthChange: (width: number) => void;
@@ -17,7 +18,7 @@ type DrawingToolbarProps = {
 };
 
 export function DrawingToolbar({
-  penWidth, eraserWidth, strokeColor, tool, onToolChange, onPenWidthChange, onEraserWidthChange,
+  penWidth, eraserWidth, strokeColor, tool, recentColors, onToolChange, onPenWidthChange, onEraserWidthChange,
   onStrokeColorChange, strokeCount, undoneStrokeCount, onUndo, onRedo,
   onClear, onDownload, canDownload = true, disabled = false,
 }: DrawingToolbarProps) {
@@ -50,16 +51,31 @@ export function DrawingToolbar({
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2">
         {panel === "color" ? <>
-          <p className="mb-3 text-sm font-semibold">그림 색상</p>
-          <div className="grid grid-cols-3 justify-items-center gap-2" role="group" aria-label="빠른 색상 선택">
-            {[["#111827", "검정"], ["#dc2626", "빨강"], ["#f59e0b", "노랑"], ["#16a34a", "초록"], ["#2563eb", "파랑"], ["#9333ea", "보라"]].map(([color, name]) => (
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-sm font-semibold">기본색 · 파스텔색</p>
+            <label className="flex min-h-11 items-center gap-2 text-xs font-semibold">직접 고르기
+              <input type="color" value={strokeColor} disabled={disabled} onChange={(event) => onStrokeColorChange(event.target.value)} className="h-11 w-11 cursor-pointer rounded-xl border border-slate-200 bg-white p-1" />
+            </label>
+          </div>
+          <div className="grid grid-cols-4 justify-items-center gap-1 sm:grid-cols-6" role="group" aria-label="빠른 색상 선택">
+            {[["#111827", "검정"], ["#dc2626", "빨강"], ["#f59e0b", "노랑"], ["#16a34a", "초록"], ["#2563eb", "파랑"], ["#9333ea", "보라"], ["#ffc798", "살구"], ["#f3b3bd", "분홍"], ["#ffedb7", "연노랑"], ["#a8d5ba", "민트"], ["#9fc9df", "하늘"], ["#c4b5df", "라벤더"]].map(([color, name]) => (
               <button key={color} type="button" aria-label={`${name} 선택`} title={name} aria-pressed={strokeColor === color} disabled={disabled}
-                onClick={() => chooseColor(color)} className="color-swatch"><span className="h-7 w-7 rounded-full" style={{ backgroundColor: color }} /></button>
+                onClick={() => chooseColor(color)} className="color-swatch"><span className="h-7 w-7 rounded-full border border-black/10" style={{ backgroundColor: color }} /></button>
             ))}
           </div>
-          <label className="mt-4 flex min-h-11 items-center gap-3 text-sm font-medium">직접 고르기
-            <input type="color" value={strokeColor} disabled={disabled} onChange={(event) => onStrokeColorChange(event.target.value)} className="h-11 w-11 cursor-pointer rounded-xl border border-slate-200 bg-white p-1" />
-          </label>
+          <div className="mt-3">
+            <p className="mb-2 text-xs font-semibold text-slate-700">최근 사용한 색</p>
+            <div role="group" aria-label="최근 사용한 색" className="grid min-h-11 grid-cols-5 gap-1">
+              {recentColors.length ? recentColors.map((color) => <button key={color} type="button" aria-label={`최근 색 ${color} 선택`} title={color} aria-pressed={strokeColor.toLowerCase() === color} disabled={disabled} onClick={() => chooseColor(color)} className="color-swatch w-full"><span className="h-6 w-6 rounded-full border border-black/10" style={{ backgroundColor: color }} /></button>)
+                : <p className="col-span-5 flex items-center text-xs leading-5 text-slate-600">선으로 그린 색이 여기에 모여요.</p>}
+            </div>
+          </div>
+          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+            <div className="flex items-center justify-between gap-2 text-xs"><p className="font-semibold text-slate-700">선 미리보기</p><span className="font-mono text-slate-600">{strokeColor.toUpperCase()} · {penWidth}</span></div>
+            <svg role="img" aria-label={`${strokeColor} 색상, 펜 굵기 ${penWidth} 선 미리보기`} viewBox="0 0 240 40" className="mt-2 h-10 w-full" data-color={strokeColor} data-pen-width={penWidth}>
+              <path d="M16 25 C48 4 72 36 104 20 S160 7 188 22 S216 27 224 15" fill="none" stroke={strokeColor} strokeWidth={penWidth} strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
         </> : <>
           <div className="mb-3 grid grid-cols-2 gap-2" role="group" aria-label="굵기를 조절할 도구">
             {(["pen", "eraser"] as const).map((value) => <button key={value} type="button" aria-label={value === "pen" ? "펜 굵기 선택" : "지우개 굵기 선택"} aria-pressed={tool === value} disabled={disabled} onClick={() => onToolChange(value)} className="tool-toggle w-full! border border-slate-200"><ToolIcon name={value} />{value === "pen" ? "펜" : "지우개"}</button>)}

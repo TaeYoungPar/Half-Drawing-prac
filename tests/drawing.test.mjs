@@ -416,3 +416,21 @@ test("drawing preferences restore each tool independently and reject malformed v
     const parsed = parseDrawingSettings(bad);assert.equal(parsed.penWidth, 4);assert.equal(parsed.eraserWidth, 16);assert.equal(parsed.strokeColor, "#111827");assert.equal(parsed.tool, "pen");
   }
 });
+
+test("recent colors migrate old preferences and reject corrupt or duplicate entries", () => {
+  const { parseDrawingSettings } = loadTS("app/utils/drawingSettings.ts");
+  assert.equal(parseDrawingSettings({ penWidth: 12 }).recentColors.length, 0);
+  const settings = parseDrawingSettings({ recentColors: ['#DC2626', null, '#dc2626', 'red', '#a8d5ba', '#2563eb', '#16a34a', '#f59e0b', '#9333ea'] });
+  assert.deepEqual(Array.from(settings.recentColors), ['#dc2626', '#a8d5ba', '#2563eb', '#16a34a', '#f59e0b']);
+  assert.equal(parseDrawingSettings({ recentColors: 'not an array' }).recentColors.length, 0);
+});
+
+test("reusing a recent color promotes it while retaining five unique colors without mutating preferences", () => {
+  const { addRecentColor } = loadTS("app/utils/drawingSettings.ts");
+  const before = ['#dc2626', '#a8d5ba', '#2563eb', '#16a34a', '#f59e0b'];
+  const promoted = addRecentColor(before, '#2563EB');
+  assert.deepEqual(Array.from(promoted), ['#2563eb', '#dc2626', '#a8d5ba', '#16a34a', '#f59e0b']);
+  assert.deepEqual(Array.from(addRecentColor(promoted, '#ffc798')), ['#ffc798', '#2563eb', '#dc2626', '#a8d5ba', '#16a34a']);
+  assert.deepEqual(before, ['#dc2626', '#a8d5ba', '#2563eb', '#16a34a', '#f59e0b']);
+  assert.deepEqual(Array.from(addRecentColor(before, 'invalid')), before);
+});
