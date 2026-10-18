@@ -112,8 +112,10 @@ try {
       assert.equal(await banner.count(), 0, 'empty lists never show advertising');
     }
     const adsTxt = await page.request.get(`${base}/ads.txt`);
-    assert.equal(adsTxt.status(), enabled ? 200 : 404);
-    if (enabled) assert.equal(await adsTxt.text(), 'google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0\n');
+    const expectedClient = enabled ? 'ca-pub-0000000000000000' : 'ca-pub-6008052842325785';
+    assert.equal(adsTxt.status(), 200);
+    assert.equal(await adsTxt.text(), `google.com, ${expectedClient.slice(3)}, DIRECT, f08c47fec0942fa0\n`);
+    assert.equal(await page.locator('head meta[name="google-adsense-account"]').getAttribute('content'), expectedClient);
     assert.deepEqual(run.errors, []);
     await context.close();
     console.log(`${width}px: ${enabled ? 'lazy 100px banner, action spacing, script deduplication, filter stability, empty-list removal' : 'no slots, no requests'} PASS`);

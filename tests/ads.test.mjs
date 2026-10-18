@@ -32,8 +32,16 @@ test('ads.txt verifies a configured publisher even before banners are enabled', 
   assert.equal(await response.text(), 'google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0\n');
   assert.match(response.headers.get('content-type'), /^text\/plain/);
 });
-test('ads.txt does not publish a placeholder or malformed publisher', async () => {
-  for (const env of [{}, { NEXT_PUBLIC_ADSENSE_CLIENT: 'ca-pub-123\nmalicious-entry' }]) {
+test('site ownership can be verified before ads or slots are configured', async () => {
+  assert.equal(load({}).adsPublisherId(), 'ca-pub-6008052842325785');
+  assert.equal(load({}).adSettings('completed'), null);
+  assert.equal(load({}).adSettings('library'), null);
+  const response = load({}, true).GET();
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), 'google.com, pub-6008052842325785, DIRECT, f08c47fec0942fa0\n');
+});
+test('ads.txt rejects an explicitly empty or malformed publisher override', async () => {
+  for (const env of [{ NEXT_PUBLIC_ADSENSE_CLIENT: '' }, { NEXT_PUBLIC_ADSENSE_CLIENT: 'ca-pub-123\nmalicious-entry' }]) {
     const response = load(env, true).GET();
     assert.equal(response.status, 404);
     assert.equal(await response.text(), '');
