@@ -58,7 +58,7 @@ async function waitToolsClosed(page){await page.getByRole('dialog',{name:'그림
  await h.getByRole('button',{name:'그림 도구 닫기',exact:true}).click();await waitToolsClosed(h);
  await h.getByRole('button',{name:'색상 팔레트',exact:true}).click();await h.screenshot({path:`${out}/palette-mobile.png`,fullPage:true});
  await h.getByLabel('직접 고르기').evaluate(el=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,'#2563eb');el.dispatchEvent(new Event('input',{bubbles:true}));});
- await h.getByRole('button',{name:'빨강 선택',exact:true}).click();await waitToolsClosed(h);
+ await h.getByRole('button',{name:'빨강 선택',exact:true}).click();await h.getByRole('img',{name:'#dc2626 색상, 펜 굵기 2 선 미리보기',exact:true}).waitFor();await h.getByRole('button',{name:'이 색으로 그리기',exact:true}).click();await waitToolsClosed(h);
  await canvas.scrollIntoViewIfNeeded();
  const box=await canvas.boundingBox();await h.mouse.move(box.x+box.width*.25,box.y+box.height*.5);await h.mouse.down();await h.mouse.move(box.x+box.width*.5,box.y+box.height*.5,{steps:8});await h.mouse.up();
  await h.getByRole('button',{name:'지우개',exact:true}).click();await canvas.scrollIntoViewIfNeeded();

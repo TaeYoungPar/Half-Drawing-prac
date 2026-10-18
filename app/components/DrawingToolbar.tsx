@@ -28,7 +28,7 @@ export function DrawingToolbar({
     ? { label: "펜 굵기", value: penWidth, onChange: onPenWidthChange, color: strokeColor, presets: [2, 4, 12] }
     : { label: "지우개 굵기", value: eraserWidth, onChange: onEraserWidthChange, color: "#64748b", presets: [8, 16, 30] };
   function showPanel(next: "width" | "color") { setPanel(next); setOpen(true); }
-  function chooseColor(color: string) { onStrokeColorChange(color); setOpen(false); }
+  function chooseColor(color: string) { onStrokeColorChange(color); }
   return (
     <div className="panel drawing-toolbar flex flex-wrap items-center gap-1 p-2 sm:gap-2 sm:p-3" aria-label="그림 도구">
         <div className="flex gap-0 rounded-xl bg-[#f1e5c8] sm:gap-1 sm:p-1" role="group" aria-label="그리기 도구 선택">
@@ -70,12 +70,6 @@ export function DrawingToolbar({
                 : <p className="col-span-5 flex items-center text-xs leading-5 text-slate-600">선으로 그린 색이 여기에 모여요.</p>}
             </div>
           </div>
-          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
-            <div className="flex items-center justify-between gap-2 text-xs"><p className="font-semibold text-slate-700">선 미리보기</p><span className="font-mono text-slate-600">{strokeColor.toUpperCase()} · {penWidth}</span></div>
-            <svg role="img" aria-label={`${strokeColor} 색상, 펜 굵기 ${penWidth} 선 미리보기`} viewBox="0 0 240 40" className="mt-2 h-10 w-full" data-color={strokeColor} data-pen-width={penWidth}>
-              <path d="M16 25 C48 4 72 36 104 20 S160 7 188 22 S216 27 224 15" fill="none" stroke={strokeColor} strokeWidth={penWidth} strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
         </> : <>
           <div className="mb-3 grid grid-cols-2 gap-2" role="group" aria-label="굵기를 조절할 도구">
             {(["pen", "eraser"] as const).map((value) => <button key={value} type="button" aria-label={value === "pen" ? "펜 굵기 선택" : "지우개 굵기 선택"} aria-pressed={tool === value} disabled={disabled} onClick={() => onToolChange(value)} className="tool-toggle w-full! border border-slate-200"><ToolIcon name={value} />{value === "pen" ? "펜" : "지우개"}</button>)}
@@ -105,6 +99,15 @@ export function DrawingToolbar({
           <p className="mt-3 text-sm leading-6 text-slate-600">선택한 도구의 굵기만 조절해요. 펜과 지우개 설정은 따로 기억해요.</p>
         </>}
         </div>
+        {panel === "color" && <div className="color-preview-footer mt-2 grid shrink-0 gap-2 border-t border-slate-200 pt-2">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+            <div className="flex items-center justify-between gap-2 text-xs"><p className="font-semibold text-slate-700">선 미리보기</p><span className="font-mono text-slate-600">{strokeColor.toUpperCase()} · {penWidth}</span></div>
+            <svg role="img" aria-label={`${strokeColor} 색상, 펜 굵기 ${penWidth} 선 미리보기`} viewBox="0 0 240 40" className="mt-1 h-8 w-full" data-color={strokeColor} data-pen-width={penWidth}>
+              <path d="M16 25 C48 4 72 36 104 20 S160 7 188 22 S216 27 224 15" fill="none" stroke={strokeColor} strokeWidth={penWidth} strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <button type="button" onClick={() => setOpen(false)} disabled={disabled} className="button-primary w-full">이 색으로 그리기</button>
+        </div>}
       </OverlayDialog>
     </div>
   );

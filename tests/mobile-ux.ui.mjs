@@ -75,7 +75,9 @@ async function swipe(context, page, x, y, dx, dy) {
     await openDrawing(page);
     await page.getByRole('dialog', { name: '내 반쪽 크게 그리기', exact: true }).waitFor();
     await page.getByRole('button', { name: '색상 팔레트', exact: true }).click();
-    await page.getByRole('button', { name: '보라 선택', exact: true }).click(); await settled(page, '그림 도구', false);
+    await page.getByRole('button', { name: '보라 선택', exact: true }).click();
+    await page.getByRole('img', { name: '#9333ea 색상, 펜 굵기 2 선 미리보기', exact: true }).waitFor();
+    await page.getByRole('button', { name: '이 색으로 그리기', exact: true }).click(); await settled(page, '그림 도구', false);
     let box = await stage.boundingBox();
     await page.touchscreen.tap(box.x + box.width * .25, box.y + box.height * .5);
     await page.waitForFunction(() => !Array.from(document.querySelectorAll('button')).find(b => b.textContent === '다 그렸어요').disabled);

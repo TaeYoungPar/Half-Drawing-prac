@@ -43,6 +43,18 @@ try {
     assert.equal(await recent.getByRole('button').count(), 0);
     await recent.getByText('선으로 그린 색이 여기에 모여요.', { exact: true }).waitFor();
     await page.screenshot({ path: `${out}/empty-${width}x${height}.png` });
+    for (const name of ['검정', '빨강', '노랑', '초록', '파랑', '보라', '살구', '분홍', '연노랑', '민트', '하늘', '라벤더']) {
+      const choice = quick.getByRole('button', { name: `${name} 선택`, exact: true });
+      await choice.click();
+      assert.equal(await dialog.isVisible(), true, 'all twelve choices keep the preview open');
+      assert.equal(await choice.getAttribute('aria-pressed'), 'true');
+      const selected = (await settings(page)).strokeColor;
+      const line = dialog.getByRole('img');
+      assert.equal(await line.getAttribute('data-color'), selected);
+      const lineBox = await line.boundingBox(), actionBox = await dialog.getByRole('button', { name: '이 색으로 그리기', exact: true }).boundingBox();
+      assert.ok(lineBox.y >= initial.y && lineBox.y + lineBox.height <= initial.y + initial.height, 'preview stays visible after scrolling to a color');
+      assert.ok(actionBox.y >= 0 && actionBox.y + actionBox.height <= height, 'drawing action stays visible');
+    }
 
     await tabs.getByRole('button', { name: '굵기 · 작업', exact: true }).click();
     await dialog.getByRole('button', { name: '펜 굵기 굵게', exact: true }).click();
@@ -58,13 +70,15 @@ try {
     assert.equal(await preview.locator('path').getAttribute('stroke'), '#1284ab');
     assert.equal(await preview.locator('path').getAttribute('stroke-width'), '12');
     assert.equal(await recent.getByRole('button').count(), 0, 'selecting without drawing does not record usage');
-    await dialog.getByRole('button', { name: '그림 도구 닫기', exact: true }).click(); await closed(page);
+    await dialog.getByRole('button', { name: '이 색으로 그리기', exact: true }).click(); await closed(page);
     await paint(page);
     await page.waitForFunction(() => JSON.parse(localStorage.getItem('half-drawing:tool-settings')).recentColors[0] === '#1284ab');
 
     for (const name of ['빨강', '노랑', '초록', '파랑', '민트']) {
       await palette.click();
       await quick.getByRole('button', { name: `${name} 선택`, exact: true }).click();
+      assert.equal(await dialog.isVisible(), true);
+      await dialog.getByRole('button', { name: '이 색으로 그리기', exact: true }).click();
       await closed(page);
       await paint(page);
     }
@@ -78,7 +92,11 @@ try {
     }
     await dialog.getByRole('img', { name: '#a8d5ba 색상, 펜 굵기 12 선 미리보기', exact: true }).scrollIntoViewIfNeeded();
     await page.screenshot({ path: `${out}/recent-${width}x${height}.png` });
-    await recent.getByRole('button', { name: '최근 색 #dc2626 선택', exact: true }).click(); await closed(page);
+    await recent.getByRole('button', { name: '최근 색 #dc2626 선택', exact: true }).click();
+    assert.equal(await dialog.isVisible(), true, 'recent color also keeps the preview open');
+    assert.equal(await dialog.getByRole('img').getAttribute('data-color'), '#dc2626');
+    await page.screenshot({ path: `${out}/selected-${width}x${height}.png` });
+    await dialog.getByRole('button', { name: '이 색으로 그리기', exact: true }).click(); await closed(page);
     assert.deepEqual((await settings(page)).recentColors, expected, 'picking a recent color alone keeps usage order');
     await paint(page);
     const promoted = ['#dc2626', '#a8d5ba', '#2563eb', '#16a34a', '#f59e0b'];

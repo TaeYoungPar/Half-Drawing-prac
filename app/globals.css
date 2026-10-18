@@ -173,3 +173,6 @@ button:not(:disabled), a { cursor: pointer; }
 .tool-settings-tabs { flex-shrink: 0; }
 .tool-settings-tabs .tool-tab { height: 48px; min-height: 48px; padding: 8px 12px; }
 .tool-settings-tabs .tool-tab[aria-pressed="true"] { background: #ffc798; box-shadow: 0 3px 0 var(--ink); }
+@media (max-height: 480px) {
+  .color-preview-footer { grid-template-columns: minmax(0, 1fr) auto; }
+}
