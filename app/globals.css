@@ -166,6 +166,9 @@ button:not(:disabled), a { cursor: pointer; }
 .overlay-dialog { max-height: calc(100dvh - 16px); overscroll-behavior: contain; }
 .result-preview-scroll { max-height: 65dvh; overflow: auto; overscroll-behavior: contain; touch-action: pan-x pan-y pinch-zoom; }
 
+.ad-banner { width: 100%; max-width: 800px; margin-top: 40px; padding-top: 12px; border-top: 1px solid #c8b99b; }
+.ad-banner-unit { display: block; width: 100%; height: 100px; }
+
 .tool-settings-dialog { height: min(540px, calc(100dvh - 16px)); overflow: hidden; }
 .tool-settings-dialog[open] { display: flex; flex-direction: column; }
 .tool-settings-dialog > :first-child { flex-shrink: 0; }

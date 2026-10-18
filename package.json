@@ -17,7 +17,8 @@
     "test:colors": "node tests/color-palette.ui.mjs",
     "test:topics-card": "node tests/topics-and-card.ui.mjs",
     "assets:share": "node scripts/generate-share-preview.mjs",
-    "test:share": "node tests/share-preview.ui.mjs"
+    "test:share": "node tests/share-preview.ui.mjs",
+    "test:ads": "node tests/ads.ui.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "./components/SiteHeader";
+import { adsPublisherId } from "./lib/ads";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +15,10 @@ const geistMono = Geist_Mono({
 });
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1, interactiveWidget: "resizes-content" };
+const adPublisher = adsPublisherId();
 
 export const metadata: Metadata = {
+  other: adPublisher ? { "google-adsense-account": adPublisher } : undefined,
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://half-drawing-prac.vercel.app")),
   title: "반쪽그림 | 내 반쪽에 네 상상을 더해!",
   description: "나는 왼쪽, 너는 오른쪽. 작은 힌트만 보고 이어 그리고, 완성된 둘의 그림을 함께 열어봐요. 회원가입 없이 친구와 즐기는 반쪽그림!",

@@ -231,3 +231,9 @@ npm run test:ui
 ```
 
 시스템 Chromium이 없으면 `npx playwright install chromium`을 먼저 실행한다. 필요하면 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`, `TEST_BASE_URL`, `VISUAL_ARTIFACT_DIR`를 지정한다. 스크린샷과 클릭 검사 결과는 기본 `artifacts/visual`에 저장되며 Git에서 제외한다. 이번 전후 캡처는 현재 작업 공간의 `/workspace/scratch/half-drawing-visual`에 보관했다.
+
+## 수동 광고 배치 규칙 — 2026-10-18
+
+- 작업 중인 캔버스·도구·초대·참여·대기와 첫 홈 화면은 광고 없이 유지한다. 광고는 완성/보관함에서 모든 주요 행동 아래에 한 개만 배치한다.
+- 화면을 덮거나 고정하지 않고 100px 높이를 예약한다. 버튼과 40px 이상 떨어뜨리고, 서비스 콘텐츠와 구분되는 중립적인 ‘광고’ 라벨을 쓴다. 광고 클릭을 유도하는 장식이나 안내는 넣지 않는다.
+- 미설정 상태는 빈 광고 카드도 표시하지 않는다. 설정 후에도 가까이 스크롤할 때 요청하고, 광고가 없거나 실패하면 접는다. 광고 구현을 홈의 예쁜 예시 그림판이나 공유 카드 이미지 안에 포함하지 않는다.
