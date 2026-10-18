@@ -9,7 +9,7 @@ export function OverlayDialog({ open, setOpen, title, children, wide = false, cl
   open: boolean; setOpen: Dispatch<SetStateAction<boolean>>; title: string; children: ReactNode; wide?: boolean; className?: string; bodyClassName?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
-  useOverlayHistory(open, setOpen, title);
+  useOverlayHistory(open, setOpen, title, false);
   useEffect(() => {
     if (!open) return;
     const dialog = ref.current;

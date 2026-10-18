@@ -11,18 +11,28 @@ function entries(state: Record<string, unknown> | null): OverlayEntry[] {
 }
 
 /** Keep Next.js history metadata; browser Back closes the top overlay first. */
-export function useOverlayHistory(open: boolean, setOpen: Dispatch<SetStateAction<boolean>>, kind: string) {
+export function useOverlayHistory(open: boolean, setOpen: Dispatch<SetStateAction<boolean>>, kind: string, reopenOnHistory = true) {
   const id = useId();
   const opened = useRef(false);
 
   useEffect(() => {
-    const onPop = (event: PopStateEvent) => setOpen(entries(event.state).some((entry) => entry.kind === kind));
+    const onPop = (event: PopStateEvent) => {
+      const present = entries(event.state).some((entry) => entry.kind === kind);
+      // A dismissed dialog is a transient history entry, not a page to reopen.
+      // Return to the underlying view so its next Back still works normally.
+      if (present && !reopenOnHistory && !opened.current) {
+        window.history.back();
+        return;
+      }
+      if (!present) opened.current = false;
+      setOpen(present);
+    };
     window.addEventListener("popstate", onPop);
     const frame = window.requestAnimationFrame(() => {
-      if (entries(window.history.state).some((entry) => entry.kind === kind)) setOpen(true);
+      if (reopenOnHistory && entries(window.history.state).some((entry) => entry.kind === kind)) setOpen(true);
     });
     return () => { window.cancelAnimationFrame(frame); window.removeEventListener("popstate", onPop); };
-  }, [kind, setOpen]);
+  }, [kind, setOpen, reopenOnHistory]);
 
   useEffect(() => {
     const stack = entries(window.history.state);
@@ -32,6 +42,7 @@ export function useOverlayHistory(open: boolean, setOpen: Dispatch<SetStateActio
         window.history.pushState({ ...window.history.state, [STATE_KEY]: [...stack, { id, kind }] }, "", window.location.href);
       }
     } else if (opened.current && stack.at(-1)?.kind === kind) {
+      opened.current = false;
       window.history.back();
     }
   }, [open, id, kind]);

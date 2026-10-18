@@ -132,7 +132,7 @@ export function DrawingCanvas({
     },
     onFillComplete: (fill) => {
       addStrokes(fill);
-      rememberStrokeColor(fill[0].color);
+      rememberStrokeColor(strokeColor);
     },
   });
 

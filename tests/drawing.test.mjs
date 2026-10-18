@@ -26,13 +26,14 @@ export function loadTS(filename, mocks = {}) {
     }
     return requireModule(name);
   };
-  vm.runInNewContext("(function(exports, require) {" + source + "\n})", { crypto: globalThis.crypto }, { filename: full })(exports, requireLocal);
+  vm.runInNewContext("(function(exports, require) {" + source + "\n})", { crypto: globalThis.crypto, window: { innerWidth: 800 } }, { filename: full })(exports, requireLocal);
   return exports;
 }
 
 function setup(readOnly = false, dimensions = {}, drawingSide = "left", tool = "pen") {
   const calls = [];
   const captures = new Set();
+  const listeners = new Map();
   const context = {};
   const canvas = {
     width: 800, height: 500, clientWidth: 800, clientHeight: 500, clientLeft: 1, clientTop: 1,
@@ -41,6 +42,8 @@ function setup(readOnly = false, dimensions = {}, drawingSide = "left", tool = "
     setPointerCapture: (id) => captures.add(id),
     hasPointerCapture: (id) => captures.has(id),
     releasePointerCapture: (id) => captures.delete(id),
+    addEventListener: (name, listener, options) => listeners.set(name, { listener, options }),
+    removeEventListener: name => listeners.delete(name),
     ...dimensions,
   };
   context.canvas = canvas;
@@ -64,7 +67,7 @@ function setup(readOnly = false, dimensions = {}, drawingSide = "left", tool = "
   const event = (x, y = 100, pointerId = 1, button = 0) => ({
     clientX: x + 11, clientY: y + 21, pointerId, button, type: "pointerup", preventDefault() {},
   });
-  return { handlers, completed, fills, calls, captures, event, stateUpdates };
+  return { handlers, completed, fills, calls, captures, event, stateUpdates, listeners };
 }
 
 test("phone-size input reaches the same bitmap seam for both artists", () => {
@@ -527,4 +530,34 @@ test('fill preferences restore without changing pen/eraser widths and invalid fi
   const { isStroke } = loadTS('app/utils/validateStroke.ts');
   assert.equal(isStroke({ ...sampleStroke(), tool: 'fill', lineWidth: 3 }), false);
   assert.equal(isStroke({ ...sampleStroke(), tool: 'fill', fillId: 123 }), false);
+});
+
+test('native edge navigation is cancelled only for single editable touches on the artist half', () => {
+  for (const side of ['left', 'right']) {
+    const { listeners } = setup(false, {}, side);
+    const { listener, options } = listeners.get('touchstart');
+    assert.equal(options.passive, false);
+    for (const [clientX, count, cancelable, expected] of [[side === 'left' ? 11 : 799, 1, true, true], [side === 'left' ? 799 : 11, 1, true, false], [400, 1, true, false], [11, 2, true, false], [11, 1, false, false]]) {
+      let prevented = false;
+      listener({ touches: Array.from({ length: count }, () => ({ clientX, clientY: 100 })), cancelable, preventDefault: () => { prevented = true; } });
+      assert.equal(prevented, expected);
+    }
+  }
+  assert.equal(setup(true).listeners.has('touchstart'), false, 'read-only canvases keep native navigation');
+});
+
+test('fill completes antialiased borders and recolors them from the original outline without crossing it', () => {
+  const { createFillStrokes } = loadTS('app/utils/fillRegion.ts');
+  const outline = { width: 4, height: 1, data: new Uint8ClampedArray([0, 0, 0, 0, 0, 0, 0, 128, 0, 0, 0, 255, 0, 0, 0, 0]) };
+  const red = createFillStrokes(outline, { x: 0, y: 0 }, '#dc2626', 'left', 'red', outline);
+  const colorAt = (strokes, x) => strokes.find(stroke => stroke.points.some(point => point.x - stroke.lineWidth / 2 <= x && point.x + stroke.lineWidth / 2 > x))?.color;
+  assert.equal(colorAt(red, 0), '#dc2626');
+  assert.equal(colorAt(red, 1), '#6e1313');
+  assert.equal(colorAt(red, 2), undefined, 'opaque outline is preserved');
+  assert.equal(colorAt(red, 3), undefined, 'outside of the closed region remains untouched');
+  const filled = { width: 4, height: 1, data: new Uint8ClampedArray([220, 38, 38, 255, 110, 19, 19, 255, 0, 0, 0, 255, 0, 0, 0, 0]) };
+  assert.equal(createFillStrokes(filled, { x: 0, y: 0 }, '#dc2626', 'left', 'same-red', outline).length, 0);
+  const blue = createFillStrokes(filled, { x: 0, y: 0 }, '#2563eb', 'left', 'blue', outline);
+  assert.equal(colorAt(blue, 1), '#123175', 'previous red edge must be replaced with the blue/outline blend');
+  assert.ok(blue.every(loadTS('app/utils/validateStroke.ts').isStroke));
 });

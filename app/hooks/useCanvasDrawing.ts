@@ -17,7 +17,7 @@ type UseCanvasDrawingOptions = {
   onFillComplete: (strokes: Stroke[]) => void;
 };
 
-function getCanvasPoint(canvas: HTMLCanvasElement, event: PointerEvent<HTMLCanvasElement>): Point {
+function getCanvasPoint(canvas: HTMLCanvasElement, event: Pick<PointerEvent<HTMLCanvasElement>, "clientX" | "clientY">): Point {
   const rect = canvas.getBoundingClientRect();
   // Preserve fractional CSS dimensions in focused view; clientWidth rounds them.
   // The canvas has no border in the UI (legacy bordered canvases remain supported).
@@ -46,6 +46,24 @@ export function useCanvasDrawing({ backgroundStrokes, strokes, lineWidth, stroke
     drawHalfStrokes(context, backgroundStrokes, drawingSide === "left" ? "right" : "left");
     drawHalfStrokes(context, strokes, drawingSide);
   }, [backgroundStrokes, strokes, drawingSide]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || readOnly) return;
+    const guardEdgeGesture = (event: TouchEvent) => {
+      if (event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      if (touch.clientX > 24 && touch.clientX < window.innerWidth - 24) return;
+      const point = getCanvasPoint(canvas, touch);
+      if ((drawingSide === "left" && point.x > canvas.width / 2) ||
+          (drawingSide === "right" && point.x < canvas.width / 2)) return;
+      // iOS edge navigation needs a non-passive touchstart cancellation;
+      // pointerdown/touch-action alone do not cover that browser gesture.
+      if (event.cancelable) event.preventDefault();
+    };
+    canvas.addEventListener("touchstart", guardEdgeGesture, { passive: false });
+    return () => canvas.removeEventListener("touchstart", guardEdgeGesture);
+  }, [drawingSide, readOnly]);
 
   function handlePointerDown(event: PointerEvent<HTMLCanvasElement>) {
     if (readOnly || activePointerRef.current !== null || event.button !== 0) return;
@@ -101,7 +119,17 @@ export function useCanvasDrawing({ backgroundStrokes, strokes, lineWidth, stroke
       const context = canvas?.getContext("2d");
       if (!canvas || !context) return;
       const image = context.getImageData(drawingSide === "left" ? 0 : canvas.width / 2, 0, canvas.width / 2, canvas.height);
-      const fill = createFillStrokes(image, stroke.points[0], stroke.color, drawingSide, crypto.randomUUID());
+      let outline: ImageData | undefined;
+      if (strokes.some(item => item.tool === "pen")) {
+        const edges = document.createElement("canvas");
+        edges.width = canvas.width; edges.height = canvas.height;
+        const edgeContext = edges.getContext("2d");
+        if (edgeContext) {
+          drawHalfStrokes(edgeContext, strokes.filter(item => item.tool !== "fill"), drawingSide);
+          outline = edgeContext.getImageData(drawingSide === "left" ? 0 : canvas.width / 2, 0, canvas.width / 2, canvas.height);
+        }
+      }
+      const fill = createFillStrokes(image, stroke.points[0], stroke.color, drawingSide, crypto.randomUUID(), outline);
       if (fill.length) {
         drawHalfStrokes(context, fill, drawingSide);
         onFillComplete(fill);
