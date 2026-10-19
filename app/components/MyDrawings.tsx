@@ -7,7 +7,6 @@ import { useMyRooms } from "../hooks/useMyRooms";
 import { MY_ROOMS_PAGE_SIZE, type RoomScope } from "../lib/rooms/getMyRooms";
 import { copyRoomCode } from "../utils/copyRoomCode";
 import type { DrawingStatus } from "../types/drawing";
-import { AdBanner } from "./AdBanner";
 
 const STATUS: Record<DrawingStatus, { label: string; className: string; description: string }> = {
   waiting: { label: "참여 대기", className: "bg-slate-100 text-slate-700", description: "친구에게 참여 코드를 보내주세요." },
@@ -83,7 +82,6 @@ export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) 
         <span className="text-sm text-slate-500">{page + 1} / {Math.ceil(total / MY_ROOMS_PAGE_SIZE)}</span>
         <button type="button" onClick={() => changePage(page + 1)} disabled={!hasNextPage || isLoading || isRefreshing} className="button-secondary">다음</button>
       </nav>}
-      {!isLoading && !error && rooms.length > 0 && <AdBanner placement="library" />}
     </section>
   );
 }

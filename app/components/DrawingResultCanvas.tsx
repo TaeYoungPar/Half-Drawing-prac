@@ -9,7 +9,6 @@ import {
 import type { Stroke } from "../types/drawing";
 import { OverlayDialog } from "./OverlayDialog";
 import { CompletedShareOptions } from "./CompletedShareOptions";
-import { AdBanner } from "./AdBanner";
 import { drawHalfStrokes } from "../utils/drawHalfStrokes";
 import Link from "next/link";
 import { downloadCanvasImage } from "../utils/downloadCanvasImage";
@@ -79,7 +78,6 @@ export function DrawingResultCanvas({
         <Link href="/library" className="button-secondary">내 보관함으로</Link>
         <Link href="/" className="button-secondary">홈으로</Link>
       </div>
-      <AdBanner placement="completed" />
     </div>
   );
 }

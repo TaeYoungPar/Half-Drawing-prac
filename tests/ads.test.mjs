@@ -5,7 +5,6 @@ import vm from 'node:vm';
 import ts from 'typescript';
 
 const client = 'ca-pub-0000000000000000';
-const configured = { NEXT_PUBLIC_ADSENSE_ENABLED: 'true', NEXT_PUBLIC_ADSENSE_CLIENT: client, NEXT_PUBLIC_ADSENSE_COMPLETED_SLOT: '1111111111', NEXT_PUBLIC_ADSENSE_LIBRARY_SLOT: '2222222222' };
 function load(env, route = false) {
   const exports = {};
   const source = ts.transpileModule(fs.readFileSync(new URL(route ? '../app/ads.txt/route.ts' : '../app/lib/ads.ts', import.meta.url), 'utf8'), {
@@ -14,18 +13,6 @@ function load(env, route = false) {
   vm.runInNewContext(source, { exports, process: { env }, Response, require: () => load(env) });
   return exports;
 }
-test('advertising requires explicit activation and valid publisher and slot IDs', () => {
-  for (const env of [{}, { ...configured, NEXT_PUBLIC_ADSENSE_ENABLED: 'false' }, { ...configured, NEXT_PUBLIC_ADSENSE_CLIENT: 'ca-pub-invalid' }, { ...configured, NEXT_PUBLIC_ADSENSE_COMPLETED_SLOT: 'not-a-slot' }]) {
-    assert.equal(load(env).adSettings('completed'), null);
-  }
-});
-test('placements can be enabled separately and use test ads by default', () => {
-  const ads = load({ ...configured, NEXT_PUBLIC_ADSENSE_LIBRARY_SLOT: '' });
-  assert.equal(ads.adSettings('library'), null);
-  assert.equal(ads.adSettings('completed').slot, '1111111111');
-  assert.equal(ads.adSettings('completed').testMode, true);
-  assert.equal(load({ ...configured, NEXT_PUBLIC_ADSENSE_TEST_MODE: 'false' }).adSettings('completed').testMode, false);
-});
 test('ads.txt verifies a configured publisher even before banners are enabled', async () => {
   const response = load({ NEXT_PUBLIC_ADSENSE_CLIENT: client }, true).GET();
   assert.equal(response.status, 200);
@@ -34,8 +21,6 @@ test('ads.txt verifies a configured publisher even before banners are enabled', 
 });
 test('site ownership can be verified before ads or slots are configured', async () => {
   assert.equal(load({}).adsPublisherId(), 'ca-pub-6008052842325785');
-  assert.equal(load({}).adSettings('completed'), null);
-  assert.equal(load({}).adSettings('library'), null);
   const response = load({}, true).GET();
   assert.equal(response.status, 200);
   assert.equal(await response.text(), 'google.com, pub-6008052842325785, DIRECT, f08c47fec0942fa0\n');
