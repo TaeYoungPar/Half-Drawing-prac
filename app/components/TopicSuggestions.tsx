@@ -21,7 +21,7 @@ export function TopicSuggestions({ value, onChange, disabled }: { value: string;
       </div>
       <button type="button" disabled={disabled} onClick={show} className="button-secondary shrink-0 px-3 shadow-none"><span aria-hidden="true">🎲</span>주제 추천</button>
       <OverlayDialog open={open} setOpen={setOpen} title="그림 주제 추천">
-        <p className="mb-4 text-sm leading-6 text-slate-600">마음에 드는 주제를 골라 다듬어보세요. 이미 그린 그림은 그대로 유지돼요.</p>
+        <p className="mb-4 text-sm leading-6 text-slate-600">간단한 모양에 표정이나 특징 하나만 더해봐요. 얼굴만 그려도, 내 식대로 바꿔도 좋아요.</p>
         <div role="group" aria-label="추천 주제" className="grid gap-3">
           {choices.map((topic) => <button type="button" key={topic} aria-pressed={draft === topic} onClick={() => setDraft(topic)} className={`button-secondary justify-start text-left ${draft === topic ? "bg-[#ffc798]!" : "bg-[#fffdf3]!"}`}>{topic}</button>)}
         </div>

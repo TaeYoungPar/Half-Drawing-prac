@@ -547,7 +547,7 @@ export function DrawingCanvas({
                 event.target.value
               );
             }}
-            placeholder="예: 우주를 여행하는 고양이"
+            placeholder="예: 화난 딸기, 울보 양파"
             className="min-h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-500 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 sm:text-lg"
           />
 
