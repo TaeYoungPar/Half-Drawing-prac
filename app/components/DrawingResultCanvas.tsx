@@ -4,6 +4,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 
 import type { Stroke } from "../types/drawing";
@@ -17,12 +18,14 @@ type DrawingResultCanvasProps = {
   prompt: string;
   leftStrokes: Stroke[];
   rightStrokes: Stroke[];
+  children?: ReactNode;
 };
 
 export function DrawingResultCanvas({
   prompt,
   leftStrokes,
   rightStrokes,
+  children,
 }: DrawingResultCanvasProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
@@ -73,6 +76,7 @@ export function DrawingResultCanvas({
         완성 그림 PNG 저장
       </button>
       <p className="text-sm text-slate-500">이 그림은 참여한 두 사람만 볼 수 있어요. 잊기 전에 기기에 저장해주세요.</p>
+      {children}
       <div className="mt-2 flex flex-wrap gap-3">
         <Link href="/draw" className="button-secondary">새 그림 시작하기</Link>
         <Link href="/library" className="button-secondary">내 보관함으로</Link>

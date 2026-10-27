@@ -20,6 +20,8 @@
     "test:share": "node tests/share-preview.ui.mjs",
     "test:ads": "node tests/ads.ui.mjs",
     "test:content": "node tests/public-content.ui.mjs",
+    "test:comments": "node tests/room-comments.ui.mjs",
+    "test:comments-db": "node tests/room-comments.db.mjs",
     "test:fill": "node tests/fill.ui.mjs",
     "test:gestures": "node tests/drawing-gestures.ui.mjs",
     "test:fill-edges": "node tests/fill-edges.ui.mjs"

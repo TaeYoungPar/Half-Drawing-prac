@@ -12,6 +12,7 @@ import { DrawingCanvas } from "../../components/DrawingCanvas";
 import { DrawingPrompt } from "../../components/DrawingPrompt";
 import { DrawingResultCanvas } from "../../components/DrawingResultCanvas";
 import { DrawingWaitingCanvas } from "../../components/DrawingWaitingCanvas";
+import { RoomComments } from "../../components/RoomComments";
 import { useAnonymousAuth } from "../../hooks/useAnonymousAuth";
 
 import {
@@ -279,6 +280,9 @@ export default function RoomPage() {
 
   // Completed rooms are read-only for both artists, including after a reload.
   if (room.status === "completed") {
+    if (room.host_id !== userId && room.guest_id !== userId) {
+      return <main className="p-6"><p role="alert">이 그림에 참여한 두 사람만 볼 수 있어요.</p><Link href="/" className="button-secondary mt-4">홈으로</Link></main>;
+    }
     if (!leftDrawing || !rightDrawing) {
       return (
         <main className="p-6">
@@ -296,7 +300,9 @@ export default function RoomPage() {
           prompt={room.prompt}
           leftStrokes={leftDrawing.strokes}
           rightStrokes={rightDrawing.strokes}
-        />
+        >
+          {room.guest_id && <RoomComments key={`${roomId}:${userId}`} roomId={roomId} userId={userId} hostId={room.host_id} guestId={room.guest_id} />}
+        </DrawingResultCanvas>
       </main>
     );
   }

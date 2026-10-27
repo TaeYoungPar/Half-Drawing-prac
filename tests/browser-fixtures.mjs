@@ -4,7 +4,7 @@ export const roomId='33333333-3333-4333-8333-333333333333';
 export const hostId='11111111-1111-4111-8111-111111111111';
 export const guestId='22222222-2222-4222-8222-222222222222';
 const expires=new Date(Date.now()+86400000).toISOString();
-export const fixture={room:null,writes:0};
+export const fixture={room:null,writes:0,comments:[],commentsUnavailable:false};
 function user(id){return {id,aud:'authenticated',role:'authenticated',email:'',app_metadata:{provider:'anonymous'},user_metadata:{},created_at:new Date().toISOString(),is_anonymous:true};}
 export async function mock(context,id){
  await context.route('**/*',async r=>{
@@ -22,6 +22,27 @@ export async function mock(context,id){
    fixture.writes++;assert.equal(r.request().postDataJSON().room_code,'ABC123DEF4');fixture.room.guest_id=id;fixture.room.status='guest_joined';return json([{room_id:roomId,prompt:fixture.room.prompt,room_status:fixture.room.status,expires_at:expires}]);
   }
   if(path==='/rest/v1/rpc/get_left_preview')return json(fixture.room.drawings[0].strokes.map(s=>({...s,points:s.points.filter(p=>p.x>=376&&p.x<=400)})).filter(s=>s.points.length));
+  if(path==='/rest/v1/room_comments'){
+   if(fixture.commentsUnavailable)return json({code:'PGRST205',message:'Table not available'},404);
+   const room=fixture.room;
+   if(!room || room.status!=='completed' || (room.host_id!==id && room.guest_id!==id))return json([],200);
+   if(r.request().method()==='POST'){
+    const body=r.request().postDataJSON();
+    assert.equal(body.room_id,room.id);assert.equal(body.author_id,id);
+    const existing=fixture.comments.find(row=>row.room_id===room.id && row.author_id===id);
+    const saved={...body,created_at:existing?.created_at || new Date().toISOString(),updated_at:new Date().toISOString()};
+    fixture.comments=fixture.comments.filter(row=>row.room_id!==room.id || row.author_id!==id).concat(saved);
+    return json(saved,201);
+   }
+   if(r.request().method()==='DELETE'){
+    assert.equal(url.searchParams.get('room_id'),`eq.${room.id}`);assert.equal(url.searchParams.get('author_id'),`eq.${id}`);
+    const removed=fixture.comments.filter(row=>row.room_id===room.id && row.author_id===id);
+    fixture.comments=fixture.comments.filter(row=>row.room_id!==room.id || row.author_id!==id);
+    return json(removed.map(row=>({author_id:row.author_id})));
+   }
+   assert.equal(url.searchParams.get('room_id'),`eq.${room.id}`);
+   return json(fixture.comments.filter(row=>row.room_id===room.id));
+  }
   if(path==='/rest/v1/rooms'){
    if(url.searchParams.has('id'))return json(fixture.room);
    const all=url.searchParams.get('or');const hostFilter=url.searchParams.get('host_id');const guestFilter=url.searchParams.get('guest_id');
