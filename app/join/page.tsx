@@ -6,6 +6,7 @@ import { useAnonymousAuth } from "../hooks/useAnonymousAuth";
 import { joinRoom } from "../lib/rooms/joinRoom";
 
 import { normalizeRoomCode } from "../utils/shareInvitation";
+import { LoadingState } from "../components/LoadingState";
 
 export default function JoinRoomPage() {
   const router = useRouter();
@@ -75,6 +76,7 @@ export default function JoinRoomPage() {
           <button type="submit" disabled={isLoading || isJoining || !userId || !roomCode} className="button-primary mt-3">
             {isLoading ? "연결 중…" : isJoining ? "그림으로 이동 중…" : "이어 그리러 가기 →"}
           </button>
+          {isJoining && <LoadingState variant="inline" title="친구의 그림으로 가고 있어요" description="내 반쪽을 준비하고 있어요." />}
           {joinError && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{joinError}</p>}
           {isInvited && <details open={showCode} onToggle={(event) => setShowCode(event.currentTarget.open)} className="text-sm text-slate-600">
             <summary className="min-h-11 cursor-pointer py-3 font-semibold">참여 코드 확인·변경</summary>

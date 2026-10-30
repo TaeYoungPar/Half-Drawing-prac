@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { COMMENT_LIMIT, commentDraft, commentLength, deleteRoomComment, getRoomComments, saveRoomComment, type RoomComment } from "../lib/rooms/comments";
+import { LoadingState } from "./LoadingState";
 
 export function RoomComments({ roomId, userId, hostId, guestId }: { roomId: string; userId: string; hostId: string; guestId: string }) {
   const [comments, setComments] = useState<RoomComment[]>([]);
@@ -96,7 +97,7 @@ export function RoomComments({ roomId, userId, hostId, guestId }: { roomId: stri
     <p className="eyebrow">그림 뒤의 작은 이야기</p>
     <h2 id="comments-heading" className="mt-2 text-xl font-extrabold">서로에게 한마디</h2>
     <p className="mt-2 text-sm leading-6 text-slate-600">어떤 모습을 상상했나요? 함께 그린 친구에게 짧게 남겨보세요.</p>
-    {loading ? <p role="status" className="mt-5 text-sm text-slate-500">두 사람의 한마디를 불러오는 중이에요.</p> : <>
+    {loading ? <div className="mt-5"><LoadingState variant="inline" title="두 사람의 한마디를 불러오는 중이에요." /></div> : <>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <div className="min-w-0 rounded-2xl border border-[#c8b99b] bg-[#fff0bd] p-4" aria-label="내 한마디">
           <p className="text-xs font-bold text-slate-600">나 · {userId === hostId ? "왼쪽" : "오른쪽"}을 그렸어요</p>

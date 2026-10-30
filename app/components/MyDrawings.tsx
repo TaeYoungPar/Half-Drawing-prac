@@ -7,6 +7,7 @@ import { useMyRooms } from "../hooks/useMyRooms";
 import { MY_ROOMS_PAGE_SIZE, type RoomScope } from "../lib/rooms/getMyRooms";
 import { copyRoomCode } from "../utils/copyRoomCode";
 import type { DrawingStatus } from "../types/drawing";
+import { LoadingState } from "./LoadingState";
 
 const STATUS: Record<DrawingStatus, { label: string; className: string; description: string }> = {
   waiting: { label: "참여 대기", className: "bg-slate-100 text-slate-700", description: "친구에게 참여 코드를 보내주세요." },
@@ -50,7 +51,7 @@ export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) 
         <p>{error} {rooms.length > 0 && "아래 목록은 마지막으로 확인한 상태예요."}</p>
         <button type="button" onClick={refresh} disabled={isRefreshing} className="button-secondary mt-3">다시 시도</button>
       </div>}
-      {isLoading ? <p role="status" className="panel mt-5 p-6 text-sm text-slate-500">내 그림을 확인하는 중…</p>
+      {isLoading ? <div className="mt-8"><LoadingState title="그림 노트를 펼치고 있어요" description="내 그림을 확인하는 중이에요." /></div>
         : !error && rooms.length === 0 ? <div className="panel mt-5 px-6 py-8 sm:px-8 sm:py-10">
           <p className="font-semibold">{scope === "guest" ? "아직 참여한 그림이 없어요." : scope === "host" ? "아직 시작한 그림이 없어요." : "아직 함께 그린 그림이 없어요."}</p>
           <p className="mt-2 text-sm text-slate-500">그림을 시작하거나 친구의 그림에 참여하면 여기에 표시돼요.</p>

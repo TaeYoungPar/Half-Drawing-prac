@@ -13,6 +13,7 @@ import { DrawingPrompt } from "../../components/DrawingPrompt";
 import { DrawingResultCanvas } from "../../components/DrawingResultCanvas";
 import { DrawingWaitingCanvas } from "../../components/DrawingWaitingCanvas";
 import { RoomComments } from "../../components/RoomComments";
+import RoomLoading from "./loading";
 import { useAnonymousAuth } from "../../hooks/useAnonymousAuth";
 
 import {
@@ -215,11 +216,7 @@ export default function RoomPage() {
   }
 
   if (isAuthLoading) {
-    return (
-      <main className="p-6">
-        사용자 연결 중...
-      </main>
-    );
+    return <RoomLoading />;
   }
 
   if (!userId) {
@@ -231,12 +228,8 @@ export default function RoomPage() {
     );
   }
 
-  if (isRoomLoading) {
-    return (
-      <main className="p-6">
-        방 정보를 불러오는 중...
-      </main>
-    );
+  if (isRoomLoading || (room && room.id !== roomId)) {
+    return <RoomLoading />;
   }
 
   if (roomError && !room) {

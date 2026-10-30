@@ -53,12 +53,12 @@ try {
     assert.equal(await refresh.getAttribute('aria-busy'), 'false');
     assert.equal(await host.getAttribute('aria-pressed'), 'true');
     assert.equal(await page.getByText('아직 시작한 그림이 없어요.', { exact: true }).isVisible(), true);
-    assert.equal(await page.getByText('내 그림을 확인하는 중…', { exact: true }).count(), 0);
+    assert.equal(await page.locator('[data-loading-state="section"]').count(), 0);
 
     // A previously seen filter is visible before its delayed network request returns.
     await all.click();
     assert.equal(await result.isVisible(), true, 'cached list should appear immediately');
-    assert.equal(await page.getByText('내 그림을 확인하는 중…', { exact: true }).count(), 0);
+    assert.equal(await page.locator('[data-loading-state="section"]').count(), 0);
     assert.equal(await refresh.isEnabled(), true);
 
     // A slower old filter response must never replace the newly selected filter.
