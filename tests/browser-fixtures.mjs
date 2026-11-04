@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { handleSocial, social, socialRoom } from './social-fixtures.mjs';
 const base=process.env.TEST_BASE_URL || 'http://127.0.0.1:3000';
 export const roomId='33333333-3333-4333-8333-333333333333';
 export const hostId='11111111-1111-4111-8111-111111111111';
@@ -14,6 +15,7 @@ export async function mock(context,id){
   const json=(body,status=200)=>r.fulfill({status,contentType:'application/json',body:JSON.stringify(body)});
   if(path==='/auth/v1/signup')return json({access_token:[Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url'),Buffer.from(JSON.stringify({sub:id,aud:'authenticated',role:'authenticated',exp:Math.floor(Date.now()/1000)+3600,iat:Math.floor(Date.now()/1000),is_anonymous:true})).toString('base64url'),'fixture'].join('.'),refresh_token:'fixture-only-refresh',token_type:'bearer',expires_in:3600,user:user(id)});
   if(path==='/auth/v1/user')return json(user(id));
+  if(await handleSocial(r,id,fixture))return;
   if(path==='/rest/v1/rpc/create_room'){
    fixture.writes++;const body=r.request().postDataJSON();fixture.room={id:roomId,code:'ABC123DEF4',prompt:body.room_prompt,host_id:id,guest_id:null,status:'waiting',expires_at:expires,drawings:[{role:'left',strokes:body.initial_strokes,completed:true}]};
    return json([{room_id:roomId,room_code:fixture.room.code,prompt:fixture.room.prompt,room_status:'waiting',expires_at:expires}]);
@@ -24,13 +26,14 @@ export async function mock(context,id){
   if(path==='/rest/v1/rpc/get_left_preview')return json(fixture.room.drawings[0].strokes.map(s=>({...s,points:s.points.filter(p=>p.x>=376&&p.x<=400)})).filter(s=>s.points.length));
   if(path==='/rest/v1/room_comments'){
    if(fixture.commentsUnavailable)return json({code:'PGRST205',message:'Table not available'},404);
-   const room=fixture.room;
+   const requested= r.request().method()==='POST' ? r.request().postDataJSON().room_id : url.searchParams.get('room_id')?.replace(/^eq\./,'');
+   const room=social.enabled ? socialRoom(requested,fixture) : fixture.room;
    if(!room || room.status!=='completed' || (room.host_id!==id && room.guest_id!==id))return json([],200);
    if(r.request().method()==='POST'){
     const body=r.request().postDataJSON();
     assert.equal(body.room_id,room.id);assert.equal(body.author_id,id);
     const existing=fixture.comments.find(row=>row.room_id===room.id && row.author_id===id);
-    const saved={...body,created_at:existing?.created_at || new Date().toISOString(),updated_at:new Date().toISOString()};
+    const saved={...body,created_at:existing?.created_at || new Date().toISOString(),updated_at:existing?.body===body.body ? existing.updated_at : new Date().toISOString()};
     fixture.comments=fixture.comments.filter(row=>row.room_id!==room.id || row.author_id!==id).concat(saved);
     return json(saved,201);
    }

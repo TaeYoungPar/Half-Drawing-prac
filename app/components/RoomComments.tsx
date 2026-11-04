@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { COMMENT_LIMIT, commentDraft, commentLength, deleteRoomComment, getRoomComments, saveRoomComment, type RoomComment } from "../lib/rooms/comments";
 import { LoadingState } from "./LoadingState";
+import { useCommentRead } from "../hooks/useCommentRead";
 
 export function RoomComments({ roomId, userId, hostId, guestId }: { roomId: string; userId: string; hostId: string; guestId: string }) {
   const [comments, setComments] = useState<RoomComment[]>([]);
@@ -22,6 +23,8 @@ export function RoomComments({ roomId, userId, hostId, guestId }: { roomId: stri
   const mine = comments.find(row => row.author_id === userId);
   const friendId = userId === hostId ? guestId : hostId;
   const friend = comments.find(row => row.author_id === friendId);
+  const friendMessage = useRef<HTMLParagraphElement>(null);
+  useCommentRead(roomId, friend?.updated_at, friendMessage);
 
   useEffect(() => {
     mounted.current = true;
@@ -106,7 +109,7 @@ export function RoomComments({ roomId, userId, hostId, guestId }: { roomId: stri
         </div>
         <div className="min-w-0 rounded-2xl border border-[#c8b99b] bg-[#e5f0e1] p-4" aria-label="친구의 한마디">
           <p className="text-xs font-bold text-slate-600">친구 · {userId === hostId ? "오른쪽" : "왼쪽"}을 그렸어요</p>
-          <p aria-live="polite" className={`mt-3 whitespace-pre-wrap break-words text-sm leading-7 ${friend ? "" : "text-slate-500"}`}>{friend?.body ?? (loadError ? "한마디를 다시 불러와주세요." : "친구는 어떤 생각으로 그렸을까요? 아직 한마디가 없어요.")}</p>
+          <p ref={friendMessage} aria-live="polite" className={`mt-3 whitespace-pre-wrap break-words text-sm leading-7 ${friend ? "" : "text-slate-500"}`}>{friend?.body ?? (loadError ? "한마디를 다시 불러와주세요." : "친구는 어떤 생각으로 그렸을까요? 아직 한마디가 없어요.")}</p>
         </div>
       </div>
       {loadError && <div className="mt-4"><p role="alert" className="text-sm leading-6 text-red-700">{loadError}</p><button type="button" className="button-secondary mt-2" onClick={() => setAttempt(value => value + 1)}>한마디 다시 불러오기</button></div>}

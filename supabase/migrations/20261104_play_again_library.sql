@@ -1,0 +1,200 @@
+-- Apply after 20261027_room_comments.sql, or run the combined enable_social_features.sql.
+-- Existing drawings and room policies are preserved. No user artwork is made public.
+begin;
+
+-- Retrying an identical comment must not create another unread notification.
+create or replace function public.guard_room_comment()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  if TG_OP='UPDATE' then
+    if NEW.room_id is distinct from OLD.room_id or NEW.author_id is distinct from OLD.author_id then
+      raise exception 'COMMENT_IDENTITY_IMMUTABLE' using errcode='42501';
+    end if;
+    NEW.created_at := OLD.created_at;
+    NEW.updated_at := case when NEW.body is not distinct from OLD.body then OLD.updated_at else now() end;
+  else
+    NEW.created_at := now(); NEW.updated_at := now();
+  end if;
+  return NEW;
+end $$;
+revoke all on function public.guard_room_comment() from public, anon, authenticated;
+
+create table if not exists public.room_library_state (
+  room_id uuid not null references public.rooms(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  hidden boolean not null default false,
+  comments_read_at timestamptz,
+  primary key (room_id, user_id)
+);
+alter table public.room_library_state enable row level security;
+alter table public.room_library_state force row level security;
+revoke all on public.room_library_state from public, anon, authenticated;
+grant select on public.room_library_state to authenticated;
+drop policy if exists "read own library preferences" on public.room_library_state;
+create policy "read own library preferences" on public.room_library_state for select to authenticated
+using (user_id = (select auth.uid()));
+
+create index if not exists rooms_host_library_order on public.rooms(host_id, created_at desc, id desc);
+create index if not exists rooms_guest_library_order on public.rooms(guest_id, created_at desc, id desc);
+
+create or replace function public.set_room_hidden(p_room_id uuid, p_hidden boolean)
+returns boolean language plpgsql security definer set search_path = '' as $$
+declare v_user uuid := auth.uid();
+begin
+  if v_user is null or p_hidden is null or not exists (
+    select 1 from public.rooms r where r.id=p_room_id and (r.host_id=v_user or r.guest_id=v_user)
+  ) then raise exception 'ROOM_NOT_AVAILABLE' using errcode='42501'; end if;
+  insert into public.room_library_state(room_id,user_id,hidden) values(p_room_id,v_user,p_hidden)
+  on conflict(room_id,user_id) do update set hidden=excluded.hidden;
+  return p_hidden;
+end $$;
+
+create or replace function public.mark_room_comment_read(p_room_id uuid, p_seen_updated_at timestamptz)
+returns boolean language plpgsql security definer set search_path = '' as $$
+declare v_user uuid := auth.uid(); v_latest timestamptz; v_seen timestamptz;
+begin
+  if v_user is null or p_seen_updated_at is null or not exists (
+    select 1 from public.rooms r where r.id=p_room_id and r.status='completed' and (r.host_id=v_user or r.guest_id=v_user)
+  ) then raise exception 'ROOM_NOT_AVAILABLE' using errcode='42501'; end if;
+  select c.updated_at into v_latest from public.room_comments c
+  join public.rooms r on r.id=c.room_id
+  where c.room_id=p_room_id and c.author_id=case when r.host_id=v_user then r.guest_id else r.host_id end;
+  if v_latest is null then return false; end if;
+  -- Never mark an edit that arrived after the version actually rendered as read.
+  v_seen := least(p_seen_updated_at,v_latest);
+  insert into public.room_library_state(room_id,user_id,comments_read_at) values(p_room_id,v_user,v_seen)
+  on conflict(room_id,user_id) do update set comments_read_at=greatest(public.room_library_state.comments_read_at,excluded.comments_read_at);
+  return true;
+end $$;
+
+create or replace function public.get_my_library(p_page integer default 0, p_scope text default 'all', p_hidden boolean default false)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare v_user uuid := auth.uid(); v_result jsonb;
+begin
+  if v_user is null then raise exception 'AUTH_REQUIRED' using errcode='42501'; end if;
+  if p_page is null or p_page<0 or p_page>1000000 or p_scope is null or p_scope not in ('all','host','guest') or p_hidden is null
+  then raise exception 'INVALID_LIBRARY_PAGE' using errcode='22023'; end if;
+  with eligible as materialized (
+    select r.id,r.code,r.prompt,r.status,r.created_at,r.expires_at,r.host_id,r.guest_id,
+      (r.status='completed' and c.updated_at is not null and (s.comments_read_at is null or c.updated_at>s.comments_read_at)) as has_unread_comment
+    from public.rooms r
+    left join public.room_library_state s on s.room_id=r.id and s.user_id=v_user
+    left join public.room_comments c on c.room_id=r.id and c.author_id=case when r.host_id=v_user then r.guest_id else r.host_id end
+    where (r.host_id=v_user or r.guest_id=v_user)
+      and (p_scope='all' or (p_scope='host' and r.host_id=v_user) or (p_scope='guest' and r.guest_id=v_user))
+      and coalesce(s.hidden,false)=p_hidden
+  ) select jsonb_build_object('rooms',coalesce((select jsonb_agg(to_jsonb(p) order by p.created_at desc,p.id desc)
+      from (select * from eligible order by created_at desc,id desc offset (p_page::bigint*6) limit 6) p),'[]'::jsonb),
+    'total',(select count(*) from eligible)) into v_result;
+  return v_result;
+end $$;
+
+create table if not exists public.room_rematches (
+  parent_room_id uuid primary key references public.rooms(id) on delete cascade,
+  requested_by uuid not null references auth.users(id) on delete cascade,
+  next_room_id uuid unique references public.rooms(id) on delete set null,
+  created_at timestamptz not null default now(),
+  check(next_room_id is distinct from parent_room_id)
+);
+alter table public.room_rematches enable row level security;
+alter table public.room_rematches force row level security;
+revoke all on public.room_rematches from public, anon, authenticated;
+grant select on public.room_rematches to authenticated;
+drop policy if exists "participants read their next round" on public.room_rematches;
+create policy "participants read their next round" on public.room_rematches for select to authenticated using (
+  exists(select 1 from public.rooms r where r.id=parent_room_id and r.status='completed'
+    and (r.host_id=(select auth.uid()) or r.guest_id=(select auth.uid())))
+);
+
+create or replace function public.get_room_rematch(p_parent_room_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare v_user uuid := auth.uid(); v_room public.rooms%rowtype; v_next public.rooms%rowtype; v_request public.room_rematches%rowtype;
+begin
+  select * into v_room from public.rooms where id=p_parent_room_id;
+  if v_user is null or v_room.id is null or v_room.status<>'completed' or v_room.guest_id is null
+    or (v_room.host_id<>v_user and v_room.guest_id<>v_user)
+  then raise exception 'ROOM_NOT_AVAILABLE' using errcode='42501'; end if;
+  select * into v_request from public.room_rematches where parent_room_id=p_parent_room_id;
+  if v_request.next_room_id is not null then select * into v_next from public.rooms where id=v_request.next_room_id; end if;
+  return jsonb_build_object('parent_room_id',v_room.id,'starter_id',v_room.guest_id,'partner_id',v_room.host_id,'prompt',v_room.prompt,
+    'requested_by',v_request.requested_by,'next_room_id',v_next.id,'next_code',v_next.code,
+    'next_status',case when v_next.status<>'completed' and v_next.expires_at<=now() then 'expired' else v_next.status::text end);
+end $$;
+
+create or replace function public.request_room_rematch(p_parent_room_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare v_user uuid := auth.uid(); v_room public.rooms%rowtype;
+begin
+  select * into v_room from public.rooms where id=p_parent_room_id for update;
+  if v_user is null or v_room.id is null or v_room.status<>'completed' or v_room.guest_id is null
+    or (v_room.host_id<>v_user and v_room.guest_id<>v_user)
+  then raise exception 'ROOM_NOT_AVAILABLE' using errcode='42501'; end if;
+  insert into public.room_rematches(parent_room_id,requested_by) values(p_parent_room_id,v_user)
+  on conflict(parent_room_id) do nothing;
+  update public.room_rematches m set next_room_id=null,requested_by=v_user
+  where m.parent_room_id=p_parent_room_id and exists(
+    select 1 from public.rooms n where n.id=m.next_room_id and n.status<>'completed' and n.expires_at<=now());
+  return public.get_room_rematch(p_parent_room_id);
+end $$;
+
+create or replace function public.create_rematch_room(p_parent_room_id uuid, p_prompt text, p_strokes jsonb)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare v_user uuid := auth.uid(); v_parent public.rooms%rowtype; v_next public.rooms%rowtype; v_next_id uuid; v_created jsonb;
+begin
+  -- Both request and create lock the parent, so concurrent clicks cannot create extra rooms.
+  select * into v_parent from public.rooms where id=p_parent_room_id for update;
+  if v_user is null or v_parent.id is null or v_parent.status<>'completed' or v_parent.guest_id is distinct from v_user
+  then raise exception 'ROOM_NOT_AVAILABLE' using errcode='42501'; end if;
+  select next_room_id into v_next_id from public.room_rematches where parent_room_id=p_parent_room_id;
+  if v_next_id is not null then
+    select * into v_next from public.rooms where id=v_next_id;
+    if v_next.status='completed' or v_next.expires_at>now() then
+      return jsonb_build_object('room_id',v_next.id,'room_code',v_next.code,'prompt',v_next.prompt,'room_status',v_next.status,'expires_at',v_next.expires_at);
+    end if;
+  end if;
+  if p_prompt is null or char_length(btrim(p_prompt)) not between 1 and 80 then
+    raise exception 'INVALID_PROMPT' using errcode='22023'; end if;
+  if p_strokes is null or jsonb_typeof(p_strokes)<>'array' then raise exception 'INVALID_DRAWING' using errcode='22023'; end if;
+  if jsonb_array_length(p_strokes)=0 then raise exception 'INVALID_DRAWING' using errcode='22023'; end if;
+  -- Reuse the project's existing atomic room + left-drawing creation and validation.
+  select to_jsonb(created) into v_created from public.create_room(room_prompt=>btrim(p_prompt),initial_strokes=>p_strokes) created limit 1;
+  if jsonb_typeof(v_created)='array' then v_created := v_created->0; end if;
+  v_next_id := (v_created->>'room_id')::uuid;
+  select * into v_next from public.rooms where id=v_next_id;
+  if v_next.id is null or v_next.host_id is distinct from v_user or v_next.guest_id is not null or v_next.status<>'waiting'
+  then raise exception 'ROOM_CREATION_FAILED'; end if;
+  insert into public.room_rematches(parent_room_id,requested_by,next_room_id) values(p_parent_room_id,v_user,v_next_id)
+  on conflict(parent_room_id) do update set next_room_id=excluded.next_room_id;
+  return jsonb_build_object('room_id',v_next.id,'room_code',v_next.code,'prompt',v_next.prompt,'room_status',v_next.status,'expires_at',v_next.expires_at);
+end $$;
+
+-- A leaked code for a next round must not let a third person replace the same friend.
+create or replace function public.guard_rematch_guest()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare v_partner uuid;
+begin
+  if NEW.guest_id is not null and NEW.guest_id is distinct from OLD.guest_id then
+    select p.host_id into v_partner from public.room_rematches m join public.rooms p on p.id=m.parent_room_id where m.next_room_id=NEW.id;
+    if v_partner is not null and NEW.guest_id is distinct from v_partner then
+      raise exception 'ROOM_NOT_AVAILABLE' using errcode='42501'; end if;
+  end if;
+  return NEW;
+end $$;
+revoke all on function public.guard_rematch_guest() from public, anon, authenticated;
+drop trigger if exists guard_rematch_guest on public.rooms;
+create trigger guard_rematch_guest before update of guest_id on public.rooms for each row execute function public.guard_rematch_guest();
+
+revoke all on function public.get_my_library(integer,text,boolean) from public, anon;
+revoke all on function public.set_room_hidden(uuid,boolean) from public, anon;
+revoke all on function public.mark_room_comment_read(uuid,timestamptz) from public, anon;
+revoke all on function public.get_room_rematch(uuid) from public, anon;
+revoke all on function public.request_room_rematch(uuid) from public, anon;
+revoke all on function public.create_rematch_room(uuid,text,jsonb) from public, anon;
+grant execute on function public.get_my_library(integer,text,boolean) to authenticated;
+grant execute on function public.set_room_hidden(uuid,boolean) to authenticated;
+grant execute on function public.mark_room_comment_read(uuid,timestamptz) to authenticated;
+grant execute on function public.get_room_rematch(uuid) to authenticated;
+grant execute on function public.request_room_rematch(uuid) to authenticated;
+grant execute on function public.create_rematch_room(uuid,text,jsonb) to authenticated;
+notify pgrst, 'reload schema';
+commit;

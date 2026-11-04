@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ToolIcon } from "./components/ToolIcon";
 import { ExampleCards } from "./components/PublicContent";
+import { DailyTopic } from "./components/DailyTopic";
+import { dailyTopic } from "./utils/dailyTopic";
 
 export const metadata = { alternates: { canonical: "/" } };
 
@@ -30,6 +32,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           </div>
         </div>
       </section>
+      <DailyTopic initial={dailyTopic()} />
       <section aria-labelledby="how-it-works" className="mt-12 sm:mt-16">
         <span className="eyebrow">우리의 작은 그림 시간</span>
         <h2 id="how-it-works" className="section-heading mt-2">세 번이면 완성돼요</h2>

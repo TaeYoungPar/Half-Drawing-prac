@@ -37,6 +37,8 @@ type DrawingCanvasProps = {
   prompt?: string;
   backgroundStrokes?: Stroke[];
   draftId?: string;
+  initialPrompt?: string;
+  onCreateRoom?: (prompt: string, strokes: Stroke[]) => Promise<CreatedRoom>;
 
   onSubmitDrawing?: (
     strokes: Stroke[]
@@ -51,6 +53,8 @@ export function DrawingCanvas({
   backgroundStrokes =
     EMPTY_BACKGROUND_STROKES,
   draftId,
+  initialPrompt = "",
+  onCreateRoom,
   onSubmitDrawing,
 }: DrawingCanvasProps) {
   const router = useRouter();
@@ -89,7 +93,7 @@ export function DrawingCanvas({
   const [roomPrompt, setRoomPrompt] =
     useState("");
   const [isPromptRestored, setIsPromptRestored] = useState(false);
-  const promptStorageKey = "half-drawing:draft:prompt";
+  const promptStorageKey = draftId && drawingSide === "left" ? `half-drawing:draft:prompt:${draftId}` : "half-drawing:draft:prompt";
 
   const [isSaving, setIsSaving] =
     useState(false);
@@ -186,14 +190,14 @@ export function DrawingCanvas({
     if (drawingSide !== "left") return;
     const timer = window.setTimeout(() => {
       try {
-        setRoomPrompt(window.localStorage.getItem(promptStorageKey)?.slice(0, 80) ?? "");
+        setRoomPrompt(window.localStorage.getItem(promptStorageKey)?.slice(0, 80) ?? initialPrompt);
       } catch {
-        // Drawing is still possible when browser storage is unavailable.
+        setRoomPrompt(initialPrompt);
       }
       setIsPromptRestored(true);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [drawingSide]);
+  }, [drawingSide, promptStorageKey, initialPrompt]);
 
   useEffect(() => {
     if (drawingSide !== "left" || !isPromptRestored || createdRoom) return;
@@ -203,7 +207,7 @@ export function DrawingCanvas({
     } catch {
       // The drawing hook reports storage errors for the more valuable strokes.
     }
-  }, [drawingSide, roomPrompt, isPromptRestored, createdRoom]);
+  }, [drawingSide, roomPrompt, isPromptRestored, createdRoom, promptStorageKey]);
 
   useEffect(() => {
     // Errors stay until dismissed so users have enough time to read them.
@@ -342,7 +346,7 @@ export function DrawingCanvas({
     setSuccessMessage(null);
 
     try {
-      const room = await createRoom(
+      const room = await (onCreateRoom ?? createRoom)(
         trimmedPrompt,
         strokes
       );

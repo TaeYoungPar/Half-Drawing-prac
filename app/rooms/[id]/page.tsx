@@ -14,6 +14,7 @@ import { DrawingResultCanvas } from "../../components/DrawingResultCanvas";
 import { DrawingWaitingCanvas } from "../../components/DrawingWaitingCanvas";
 import { RoomComments } from "../../components/RoomComments";
 import RoomLoading from "./loading";
+import { RematchPanel } from "../../components/RematchPanel";
 import { useAnonymousAuth } from "../../hooks/useAnonymousAuth";
 
 import {
@@ -294,6 +295,7 @@ export default function RoomPage() {
           leftStrokes={leftDrawing.strokes}
           rightStrokes={rightDrawing.strokes}
         >
+          <RematchPanel key={`round:${roomId}:${userId}`} roomId={roomId} userId={userId} />
           {room.guest_id && <RoomComments key={`${roomId}:${userId}`} roomId={roomId} userId={userId} hostId={room.host_id} guestId={room.guest_id} />}
         </DrawingResultCanvas>
       </main>

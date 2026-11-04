@@ -335,6 +335,7 @@ function myRoomsReader({ session = { user: { id: HOME_USER_ID } }, authError = n
   const { getMyRooms } = loadTS("app/lib/rooms/getMyRooms.ts", {
     "../supabase/client": { createClient: () => ({
       auth: { getSession: async () => ({ data: { session }, error: authError }) },
+      rpc: async () => ({ data: null, error: { code: "PGRST202" } }),
       from(name) { calls.push(["from", name]); return query; },
     }) },
   });

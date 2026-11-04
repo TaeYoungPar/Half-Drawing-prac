@@ -25,7 +25,10 @@
     "test:comments-db": "node tests/room-comments.db.mjs",
     "test:fill": "node tests/fill.ui.mjs",
     "test:gestures": "node tests/drawing-gestures.ui.mjs",
-    "test:fill-edges": "node tests/fill-edges.ui.mjs"
+    "test:fill-edges": "node tests/fill-edges.ui.mjs",
+    "test:social-db": "node tests/social-features.db.mjs",
+    "test:social": "node tests/social-features.ui.mjs",
+    "db:social-bundle": "node scripts/build-social-sql.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
