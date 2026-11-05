@@ -27,7 +27,7 @@ try {
     .footer p { font-size: 20px; font-weight: 700; margin: 0; }
     .button { padding: 14px 24px; border: 2px solid #493127; border-radius: 12px; box-shadow: 0 4px 0 #493127; background: #ffc798; font-size: 21px; font-weight: 800; }
     .brand { position: absolute; bottom: 14px; right: 52px; font-size: 14px; color: #6b5745; font-weight: 700; }
-  </style></head><body><div class="label">반쪽그림</div><div class="board"><div class="paper"><div class="copy"><span class="eyebrow">둘이 그려서, 하나의 작품</span><h1>반쪽만 보고,<br>이어 그릴 수 있어?</h1><p class="intro">나는 왼쪽, 너는 오른쪽.<br>완성되면 둘의 그림을 함께 열어봐!</p></div><div class="art"><img alt="살구색과 민트색 반쪽 고양이" src="data:image/webp;base64,${illustration}"></div></div><div class="footer"><p>회원가입 없이 · 친구 한 명과</p><span class="button">친구랑 반쪽 그리기 ↗</span></div></div><span class="brand">Half Drawing Practice</span></body></html>`, { waitUntil: 'load' });
+  </style></head><body><div class="label">반쪽그림</div><div class="board"><div class="paper"><div class="copy"><span class="eyebrow">둘이 그려서, 하나의 작품</span><h1>반쪽만 보고,<br>이어 그릴 수 있어?</h1><p class="intro">나는 왼쪽, 너는 오른쪽.<br>완성되면 둘의 그림을 함께 열어봐!</p></div><div class="art"><img alt="살구색과 민트색 반쪽 고양이" src="data:image/webp;base64,${illustration}"></div></div><div class="footer"><p>회원가입 없이 · 친구 한 명과</p><span class="button">친구랑 반쪽 그리기 ↗</span></div></div><span class="brand">Half Drawing</span></body></html>`, { waitUntil: 'load' });
   await page.evaluate(async () => { await document.fonts.ready; await document.querySelector('img').decode(); });
   await page.screenshot({ path: path.join(root, 'app/opengraph-image.png') });
   console.log('Generated app/opengraph-image.png (1200×630)');

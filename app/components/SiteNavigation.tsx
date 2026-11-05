@@ -15,7 +15,7 @@ export function SiteNavigation() {
       ].map(({ href, label, color }) => {
         const NavigationLink = pathname === "/" && href !== "/" ? IntentLink : Link;
         return <NavigationLink key={href} href={href} aria-current={pathname === href ? "page" : undefined}
-          aria-label={href === "/join" ? "코드로 참여" : undefined} className={`nav-sticker ${color}`}>{label}</NavigationLink>;
+          className={`nav-sticker ${color}`}>{label}</NavigationLink>;
       })}
     </div>
   );

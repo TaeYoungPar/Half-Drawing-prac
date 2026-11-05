@@ -6,7 +6,7 @@ export const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || (process.env.
 export function contentMetadata(title: string, description: string, path: string): Metadata {
   return {
     title: `${title} | 반쪽그림`, description, alternates: { canonical: path },
-    openGraph: { title: `${title} | 반쪽그림`, description, url: path, type: "website", locale: "ko_KR", siteName: "반쪽그림", images: ["/opengraph-image.png"] },
+    openGraph: { title: `${title} | 반쪽그림`, description, url: path, type: "website", locale: "ko_KR", siteName: "반쪽그림 · Half Drawing", images: ["/opengraph-image.png"] },
     twitter: { card: "summary_large_image", title: `${title} | 반쪽그림`, description, images: ["/opengraph-image.png"] },
   };
 }

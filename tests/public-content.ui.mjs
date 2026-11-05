@@ -20,6 +20,13 @@ try {
     const page = await context.newPage();
     const errors = []; page.on('pageerror', error => errors.push(error.message));
     await page.goto(base);
+    assert.equal(await page.locator('.brand-title').innerText(), 'Half Drawing');
+    assert.equal(await page.locator('header').innerText().then(text => /practice/i.test(text)), false);
+    await page.getByRole('link', { name: '친구 없이 예시 먼저 보기', exact: false }).click();
+    await page.getByRole('heading', { level: 1, name: '서로 다른 표정의 고양이' }).waitFor();
+    await page.getByRole('button', { name: '친구의 화면', exact: true }).click();
+    await page.getByRole('button', { name: '완성 예시', exact: true }).click();
+    await page.getByRole('link', { name: '홈', exact: true }).click();
     await page.getByRole('link', { name: '이용 가이드 읽기' }).click();
     await page.getByRole('heading', { level: 1, name: '처음이어도, 반쪽이면 충분해요' }).waitFor();
     for (const route of routes) {

@@ -19,9 +19,11 @@ try {
       const tags = await page.evaluate(html => {
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const meta = key => doc.querySelector(`meta[property="${key}"],meta[name="${key}"]`)?.content;
-        return { title: meta('og:title'), description: meta('og:description'), image: meta('og:image'), width: meta('og:image:width'), height: meta('og:image:height'), twitter: meta('twitter:card'), twitterImage: meta('twitter:image'), icon: doc.querySelector('link[rel="icon"][type="image/png"]')?.getAttribute('href'), apple: doc.querySelector('link[rel="apple-touch-icon"]')?.getAttribute('href') };
+        return { title: meta('og:title'), siteName: meta('og:site_name'), applicationName: meta('application-name'), documentTitle: doc.title, description: meta('og:description'), image: meta('og:image'), width: meta('og:image:width'), height: meta('og:image:height'), twitter: meta('twitter:card'), twitterImage: meta('twitter:image'), icon: doc.querySelector('link[rel="icon"][type="image/png"]')?.getAttribute('href'), apple: doc.querySelector('link[rel="apple-touch-icon"]')?.getAttribute('href') };
       }, await response.text());
       assert.match(tags.title, /이어 그릴 수 있어/); assert.ok(tags.description.length > 20);
+      assert.equal(tags.siteName, '반쪽그림 · Half Drawing'); assert.equal(tags.applicationName, 'Half Drawing');
+      assert.equal(/practice/i.test(tags.documentTitle + tags.title + tags.siteName), false);
       assert.equal(tags.width, '1200'); assert.equal(tags.height, '630');
       assert.equal(tags.twitter, 'summary_large_image');
       assert.equal(new URL(tags.image).protocol, 'https:');

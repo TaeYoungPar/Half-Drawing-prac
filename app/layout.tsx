@@ -23,12 +23,13 @@ const adPublisher = adsPublisherId();
 export const metadata: Metadata = {
   other: adPublisher ? { "google-adsense-account": adPublisher } : undefined,
   metadataBase: siteUrl,
-  title: "반쪽그림 | 내 반쪽에 네 상상을 더해!",
-  description: "나는 왼쪽, 너는 오른쪽. 작은 힌트만 보고 이어 그리고, 완성된 둘의 그림을 함께 열어봐요. 회원가입 없이 친구와 즐기는 반쪽그림!",
+  applicationName: "Half Drawing",
+  title: "반쪽그림 Half Drawing | 친구와 반씩 그리는 그림 게임",
+  description: "회원가입 없이 친구와 반쪽씩 그리는 온라인 그림 게임. 서로의 그림을 모른 채 경계 힌트만 보고 이어 그리고, 완성된 한 장을 함께 열어보세요.",
   openGraph: {
     type: "website",
     locale: "ko_KR",
-    siteName: "반쪽그림",
+    siteName: "반쪽그림 · Half Drawing",
     title: "반쪽만 보고, 이어 그릴 수 있어? 🎨",
     description: "나는 왼쪽, 너는 오른쪽. 힌트만 보고 이어 그린 뒤, 둘의 상상이 만나는 순간을 함께 열어봐!",
   },

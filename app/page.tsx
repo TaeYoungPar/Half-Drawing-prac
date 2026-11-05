@@ -24,11 +24,13 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             <figcaption className="sr-only">반쪽씩 이어 그리는 놀이를 표현한 고양이 일러스트</figcaption>
           </figure>
           <div className="home-copy mt-4 text-center">
+            <p className="mb-2 text-xs font-bold text-slate-600">친구와 반씩 그리는 그림 게임</p>
             <p className="text-sm font-semibold leading-6 text-slate-800 sm:text-base">나는 왼쪽, 친구는 오른쪽.<br className="sm:hidden" /> 경계 힌트만 보고 이어 그려요.</p>
             <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
               <IntentLink href="/draw" className="button-primary"><ToolIcon name="pen" />그림 시작하기</IntentLink>
               <IntentLink href="/join" className="button-secondary">참여 코드 입력하기 <span aria-hidden="true">↗</span></IntentLink>
             </div>
+            <IntentLink href="/examples/cat" className="mt-2 inline-flex min-h-11 items-center px-2 text-sm font-bold underline underline-offset-4">친구 없이 예시 먼저 보기 <span aria-hidden="true">↗</span></IntentLink>
             <p className="mt-4 text-xs leading-5 text-slate-700">회원가입 없이 · 친구 한 명과 · 그림 실력은 상관없어요</p>
           </div>
         </div>
