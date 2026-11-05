@@ -4,6 +4,7 @@ import { ToolIcon } from "./components/ToolIcon";
 import { ExampleCards } from "./components/PublicContent";
 import { DailyTopic } from "./components/DailyTopic";
 import { dailyTopic } from "./utils/dailyTopic";
+import { IntentLink } from "./components/IntentLink";
 
 export const metadata = { alternates: { canonical: "/" } };
 
@@ -19,14 +20,14 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
               <span>나의 반쪽</span><span>친구의 반쪽</span>
             </div>
             <Image src="/half-notebook-cat.webp" alt="연필을 든 고양이의 왼쪽 살구색 반쪽과 오른쪽 민트색 반쪽이 하나로 이어진 예시 그림"
-              width={1536} height={1024} sizes="(min-width: 1024px) 850px, 94vw" preload className="mx-auto h-[190px] w-full object-contain pt-7 sm:h-[320px] sm:pt-5" />
+              width={1536} height={1024} sizes="(min-width: 640px) 450px, 243px" loading="eager" fetchPriority="high" className="mx-auto h-[190px] w-auto max-w-full object-contain pt-7 sm:h-[320px] sm:pt-5" />
             <figcaption className="sr-only">반쪽씩 이어 그리는 놀이를 표현한 고양이 일러스트</figcaption>
           </figure>
           <div className="home-copy mt-4 text-center">
             <p className="text-sm font-semibold leading-6 text-slate-800 sm:text-base">나는 왼쪽, 친구는 오른쪽.<br className="sm:hidden" /> 경계 힌트만 보고 이어 그려요.</p>
             <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
-              <Link href="/draw" className="button-primary"><ToolIcon name="pen" />그림 시작하기</Link>
-              <Link href="/join" className="button-secondary">참여 코드 입력하기 <span aria-hidden="true">↗</span></Link>
+              <IntentLink href="/draw" className="button-primary"><ToolIcon name="pen" />그림 시작하기</IntentLink>
+              <IntentLink href="/join" className="button-secondary">참여 코드 입력하기 <span aria-hidden="true">↗</span></IntentLink>
             </div>
             <p className="mt-4 text-xs leading-5 text-slate-700">회원가입 없이 · 친구 한 명과 · 그림 실력은 상관없어요</p>
           </div>

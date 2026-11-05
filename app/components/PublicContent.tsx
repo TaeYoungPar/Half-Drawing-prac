@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { examples } from "../lib/public-content";
 import { ExampleArtwork } from "./ExampleArtwork";
+import { IntentLink } from "./IntentLink";
 
 export function ContentShell({ title, intro, children }: { title: string; intro: string; children: ReactNode }) {
   return <main id="main-content" className="public-content mx-auto w-full max-w-5xl px-4 py-8 sm:px-8 sm:py-12">
@@ -19,5 +20,5 @@ export function ExampleCards() {
 }
 
 export function DrawingCTA() {
-  return <section className="panel mt-12 bg-[#dcedd5]! p-6 sm:p-8"><h2 className="section-heading">이번에는 우리 그림으로</h2><p className="mt-3 max-w-xl text-sm leading-7">예시와 똑같이 그릴 필요 없어요. 친구와 주제 하나를 정하고, 각자의 상상으로 반쪽씩 채워보세요.</p><div className="mt-5 flex flex-wrap gap-3"><Link href="/draw" className="button-primary">그림 시작하기</Link><Link href="/join" className="button-secondary">참여 코드 입력하기</Link></div></section>;
+  return <section className="panel mt-12 bg-[#dcedd5]! p-6 sm:p-8"><h2 className="section-heading">이번에는 우리 그림으로</h2><p className="mt-3 max-w-xl text-sm leading-7">예시와 똑같이 그릴 필요 없어요. 친구와 주제 하나를 정하고, 각자의 상상으로 반쪽씩 채워보세요.</p><div className="mt-5 flex flex-wrap gap-3"><IntentLink href="/draw" className="button-primary">그림 시작하기</IntentLink><IntentLink href="/join" className="button-secondary">참여 코드 입력하기</IntentLink></div></section>;
 }
