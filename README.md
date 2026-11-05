@@ -2,6 +2,16 @@
 
 두 사람이 그림을 반씩 이어 그리는 Next.js 앱입니다. 방장이 왼쪽 절반을 등록하고 참여 코드를 전달하면, 참여자가 오른쪽을 그려 완성합니다.
 
+### 방문 통계 연결 — 2026-11-05
+
+Vercel 프로젝트의 **Analytics → Enable**을 켠 뒤 이 코드를 운영 배포하면 Web Analytics에서 방문자 수·페이지 조회·유입 경로·국가/기기를 확인할 수 있습니다. 별도 측정 ID나 API 키는 필요하지 않습니다. `@vercel/analytics/next`를 공통 레이아웃에 한 번 연결하고 Vercel 시스템 변수 `VERCEL_ENV=production`일 때만 실행합니다. 개발·프리뷰 방문은 제외합니다. 활성화·배포 전의 방문이 소급 집계되지는 않습니다.
+
+페이지 URL의 쿼리/해시를 제거하고 `/rooms/개별ID`는 `/rooms/[id]`로 합칩니다. 같은 출처로 보내는 HTTP Referer에도 초대 URL이 실리지 않도록 `Referrer-Policy: strict-origin`을 사용합니다. 그림·주제·한마디·인증 정보를 사용자 정의 분석 이벤트로 전송하지 않습니다. 관련 처리는 `/privacy`에 안내합니다.
+
+배포가 Ready가 된 후 운영 사이트에서 몇 페이지를 이동하고, Analytics의 기간·필터를 확인해 새 페이지 조회를 보세요. 집계가 없으면 브라우저 Network에서 `/_vercel/insights/script.js`가 200인지, 조회 요청이 성공하는지 확인합니다. 로컬 서버에는 Vercel 수집 엔드포인트가 없으며 대시보드 수신 여부를 로컬 테스트만으로 확인할 수는 없습니다.
+
+검증은 `npm test`, `npm run test:analytics`로 재현합니다. 브라우저 검사는 `VERCEL_ENV=production npm run build`와 `VERCEL_ENV=production npm run start`로 실행한 서버에 `TEST_BASE_URL`을 지정하고, 공식 SDK의 실제 등록·탐색과 테스트용 수집기를 연결해 URL 제외·한 번씩 전송·차단 시 탐색 유지를 확인합니다. 개발/프리뷰 서버에는 `ANALYTICS_EXPECT_DISABLED=1`을 함께 지정해 요청 없음도 확인할 수 있습니다. 실제 운영 수신 테스트는 포함하지 않습니다.
+
 ### 홈 초기 로딩 개선 — 2026-11-05
 
 - **추가 이미지 후보:** `next.config.ts`의 `imageSizes`에 243·450·486px를 추가했다. DPR 1/1.75/2인 모바일에서 각각 243/450/486px, DPR 3에서는 기존 750px를 선택한다. 이미지 후보의 간격 때문에 불필요하게 640px 파일을 받는 문제를 줄인다.

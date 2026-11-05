@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "./components/SiteHeader";
+import { SiteAnalytics } from "./components/SiteAnalytics";
 import { adsPublisherId } from "./lib/ads";
 import Link from "next/link";
 import { contactEmail, siteUrl } from "./lib/public-content";
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           참여 코드는 7일 동안 유효해요. 완성한 그림은 기기에 저장해주세요.
           <p className="mt-2">운영 문의 <a className="inline-flex min-h-11 items-center underline underline-offset-4" href={`mailto:${contactEmail}`}>{contactEmail}</a></p>
         </footer>
+        {process.env.VERCEL_ENV === "production" && <SiteAnalytics />}
       </body>
     </html>
   );
