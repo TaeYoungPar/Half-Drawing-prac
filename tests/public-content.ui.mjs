@@ -14,6 +14,7 @@ try {
     let external = 0;
     await context.route('**/*', route => {
       if (new URL(route.request().url()).origin === base) return route.continue();
+      if (route.request().url().startsWith('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?')) return route.abort();
       external++; return route.abort();
     });
     const page = await context.newPage();
@@ -70,7 +71,7 @@ try {
     assert.equal(await card.evaluate(el => document.activeElement === el), true);
     await page.keyboard.press('Enter');
     await page.getByRole('heading', { level: 1, name: '각자의 기능을 가진 로봇' }).waitFor();
-    assert.equal(external, 0, 'public content makes no authentication, database or advertising requests');
+    assert.equal(external, 0, 'public content makes no authentication, database or unexpected external requests; manual ad script is blocked');
     assert.deepEqual(errors, []);
     await context.close();
     console.log(`Public content, previews and navigation: ${width}px passed`);

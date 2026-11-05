@@ -32,3 +32,32 @@ test('ads.txt rejects an explicitly empty or malformed publisher override', asyn
     assert.equal(await response.text(), '');
   }
 });
+
+test('public ads use the supplied slot only in production and can be disabled without affecting ownership', () => {
+  const active = load({ VERCEL_ENV: 'production' });
+  assert.equal(active.publicBannerConfig().client, 'ca-pub-6008052842325785');
+  assert.equal(active.publicBannerConfig().slot, '9331445471');
+  for (const env of [{}, { VERCEL_ENV: 'preview' }, { VERCEL_ENV: 'development' }, { VERCEL_ENV: 'production', NEXT_PUBLIC_ADSENSE_PUBLIC_BANNER_ENABLED: 'false' }]) {
+    assert.equal(load(env).publicBannerConfig(), null);
+    assert.equal(load(env).adsPublisherId(), 'ca-pub-6008052842325785');
+  }
+});
+
+test('invalid or intentionally cleared publisher/slot settings never request a public ad', () => {
+  for (const value of ['', 'abc', '9331445471\nmalicious', '123']) {
+    assert.equal(load({ VERCEL_ENV: 'production', NEXT_PUBLIC_ADSENSE_PUBLIC_BANNER_SLOT: value }).publicBannerConfig(), null);
+  }
+  assert.equal(load({ VERCEL_ENV: 'production', NEXT_PUBLIC_ADSENSE_CLIENT: '' }).publicBannerConfig(), null);
+  const old = { VERCEL_ENV: 'preview', NEXT_PUBLIC_ADSENSE_ENABLED: 'true', NEXT_PUBLIC_ADSENSE_LIBRARY_SLOT: '1234567890', NEXT_PUBLIC_ADSENSE_COMPLETED_SLOT: '1234567890' };
+  assert.equal(load(old).publicBannerConfig(), null);
+});
+
+test('ad page allowlist excludes private, empty and unknown example paths', () => {
+  const exports = {};
+  const source = ts.transpileModule(fs.readFileSync(new URL('../app/utils/publicAdPages.ts', import.meta.url), 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+  }).outputText;
+  vm.runInNewContext(source, { exports });
+  for (const path of ['/guide', '/examples', '/examples/cat', '/examples/robot', '/examples/flower/']) assert.equal(exports.isPublicAdPage(path), true);
+  for (const path of ['/', '/join', '/draw', '/library', '/rooms/private', '/privacy', '/about', '/examples/unknown', '/guide/unknown']) assert.equal(exports.isPublicAdPage(path), false);
+});

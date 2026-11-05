@@ -19,6 +19,7 @@
     "assets:share": "node scripts/generate-share-preview.mjs",
     "test:share": "node tests/share-preview.ui.mjs",
     "test:ads": "node tests/ads.ui.mjs",
+    "test:public-ads": "node tests/public-ads.ui.mjs",
     "test:content": "node tests/public-content.ui.mjs",
     "test:analytics": "node tests/analytics.ui.mjs",
     "test:comments": "node tests/room-comments.ui.mjs",

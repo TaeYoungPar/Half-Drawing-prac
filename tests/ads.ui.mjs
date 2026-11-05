@@ -27,7 +27,7 @@ try {
       assert.equal(await page.locator('.ad-banner, ins.adsbygoogle, script[src*="adsbygoogle"]').count(), 0);
       assert.equal(loads, 0);
     };
-    for (const route of ['/', '/guide', '/examples', '/join?code=ABC123DEF4']) { await page.goto(`${base}${route}`); await noAds(); }
+    for (const route of ['/', '/about', '/privacy', '/examples/unknown-example', '/join?code=ABC123DEF4']) { await page.goto(`${base}${route}`); await noAds(); }
     await page.goto(`${base}/draw`); await page.waitForFunction(() => !document.querySelector('#room-prompt')?.disabled); await noAds();
     fixture.room = { ...room(), status: 'waiting', guest_id: null, drawings: room().drawings.slice(0, 1) };
     await page.goto(`${base}/rooms/${roomId}`); await page.getByRole('heading', { name: '이제 친구의 차례예요.', exact: true }).waitFor(); await noAds();
@@ -40,6 +40,6 @@ try {
     fixture.room = null; await page.goto(`${base}/library`); await noAds();
     assert.equal(await page.locator('meta[name="google-adsense-account"]').getAttribute('content'), 'ca-pub-6008052842325785');
     assert.equal(await (await context.request.get(`${base}/ads.txt`)).text(), 'google.com, pub-6008052842325785, DIRECT, f08c47fec0942fa0\n');
-    assert.deepEqual(errors, []); await context.close(); console.log(`No ads on public, working or private pages; verification retained: ${width}px passed`);
+    assert.deepEqual(errors, []); await context.close(); console.log(`No ads on home, about, privacy, missing, working or private pages; verification retained: ${width}px passed`);
   }
 } finally { await browser.close(); }

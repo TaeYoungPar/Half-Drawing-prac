@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ContentShell, DrawingCTA } from "../components/PublicContent";
 import { ExamplePreview } from "../components/ExamplePreview";
 import { contentMetadata } from "../lib/public-content";
+import { PublicAdBanner } from "../components/PublicAdBanner";
 
 export const metadata = contentMetadata("친구와 반쪽씩 그리는 방법", "그림 시작부터 친구 초대, 경계 힌트, 채우기와 실행취소, 완성 그림 저장까지 알아보는 반쪽그림 이용 가이드.", "/guide");
 
@@ -21,5 +22,6 @@ export default function GuidePage() {
         <details><summary>참여 코드가 만료되면 그림도 삭제되나요?</summary><p>7일은 참여 코드의 유효 기간이에요. 서버 데이터가 같은 시점에 자동 삭제된다는 뜻은 아니에요. 저장 정보와 삭제 문의 방법은 <Link href="/privacy">개인정보·저장 안내</Link>에서 확인해주세요.</p></details>
       </section>
     </div><DrawingCTA />
+    <PublicAdBanner />
   </ContentShell>;
 }
