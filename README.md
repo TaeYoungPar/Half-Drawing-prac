@@ -2,6 +2,21 @@
 
 두 사람이 그림을 반씩 이어 그리는 Next.js 앱입니다. 방장이 왼쪽 절반을 등록하고 참여 코드를 전달하면, 참여자가 오른쪽을 그려 완성합니다.
 
+### 광고가 접히는 이유 확인 — 2026-11-06
+
+광고를 받기 전에는 예약 높이만 유지하고, `filled`가 확인된 뒤 ‘광고’ 문구와 구분선을 표시합니다. `unfilled`·스크립트 실패·초기화 오류는 접되 숨겨진 `.ad-banner`의 `data-ad-state`와 `data-ad-error`에 원인을 남깁니다. 사용자에게 내부 오류 메시지를 표시하거나 자동으로 광고를 재요청하지 않습니다.
+
+크롬 Console에서 아래 코드로 상태만 확인할 수 있습니다.
+
+```js
+(() => {
+  const ad = document.querySelector('.ad-banner');
+  return { state: ad?.dataset.adState, google: ad?.querySelector('ins')?.dataset.adStatus, error: ad?.dataset.adError };
+})()
+```
+
+`unfilled`는 슬롯에 광고가 채워지지 않았다는 뜻이며 이 값만으로 수요 부족·단위/계정 설정·게재 제한 등 세부 이유를 확정할 수는 없습니다. `script-error`는 로드 실패, `request-error`는 SDK 초기화 예외이며 `error`에 메시지를 남깁니다. `idle`→`loading`→`requesting`은 요청 진행 상태입니다. AdSense 정책센터·단위별 보고서와 실제 브라우저 Network를 함께 봐야 Google 쪽 원인을 더 좁힐 수 있습니다.
+
 ### Half Drawing 이름 정리와 첫 방문 — 2026-11-05
 
 영문 로고와 공유 미리보기에서 Practice를 제거하고 **Half Drawing / 반쪽그림**으로 정리했습니다. 기존 고양이·아이콘에는 Practice가 없어 유지했으며, 공유 이미지는 HTML 생성 원본의 표기를 수정해 1200×630으로 다시 생성했습니다. 첫 화면에 게임 용도와 ‘친구 없이 예시 먼저 보기’를 추가했습니다. 기존 시작/참여 동작은 그대로이며 예시는 인증 없이 비교할 수 있습니다.

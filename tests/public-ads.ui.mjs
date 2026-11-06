@@ -27,7 +27,9 @@ async function setup(width, behavior = 'filled') {
   await context.route('https://pagead2.googlesyndication.com/**', async route => {
     loads++;
     if (behavior === 'blocked') return route.abort();
-    const body = behavior === 'unfilled' ? script.replace("slot.dataset.adStatus = 'filled'", "slot.dataset.adStatus = 'unfilled'") : script;
+    const body = behavior === 'request-error'
+      ? `window.adsbygoogle = { push() { throw new Error('Fixture AdSense initialization failed'); } };`
+      : behavior === 'unfilled' ? script.replace("slot.dataset.adStatus = 'filled'", "slot.dataset.adStatus = 'unfilled'") : script;
     return route.fulfill({ contentType: 'application/javascript', body });
   });
   const page = await context.newPage();
@@ -43,12 +45,17 @@ try {
     await banner.waitFor({ state: 'attached' });
     await t.page.waitForTimeout(400);
     assert.equal(t.loads(), 0, 'no ad request before reaching the bottom');
+    assert.equal(await banner.getAttribute('data-ad-state'), 'idle');
+    assert.equal(await banner.locator('p').isVisible(), false, 'no ad label before a creative is filled');
     assert.equal(await t.page.locator('ins.adsbygoogle').count(), 1);
     const reservedHeight = await banner.evaluate(el => el.getBoundingClientRect().height);
     const cta = t.page.getByRole('link', { name: '그림 시작하기', exact: true });
     const ctaBottom = await cta.evaluate(el => el.getBoundingClientRect().bottom + scrollY);
     await banner.scrollIntoViewIfNeeded();
     await t.page.locator('ins.adsbygoogle[data-ad-status="filled"]').waitFor();
+    await t.page.locator('.ad-banner[data-ad-state="filled"]').waitFor();
+    assert.equal(await banner.locator('p').isVisible(), true);
+    assert.equal(await banner.getAttribute('data-ad-error'), null);
     const before = await banner.boundingBox();
     assert.equal(before.height, reservedHeight, 'filling the reserved slot does not move content');
     assert.equal(await banner.locator('ins').getAttribute('data-ad-client'), 'ca-pub-6008052842325785');
@@ -88,11 +95,19 @@ try {
     await t.context.close();
     console.log(`${width}px: lazy horizontal slot, spacing, no overflow, one script, article navigation and clean editor document PASS`);
   }
-  for (const behavior of ['blocked', 'unfilled']) {
+  for (const behavior of ['blocked', 'unfilled', 'request-error']) {
     const t = await setup(390, behavior);
     await t.page.goto(`${base}/guide`);
     await t.page.locator('.ad-banner').scrollIntoViewIfNeeded();
     await t.page.locator('.ad-banner').waitFor({ state: 'hidden' });
+    const banner = t.page.locator('.ad-banner');
+    const state = behavior === 'blocked' ? 'script-error' : behavior;
+    assert.equal(await banner.getAttribute('data-ad-state'), state);
+    assert.equal(await banner.locator('p').isVisible(), false);
+    if (behavior === 'unfilled') assert.equal(await banner.locator('ins').getAttribute('data-ad-status'), 'unfilled');
+    if (behavior === 'request-error') assert.equal(await banner.getAttribute('data-ad-error'), 'Fixture AdSense initialization failed');
+    if (behavior === 'blocked') assert.match(await banner.getAttribute('data-ad-error'), /script failed to load/);
+    await t.page.screenshot({ path: `${out}/${behavior}-390.png`, fullPage: true });
     await t.page.getByRole('link', { name: '그림 시작하기', exact: true }).click();
     await t.page.waitForURL('**/draw');
     await t.page.waitForFunction(() => !document.querySelector('#room-prompt')?.disabled);
@@ -111,6 +126,9 @@ try {
     await slow.page.goto(`${base}/guide`);
     await slow.page.locator('.ad-banner').scrollIntoViewIfNeeded();
     await slow.page.locator('script[src*="adsbygoogle"]').waitFor({ state: 'attached' });
+    assert.equal(await slow.page.locator('.ad-banner').getAttribute('data-ad-state'), 'loading');
+    assert.equal(await slow.page.locator('.ad-banner p').isVisible(), false);
+    await slow.page.screenshot({ path: `${out}/pending-390.png` });
     await slow.page.evaluate(() => { window.__adDocumentMarker = 'old-document'; });
     await slow.page.getByRole('link', { name: '그림 시작하기', exact: true }).click();
     await slow.page.waitForURL('**/draw');
