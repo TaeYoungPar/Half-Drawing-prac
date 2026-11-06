@@ -53,7 +53,7 @@ export default function JoinRoomPage() {
   const codeField = <>
     <label htmlFor="room-code" className="text-sm font-semibold">참여 코드</label>
     <input id="room-code" type="text" maxLength={10} value={roomCode}
-      disabled={isJoining} autoComplete="off" autoCapitalize="characters" spellCheck={false}
+      disabled={isLoading || isJoining} autoComplete="off" autoCapitalize="characters" spellCheck={false}
       aria-describedby="code-help" aria-invalid={Boolean(joinError)}
       onChange={(event) => {
         setRoomCode(normalizeRoomCode(event.target.value));

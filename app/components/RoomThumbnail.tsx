@@ -24,10 +24,12 @@ function loadThumbnail(cache: ThumbnailCache, roomId: string) {
   return entry.request;
 }
 
-export function RoomThumbnail({ roomId, prompt, cache }: { roomId: string; prompt: string; cache: ThumbnailCache }) {
+export function RoomThumbnail({ roomId, prompt, cache, onReadyChange }: { roomId: string; prompt: string; cache: ThumbnailCache; onReadyChange?: (roomId: string, ready: boolean) => void }) {
   const container = useRef<HTMLDivElement>(null);
   const [url, setUrl] = useState<string | null>(() => cache.get(roomId)?.url ?? null);
   const [failed, setFailed] = useState(false);
+
+  useEffect(() => () => { onReadyChange?.(roomId, false); }, [roomId, onReadyChange]);
 
   useEffect(() => {
     if (url) return;
@@ -53,7 +55,8 @@ export function RoomThumbnail({ roomId, prompt, cache }: { roomId: string; promp
 
   return (
     <div ref={container} className="relative mt-4 flex aspect-[8/5] w-full items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white">
-      {url ? <Image src={url} width={320} height={200} unoptimized alt={`${prompt} 완성 그림 미리보기`} className="h-full w-full object-contain" />
+      {url ? <Image src={url} width={320} height={200} unoptimized alt={`${prompt} 완성 그림 미리보기`} className="h-full w-full object-contain"
+        onLoad={() => onReadyChange?.(roomId, true)} onError={() => onReadyChange?.(roomId, false)} />
         : <p className="px-4 text-center text-xs leading-5 text-slate-600">{failed ? "미리보기 대신 아래 버튼으로 그림을 열어주세요." : "완성 그림 미리보기"}</p>}
     </div>
   );

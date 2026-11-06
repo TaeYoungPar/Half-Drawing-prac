@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DrawingLibrary } from "../components/DrawingLibrary";
+import { publicBannerConfig } from "../lib/ads";
 
 export const metadata: Metadata = { title: "내 보관함 | 반쪽그림" };
 
@@ -14,7 +15,7 @@ export default function LibraryPage() {
         </div>
         <Link href="/draw" className="button-primary">그림 시작하기</Link>
       </div>
-      <DrawingLibrary />
+      <DrawingLibrary adConfig={publicBannerConfig()} />
     </main>
   );
 }

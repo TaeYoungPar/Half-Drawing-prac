@@ -1,10 +1,10 @@
 "use client";
 
-import Script from "next/script";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { isPublicAdPage } from "../utils/publicAdPages";
+import { isAdPage } from "../utils/adPages";
 import { isolatePublicAdNavigation } from "../lib/publicAdNavigation";
+import { loadAdSense } from "../lib/loadAdSense";
 
 declare global {
   interface Window { adsbygoogle?: { push: (entry: Record<string, never>) => unknown } }
@@ -15,7 +15,7 @@ const isFailure = (state: AdState) => state === "unfilled" || state === "script-
 
 export function PublicAdSlot({ client, slot }: { client: string; slot: string }) {
   const pathname = usePathname();
-  return isPublicAdPage(pathname) ? <Banner key={pathname} client={client} slot={slot} /> : null;
+  return isAdPage(pathname) ? <Banner key={pathname} client={client} slot={slot} /> : null;
 }
 
 function Banner({ client, slot }: { client: string; slot: string }) {
@@ -54,20 +54,30 @@ function Banner({ client, slot }: { client: string; slot: string }) {
     return () => observer.disconnect();
   }, []);
 
-  const requestAd = () => {
-    const element = ins.current;
-    if (!element || requested.current || element.dataset.adsbygoogleStatus) return;
-    if (element.getBoundingClientRect().width <= 0) return;
-    requested.current = true;
-    setAdState("requesting");
-    try {
-      window.adsbygoogle ??= [] as Record<string, never>[];
-      window.adsbygoogle.push({});
-    } catch (error) {
-      setAdError((error instanceof Error ? error.message : String(error)).slice(0, 500));
-      setAdState("request-error");
-    }
-  };
+  useEffect(() => {
+    if (!near) return;
+    let active = true;
+    void loadAdSense(client).then(() => {
+      const element = ins.current;
+      if (!active || !element || requested.current || element.dataset.adsbygoogleStatus) return;
+      if (element.getBoundingClientRect().width <= 0) return;
+      requested.current = true;
+      setAdState("requesting");
+      try {
+        window.adsbygoogle ??= [] as Record<string, never>[];
+        window.adsbygoogle.push({});
+      } catch (error) {
+        setAdError((error instanceof Error ? error.message : String(error)).slice(0, 500));
+        setAdState("request-error");
+      }
+    }, () => {
+      scriptFailed = true;
+      if (!active) return;
+      setAdError("AdSense script failed to load");
+      setAdState("script-error");
+    });
+    return () => { active = false; };
+  }, [client, near]);
 
   return <aside ref={container} hidden={hidden} aria-label="광고" aria-busy={near && adState !== "filled" && !hidden}
     data-ad-state={adState} data-ad-error={adError ?? undefined}
@@ -76,8 +86,5 @@ function Banner({ client, slot }: { client: string; slot: string }) {
     <p aria-hidden={adState !== "filled"} style={{ visibility: adState === "filled" ? "visible" : "hidden" }} className="mb-2 text-center text-[11px] font-normal text-slate-500">광고</p>
     <ins ref={ins} className="adsbygoogle" style={{ display: "block", width: "100%", height: 100 }}
       data-ad-client={client} data-ad-slot={slot} data-ad-format="horizontal" data-full-width-responsive="false" />
-    {near && !hidden && <Script id="public-adsense" src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`}
-      crossOrigin="anonymous" strategy="afterInteractive"
-      onReady={requestAd} onError={() => { scriptFailed = true; setAdError("AdSense script failed to load"); setAdState("script-error"); }} />}
   </aside>;
 }

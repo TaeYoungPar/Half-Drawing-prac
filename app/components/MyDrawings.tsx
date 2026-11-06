@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { RoomThumbnail, type ThumbnailCache } from "./RoomThumbnail";
 import { useMyRooms } from "../hooks/useMyRooms";
 import { MY_ROOMS_PAGE_SIZE, type RoomScope } from "../lib/rooms/getMyRooms";
 import { copyRoomCode } from "../utils/copyRoomCode";
 import type { DrawingStatus } from "../types/drawing";
 import { LoadingState } from "./LoadingState";
+import { PublicAdSlot } from "./PublicAdSlot";
+import type { publicBannerConfig } from "../lib/ads";
 
 const STATUS: Record<DrawingStatus, { label: string; className: string; description: string }> = {
   waiting: { label: "참여 대기", className: "bg-slate-100 text-slate-700", description: "친구에게 참여 코드를 보내주세요." },
@@ -16,11 +18,23 @@ const STATUS: Record<DrawingStatus, { label: string; className: string; descript
   expired: { label: "기간 만료", className: "bg-slate-100 text-slate-500", description: "참여 기한이 지난 방이에요." },
 };
 
-export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) {
+export function MyDrawings({ state, adConfig }: { state: ReturnType<typeof useMyRooms>; adConfig?: ReturnType<typeof publicBannerConfig> }) {
   const { rooms, total, page, scope, changeScope, isLoading, isRefreshing, error, refresh, changePage, hasNextPage, extrasAvailable, showHidden, changeVisibility, setHidden, busyRoomId, actionError } = state;
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [undoHidden, setUndoHidden] = useState<{ id: string; hidden: boolean } | null>(null);
   const [thumbnails] = useState<ThumbnailCache>(() => new Map());
+  const [readyImages, setReadyImages] = useState<Set<string>>(() => new Set());
+  const onThumbnailReady = useCallback((id: string, ready: boolean) => {
+    setReadyImages(current => {
+      if (current.has(id) === ready) return current;
+      const next = new Set(current);
+      if (ready) next.add(id); else next.delete(id);
+      return next;
+    });
+  }, []);
+  // Keep the same slot during background refresh errors while real artwork remains visible.
+  const adEligible = !isLoading && !showHidden &&
+    rooms.filter(room => room.status === "completed" && readyImages.has(room.id)).length >= 3;
   async function copyCode(code: string) {
     try { await copyRoomCode(code); setCopyMessage("참여 코드를 복사했어요. 친구에게 보내주세요."); }
     catch (reason) { setCopyMessage(reason instanceof Error ? reason.message : "복사하지 못했습니다."); }
@@ -73,7 +87,7 @@ export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) 
               <p className="mb-2 text-xs font-semibold text-slate-500">{room.participantRole === "host" ? "내가 시작한 그림" : "내가 참여한 그림"}</p>
               <span className={`rounded-full px-3 py-1 text-xs font-bold ${status.className}`}>{room.status === "guest_joined" && room.participantRole === "guest" ? "이어 그릴 차례" : status.label}</span>
               {room.hasUnreadComment && <span className="mt-2 rounded-full border border-[#c38c9a] bg-[#f9dce0] px-3 py-1 text-xs font-bold">💬 친구의 새 한마디</span>}
-              {room.status === "completed" && <Link href={`/rooms/${room.id}`} aria-label={`${room.prompt} 완성 그림 열기`} className="block w-full rounded-xl"><RoomThumbnail roomId={room.id} prompt={room.prompt} cache={thumbnails} /></Link>}
+              {room.status === "completed" && <Link href={`/rooms/${room.id}`} aria-label={`${room.prompt} 완성 그림 열기`} className="block w-full rounded-xl"><RoomThumbnail roomId={room.id} prompt={room.prompt} cache={thumbnails} onReadyChange={onThumbnailReady} /></Link>}
               <div className="room-topic mt-4"><p className="text-xs font-semibold text-slate-600">그림 주제</p><h3 className="mt-2 break-words text-lg font-bold">{room.prompt}</h3></div>
               <time dateTime={room.created_at} className="mt-1 text-xs text-slate-500">
                 {new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeZone: "Asia/Seoul" }).format(new Date(room.created_at))} 시작
@@ -95,6 +109,7 @@ export function MyDrawings({ state }: { state: ReturnType<typeof useMyRooms> }) 
         <span className="text-sm text-slate-500">{page + 1} / {Math.ceil(total / MY_ROOMS_PAGE_SIZE)}</span>
         <button type="button" onClick={() => changePage(page + 1)} disabled={!hasNextPage || isLoading || isRefreshing} className="button-secondary">다음</button>
       </nav>}
+      {adConfig && adEligible && <PublicAdSlot {...adConfig} />}
     </section>
   );
 }

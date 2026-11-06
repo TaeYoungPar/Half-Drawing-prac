@@ -1,4 +1,4 @@
-import { isPublicAdPage } from "../utils/publicAdPages";
+import { isAdPage } from "../utils/adPages";
 
 let installed = false;
 
@@ -12,13 +12,13 @@ export function isolatePublicAdNavigation() {
     const anchor = event.target instanceof Element ? event.target.closest("a[href]") : null;
     if (!(anchor instanceof HTMLAnchorElement) || anchor.hasAttribute("download") || (anchor.target && anchor.target !== "_self")) return;
     const target = new URL(anchor.href);
-    if (target.origin !== location.origin || isPublicAdPage(target.pathname)) return;
+    if (target.origin !== location.origin || isAdPage(target.pathname)) return;
     event.preventDefault();
     event.stopImmediatePropagation();
     location.assign(target.href);
   }, true);
   window.addEventListener("popstate", event => {
-    if (isPublicAdPage(location.pathname)) return;
+    if (isAdPage(location.pathname)) return;
     event.stopImmediatePropagation();
     location.reload();
   }, true);

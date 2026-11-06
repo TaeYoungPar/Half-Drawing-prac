@@ -11,6 +11,7 @@ export async function mock(context,id){
  await context.route('**/*',async r=>{
   const url=new URL(r.request().url());
   if(url.origin===base)return r.continue();
+  if(url.hostname==='pagead2.googlesyndication.com')return r.abort();
   const path=url.pathname;
   const json=(body,status=200)=>r.fulfill({status,contentType:'application/json',body:JSON.stringify(body)});
   if(path==='/auth/v1/signup')return json({access_token:[Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url'),Buffer.from(JSON.stringify({sub:id,aud:'authenticated',role:'authenticated',exp:Math.floor(Date.now()/1000)+3600,iat:Math.floor(Date.now()/1000),is_anonymous:true})).toString('base64url'),'fixture'].join('.'),refresh_token:'fixture-only-refresh',token_type:'bearer',expires_in:3600,user:user(id)});

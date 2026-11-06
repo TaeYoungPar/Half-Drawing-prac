@@ -52,12 +52,12 @@ test('invalid or intentionally cleared publisher/slot settings never request a p
   assert.equal(load(old).publicBannerConfig(), null);
 });
 
-test('ad page allowlist excludes private, empty and unknown example paths', () => {
+test('ad route allowlist includes home/library while excluding editors, rooms and unknown content', () => {
   const exports = {};
-  const source = ts.transpileModule(fs.readFileSync(new URL('../app/utils/publicAdPages.ts', import.meta.url), 'utf8'), {
+  const source = ts.transpileModule(fs.readFileSync(new URL('../app/utils/adPages.ts', import.meta.url), 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
   }).outputText;
   vm.runInNewContext(source, { exports });
-  for (const path of ['/guide', '/examples', '/examples/cat', '/examples/robot', '/examples/flower/']) assert.equal(exports.isPublicAdPage(path), true);
-  for (const path of ['/', '/join', '/draw', '/library', '/rooms/private', '/privacy', '/about', '/examples/unknown', '/guide/unknown']) assert.equal(exports.isPublicAdPage(path), false);
+  for (const path of ['/', '/library', '/library/', '/guide', '/examples', '/examples/cat', '/examples/robot', '/examples/flower/']) assert.equal(exports.isAdPage(path), true);
+  for (const path of ['/join', '/draw', '/rooms/private', '/privacy', '/about', '/examples/unknown', '/guide/unknown']) assert.equal(exports.isAdPage(path), false);
 });

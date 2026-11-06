@@ -9,7 +9,9 @@ const out = process.env.VISUAL_ARTIFACT_DIR || path.resolve('artifacts/public-ad
 fs.mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || '/usr/bin/chromium', args: ['--no-sandbox'] });
 // No live Google requests or impressions. Exercise the app's lifecycle with a fixture.
-const script = `window.__adPushes = 0; window.adsbygoogle = { push() {
+const script = `window.__adScriptAttributes = Array.from(document.currentScript.attributes, attribute => attribute.name).sort();
+window.__adScriptReadyState = document.readyState;
+window.__adPushes = 0; window.adsbygoogle = { push() {
   window.__adPushes++;
   const slot = document.querySelector('ins.adsbygoogle:not([data-adsbygoogle-status])');
   if (!slot) throw new Error('Duplicate ad request');
@@ -56,6 +58,8 @@ try {
     await t.page.locator('.ad-banner[data-ad-state="filled"]').waitFor();
     assert.equal(await banner.locator('p').isVisible(), true);
     assert.equal(await banner.getAttribute('data-ad-error'), null);
+    assert.deepEqual(await t.page.evaluate(() => window.__adScriptAttributes), ['async', 'crossorigin', 'src'], 'AdSense must see only its supported script attributes at execution time');
+    assert.equal(await t.page.evaluate(() => window.__adScriptReadyState), 'complete');
     const before = await banner.boundingBox();
     assert.equal(before.height, reservedHeight, 'filling the reserved slot does not move content');
     assert.equal(await banner.locator('ins').getAttribute('data-ad-client'), 'ca-pub-6008052842325785');
@@ -141,16 +145,36 @@ try {
     await slow.context.close();
   }
   console.log('Leaving during a pending Google script download also opens a clean editor document PASS');
+  const shared = await setup(390);
+  let finishShared;
+  const sharedPending = new Promise(resolve => { finishShared = resolve; });
+  await shared.context.route('https://pagead2.googlesyndication.com/**', async route => {
+    await sharedPending;
+    await route.fulfill({ contentType: 'application/javascript', body: script }).catch(() => {});
+  });
+  try {
+    await shared.page.goto(`${base}/guide`);
+    await shared.page.locator('.ad-banner').scrollIntoViewIfNeeded();
+    await shared.page.locator('script[src*="adsbygoogle"]').waitFor({ state: 'attached' });
+    await shared.page.getByRole('navigation', { name: '그리기 안내', exact: true }).getByRole('link', { name: '그리기 예시', exact: true }).click();
+    await shared.page.getByRole('heading', { level: 1, name: '무엇을 그릴지 망설여질 때' }).waitFor();
+    await shared.page.locator('.ad-banner').scrollIntoViewIfNeeded();
+    assert.equal(await shared.page.locator('script[src*="adsbygoogle"]').count(), 1, 'pending script is shared across article navigation');
+    finishShared();
+    await shared.page.locator('.ad-banner[data-ad-state="filled"]').waitFor();
+    assert.equal(await shared.page.evaluate(() => window.__adPushes), 1, 'unmounted article cannot request an ad after load');
+  } finally { finishShared(); await shared.context.close(); }
+  console.log('Public navigation during script download reuses one native script and initializes only the active slot PASS');
   const t = await setup(390);
-  await t.page.goto(base);
-  await t.page.getByRole('link', { name: '이용 가이드 읽기', exact: true }).click();
+  await t.page.goto(`${base}/about`);
+  await t.page.locator('footer a[href="/guide"]').click();
   await t.page.locator('.ad-banner').scrollIntoViewIfNeeded();
   await t.page.locator('ins.adsbygoogle[data-ad-status="filled"]').waitFor();
   await t.page.goBack();
-  await t.page.waitForURL(base + '/');
+  await t.page.waitForURL(base + '/about');
   await t.page.getByRole('heading', { level: 1 }).waitFor();
   assert.equal(await t.page.evaluate(() => typeof window.adsbygoogle), 'undefined', 'Back to non-ad route reloads without Google runtime');
   assert.equal(await t.page.locator('.ad-banner, script[src*="adsbygoogle"]').count(), 0);
   await t.context.close();
-  console.log('Back navigation to non-ad home uses a clean document PASS');
+  console.log('Back navigation to non-ad about page uses a clean document PASS');
 } finally { await browser.close(); }
