@@ -29,6 +29,7 @@ const drawings = ['left', 'right'].map((role, i) => ({ role, completed: true, st
 async function setup(width, mode = 'normal') {
   const context = await browser.newContext({ viewport: { width, height: width < 640 ? 844 : 1000 }, isMobile: width < 640, hasTouch: width < 640 });
   await mock(context, hostId);
+  const dataset = mode === 'pagination' ? Array.from({ length: 14 }, (_, i) => ({ ...records[i % 3], id: `55555555-5555-4555-8555-${String(i).padStart(12, '0')}` })) : records;
   let scripts = 0, listRequests = 0;
   await context.route('https://pagead2.googlesyndication.com/**', r => { scripts++; return r.fulfill({ contentType: 'application/javascript', body: adScript }); });
   let release;
@@ -36,15 +37,17 @@ async function setup(width, mode = 'normal') {
   await context.route('**/rest/v1/rooms*', async r => {
     const query = new URL(r.request().url()).searchParams;
     if (query.has('id')) {
-      const room = records.find(row => row.id === query.get('id').slice(3));
+      const room = dataset.find(row => row.id === query.get('id').slice(3));
       if (mode === 'preview-error' && room.id === records[2].id) return r.fulfill({ status: 403, contentType: 'application/json', body: '{"message":"Preview unavailable"}' });
       return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...room, drawings }) });
     }
     listRequests++;
     await gate;
     if (mode === 'error') return r.fulfill({ status: 400, contentType: 'application/json', body: '{"code":"42501","message":"Fixture list denied"}' });
-    const rows = mode === 'empty' || query.has('guest_id') ? [] : records.map((row, i) => ({ ...row, status: mode === 'waiting' || (mode === 'two' && i === 2) ? 'waiting' : 'completed' }));
-    return r.fulfill({ contentType: 'application/json', headers: { 'content-range': rows.length ? `0-${rows.length - 1}/${rows.length}` : '*/0', 'access-control-expose-headers': 'content-range' }, body: JSON.stringify(rows) });
+    const rows = mode === 'empty' || query.has('guest_id') ? [] : dataset.map((row, i) => ({ ...row, status: mode === 'waiting' || (mode === 'two' && i === 2) ? 'waiting' : 'completed' }));
+    const offset = Number(query.get('offset') || 0);
+    const visible = rows.slice(offset, offset + Number(query.get('limit') || 6));
+    return r.fulfill({ contentType: 'application/json', headers: { 'content-range': visible.length ? `${offset}-${offset + visible.length - 1}/${rows.length}` : `*/${rows.length}`, 'access-control-expose-headers': 'content-range' }, body: JSON.stringify(visible) });
   });
   const page = await context.newPage();
   const errors = []; page.on('pageerror', e => errors.push(e.message));
@@ -57,6 +60,52 @@ async function connect(t) {
 }
 
 try {
+  for (const width of [320, 390, 1440]) {
+    const t = await setup(width, 'pagination');
+    try {
+      await connect(t);
+      await t.page.goto(`${base}/library`);
+      const readPage = async () => {
+        await t.page.locator('article').last().waitFor();
+        for (const card of await t.page.locator('article').all()) {
+          await card.scrollIntoViewIfNeeded();
+          await card.locator('img').waitFor();
+          await card.locator('img').evaluate(image => image.decode());
+        }
+      };
+      await readPage();
+      await t.page.locator('.ad-banner').scrollIntoViewIfNeeded();
+      await t.page.locator('.ad-banner[data-ad-state="filled"]').waitFor();
+      await t.page.locator('ins.adsbygoogle').evaluate(e => { window.__firstPageAd = e; });
+      await t.page.getByRole('button', { name: '다음', exact: true }).click();
+      await t.page.getByRole('navigation', { name: '내 그림 목록 페이지' }).getByText('2 / 3', { exact: true }).waitFor();
+      await t.page.waitForFunction(() => {
+        const card = document.querySelector('article')?.getBoundingClientRect();
+        return card && card.top >= 0 && card.top < innerHeight;
+      }, null, { timeout: 5000 });
+      await readPage();
+      await t.page.locator('.ad-banner').scrollIntoViewIfNeeded();
+      await t.page.locator('.ad-banner[data-ad-state="filled"]').waitFor();
+      assert.equal(await t.page.evaluate(() => window.__firstPageAd.isConnected), false, 'old page ad is retired');
+      assert.equal(await t.page.evaluate(() => window.__placementPushes), 2);
+      assert.equal(t.scripts(), 1);
+      await t.page.screenshot({ path: `${out}/library-page2-ad-${width}.png` });
+      await t.page.getByRole('button', { name: '다음', exact: true }).click();
+      await t.page.getByRole('navigation', { name: '내 그림 목록 페이지' }).getByText('3 / 3', { exact: true }).waitFor();
+      await readPage();
+      assert.equal(await t.page.locator('article').count(), 2);
+      assert.equal(await t.page.locator('.ad-banner').count(), 0, 'sparse last page remains ad-free');
+      await t.page.getByRole('button', { name: '이전', exact: true }).click();
+      await t.page.getByRole('navigation', { name: '내 그림 목록 페이지' }).getByText('2 / 3', { exact: true }).waitFor();
+      await readPage();
+      await t.page.locator('.ad-banner').scrollIntoViewIfNeeded();
+      await t.page.locator('.ad-banner[data-ad-state="filled"]').waitFor();
+      assert.equal(t.scripts(), 1);
+      assert.equal(await t.page.evaluate(() => window.__placementPushes), 3);
+      assert.deepEqual(t.errors, []);
+    } finally { await t.context.close(); }
+    console.log(`${width}px: page 2 ad, sparse last-page exclusion and cached return PASS`);
+  }
   for (const width of [320, 390, 1440]) {
     const home = await setup(width);
     await home.page.goto(base);

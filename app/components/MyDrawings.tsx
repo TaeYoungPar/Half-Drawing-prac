@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { RoomThumbnail, type ThumbnailCache } from "./RoomThumbnail";
 import { useMyRooms } from "../hooks/useMyRooms";
 import { MY_ROOMS_PAGE_SIZE, type RoomScope } from "../lib/rooms/getMyRooms";
@@ -20,6 +20,17 @@ const STATUS: Record<DrawingStatus, { label: string; className: string; descript
 
 export function MyDrawings({ state, adConfig }: { state: ReturnType<typeof useMyRooms>; adConfig?: ReturnType<typeof publicBannerConfig> }) {
   const { rooms, total, page, scope, changeScope, isLoading, isRefreshing, error, refresh, changePage, hasNextPage, extrasAvailable, showHidden, changeVisibility, setHidden, busyRoomId, actionError } = state;
+  const roomList = useRef<HTMLDivElement>(null);
+  const pendingPageScroll = useRef<number | null>(null);
+  useEffect(() => {
+    if (isLoading || pendingPageScroll.current !== page) return;
+    roomList.current?.scrollIntoView({ block: "start", behavior: "instant" });
+    pendingPageScroll.current = null;
+  }, [isLoading, page]);
+  function selectPage(next: number) {
+    pendingPageScroll.current = next;
+    changePage(next);
+  }
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [undoHidden, setUndoHidden] = useState<{ id: string; hidden: boolean } | null>(null);
   const [thumbnails] = useState<ThumbnailCache>(() => new Map());
@@ -80,7 +91,7 @@ export function MyDrawings({ state, adConfig }: { state: ReturnType<typeof useMy
           <p className="font-semibold">{showHidden ? "숨긴 그림이 없어요." : scope === "guest" ? "아직 참여한 그림이 없어요." : scope === "host" ? "아직 시작한 그림이 없어요." : "아직 함께 그린 그림이 없어요."}</p>
           <p className="mt-2 text-sm text-slate-500">{showHidden ? "숨긴 그림은 여기서 확인하고 복원할 수 있어요." : "그림을 시작하거나 친구의 그림에 참여하면 여기에 표시돼요."}</p>
           <Link href={scope === "guest" ? "/join" : "/draw"} className="button-secondary mt-4">{scope === "guest" ? "참여 코드 입력하기" : "그림 시작하기"}</Link>
-        </div> : <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        </div> : <div ref={roomList} className="mt-5 grid scroll-mt-6 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rooms.map((room) => {
             const status = STATUS[room.status];
             return <article key={room.id} className="panel room-card flex flex-col items-start p-4 sm:p-5">
@@ -105,9 +116,9 @@ export function MyDrawings({ state, adConfig }: { state: ReturnType<typeof useMy
           })}
         </div>}
       {total > MY_ROOMS_PAGE_SIZE && <nav aria-label="내 그림 목록 페이지" className="mt-5 flex items-center justify-center gap-4">
-        <button type="button" onClick={() => changePage(page - 1)} disabled={page === 0 || isLoading || isRefreshing} className="button-secondary">이전</button>
+        <button type="button" onClick={() => selectPage(page - 1)} disabled={page === 0 || isLoading || isRefreshing} className="button-secondary">이전</button>
         <span className="text-sm text-slate-500">{page + 1} / {Math.ceil(total / MY_ROOMS_PAGE_SIZE)}</span>
-        <button type="button" onClick={() => changePage(page + 1)} disabled={!hasNextPage || isLoading || isRefreshing} className="button-secondary">다음</button>
+        <button type="button" onClick={() => selectPage(page + 1)} disabled={!hasNextPage || isLoading || isRefreshing} className="button-secondary">다음</button>
       </nav>}
       {adConfig && adEligible && <PublicAdSlot {...adConfig} />}
     </section>
