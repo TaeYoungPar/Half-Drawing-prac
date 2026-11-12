@@ -1,3 +1,4 @@
+import { translate, type Locale } from "../i18n/translate";
 export const SHARE_CARD_SIZE = 1200;
 export const SHARE_CARD_FILENAME = "half-drawing-card.png";
 const DEFAULT_SITE = "https://half-drawing-prac.vercel.app";
@@ -33,7 +34,7 @@ export function wrapCardText(context: Pick<CanvasRenderingContext2D, "measureTex
 }
 
 /** Render locally: the actual completed drawing never goes to an image service. */
-export function drawShareCard(target: HTMLCanvasElement, drawing: HTMLCanvasElement, prompt: string, siteUrl?: string) {
+export function drawShareCard(target: HTMLCanvasElement, drawing: HTMLCanvasElement, prompt: string, siteUrl?: string, locale: Locale = "ko") {
   target.width = SHARE_CARD_SIZE;
   target.height = SHARE_CARD_SIZE;
   const context = target.getContext("2d");
@@ -62,12 +63,12 @@ export function drawShareCard(target: HTMLCanvasElement, drawing: HTMLCanvasElem
   context.fillStyle = ink;
   context.textAlign = "center";
   context.font = `900 36px ${font}`;
-  context.fillText("반쪽그림", 600, 96);
+  context.fillText(translate("반쪽그림", locale), 600, 96);
   context.textAlign = "left";
   context.font = `800 48px ${font}`;
-  context.fillText("반쪽씩 그렸더니,", 96, 176);
+  context.fillText(translate("반쪽씩 그렸더니,", locale), 96, 176);
   context.font = `900 56px ${font}`;
-  context.fillText("이런 그림이 됐어!", 96, 238);
+  context.fillText(translate("이런 그림이 됐어!", locale), 96, 238);
 
   // Preserve the full 8:5 artwork and its white background, including erased areas.
   rounded(96, 270, 1008, 630, 20, "#ffffff");
@@ -78,12 +79,12 @@ export function drawShareCard(target: HTMLCanvasElement, drawing: HTMLCanvasElem
 
   context.fillStyle = ink;
   context.font = `700 24px ${font}`;
-  context.fillText("우리의 그림 주제", 100, 946);
+  context.fillText(translate("우리의 그림 주제", locale), 100, 946);
   context.font = `700 36px ${font}`;
   const lines = wrapCardText(context, prompt.slice(0, 80), 992);
   lines.forEach((line, index) => context.fillText(line, 100, 992 + index * 40));
   context.font = `800 32px ${font}`;
-  context.fillText("반쪽그림", 64, 1170);
+  context.fillText(translate("반쪽그림", locale), 64, 1170);
   context.textAlign = "right";
   context.font = `600 32px ${font}`;
   context.fillText(shareSiteLabel(siteUrl), 1136, 1170, 850);

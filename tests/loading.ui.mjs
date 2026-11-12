@@ -24,7 +24,7 @@ const inlineLoader = page => page.locator('[data-loading-state="inline"]:visible
 try {
   for (const width of [320, 390, 1440]) {
     seed();
-    const context = await browser.newContext({ viewport: { width, height: width < 640 ? 844 : 1000 }, isMobile: width < 640, hasTouch: width < 640 });
+    const context = await browser.newContext({locale: "ko-KR",  viewport: { width, height: width < 640 ? 844 : 1000 }, isMobile: width < 640, hasTouch: width < 640 });
     await mock(context, hostId);
     const auth = barrier(), comments = barrier(), lists = barrier(); let room = barrier(); let roomFails = false;
     await context.route('**/auth/v1/signup', async route => { auth.enter(); await auth.wait; return route.fallback(); });
@@ -73,7 +73,7 @@ try {
     assert.deepEqual(errors, []); await context.close();
 
     seed(false);
-    const guest = await browser.newContext({ viewport: { width, height: width < 640 ? 844 : 1000 } }); await mock(guest, guestId); const joining = barrier();
+    const guest = await browser.newContext({locale: "ko-KR",  viewport: { width, height: width < 640 ? 844 : 1000 } }); await mock(guest, guestId); const joining = barrier();
     await guest.route('**/rest/v1/rpc/join_room', async route => { joining.enter(); await joining.wait; return route.fallback(); });
     const join = await guest.newPage(); await join.goto(`${base}/join?code=ABC123DEF4`);
     await join.getByRole('heading', { name: '친구의 그림이 기다려요!', exact: true }).waitFor();
@@ -84,7 +84,7 @@ try {
   }
   // The image is decorative: losing it never hides the loading message or navigation.
   seed();
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 } }); await mock(context, hostId);
+  const context = await browser.newContext({locale: "ko-KR",  viewport: { width: 390, height: 844 } }); await mock(context, hostId);
   await context.route('**/loading-kitten.webp', route => route.abort()); const pending = barrier();
   await context.route('**/rest/v1/rooms*', async route => { pending.enter(); await pending.wait; return route.fallback(); });
   const page = await context.newPage(); await page.goto(`${base}/rooms/${roomId}`); await pending.entered;

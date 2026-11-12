@@ -27,7 +27,7 @@ function sameRect(a, b) {
 }
 try {
   for (const [width, height] of [[320, 740], [390, 844], [1440, 1000], [844, 390]]) {
-    const context = await browser.newContext({ viewport: { width, height }, isMobile: width !== 1440, hasTouch: width !== 1440 });
+    const context = await browser.newContext({locale: "ko-KR",  viewport: { width, height }, isMobile: width !== 1440, hasTouch: width !== 1440 });
     await mock(context, guestId);
     const page = await context.newPage();
     await page.goto(base);

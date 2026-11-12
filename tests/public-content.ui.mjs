@@ -10,7 +10,7 @@ const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_C
 const routes = ['/guide', '/examples', '/examples/cat', '/examples/robot', '/examples/flower', '/about', '/privacy'];
 try {
   for (const width of [320, 390, 1440]) {
-    const context = await browser.newContext({ viewport: { width, height: width < 640 ? 844 : 1000 }, isMobile: width < 640, hasTouch: width < 640 });
+    const context = await browser.newContext({locale: "ko-KR",  viewport: { width, height: width < 640 ? 844 : 1000 }, isMobile: width < 640, hasTouch: width < 640 });
     let external = 0;
     await context.route('**/*', route => {
       if (new URL(route.request().url()).origin === base) return route.continue();
@@ -83,7 +83,7 @@ try {
     await context.close();
     console.log(`Public content, previews and navigation: ${width}px passed`);
   }
-  const context = await browser.newContext({ javaScriptEnabled: false });
+  const context = await browser.newContext({locale: "ko-KR",  javaScriptEnabled: false });
   const page = await context.newPage();
   for (const route of routes) {
     await page.goto(`${base}${route}`);

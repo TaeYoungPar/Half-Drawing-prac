@@ -1,5 +1,7 @@
 "use client";
 
+import { Text, useI18n, currentLocale } from "../i18n/I18n";
+import { translate } from "../i18n/translate";
 import {
   useEffect,
   useRef,
@@ -57,6 +59,7 @@ export function DrawingCanvas({
   onCreateRoom,
   onSubmitDrawing,
 }: DrawingCanvasProps) {
+  const { t } = useI18n();
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
@@ -190,14 +193,14 @@ export function DrawingCanvas({
     if (drawingSide !== "left") return;
     const timer = window.setTimeout(() => {
       try {
-        setRoomPrompt(window.localStorage.getItem(promptStorageKey)?.slice(0, 80) ?? initialPrompt);
+        setRoomPrompt(window.localStorage.getItem(promptStorageKey)?.slice(0, 80) ?? (draftId?.startsWith("daily:") ? translate(initialPrompt, currentLocale()) : initialPrompt));
       } catch {
-        setRoomPrompt(initialPrompt);
+        setRoomPrompt(draftId?.startsWith("daily:") ? translate(initialPrompt, currentLocale()) : initialPrompt);
       }
       setIsPromptRestored(true);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [drawingSide, promptStorageKey, initialPrompt]);
+  }, [drawingSide, promptStorageKey, initialPrompt, draftId]);
 
   useEffect(() => {
     if (drawingSide !== "left" || !isPromptRestored || createdRoom) return;
@@ -298,7 +301,7 @@ export function DrawingCanvas({
   function handleClear() {
     if (readOnly || isDrawing) return;
     if (strokes.length === 0 && undoneStrokes.length === 0) return;
-    if (window.confirm("모든 선을 지울까요? 지운 뒤에는 실행 취소할 수 없습니다.")) {
+    if (window.confirm(t("모든 선을 지울까요? 지운 뒤에는 실행 취소할 수 없습니다."))) {
       clear();
     }
   }
@@ -339,7 +342,7 @@ export function DrawingCanvas({
       return;
     }
 
-    if (!window.confirm("이 그림으로 등록할까요? 등록 후에는 수정할 수 없습니다.")) return;
+    if (!window.confirm(t("이 그림으로 등록할까요? 등록 후에는 수정할 수 없습니다."))) return;
 
     setIsSaving(true);
     setSaveError(null);
@@ -389,7 +392,7 @@ export function DrawingCanvas({
       return;
     }
 
-    if (!window.confirm("이어 그리기를 완료할까요? 완료 후에는 수정할 수 없습니다.")) return;
+    if (!window.confirm(t("이어 그리기를 완료할까요? 완료 후에는 수정할 수 없습니다."))) return;
 
     setIsSaving(true);
     setSaveError(null);
@@ -419,23 +422,22 @@ export function DrawingCanvas({
 
   return (
     <section ref={sectionRef} className={`drawing-editor flex w-full flex-col gap-3 sm:gap-4 ${isExpanded ? "drawing-expanded" : ""}`}
-      role={isExpanded ? "dialog" : undefined} aria-modal={isExpanded || undefined} aria-label={isExpanded ? "내 반쪽 크게 그리기" : undefined} data-drawing-side={drawingSide}>
+      role={isExpanded ? "dialog" : undefined} aria-modal={isExpanded || undefined} aria-label={isExpanded ? t("내 반쪽 크게 그리기") : undefined} data-drawing-side={drawingSide}>
       {(saveError || successMessage) && (
         <DrawingNotice message={saveError ?? successMessage ?? ""} isError={Boolean(saveError)} onClose={closeToast} />
       )}
 
       {isLoading && (
         <p className="text-sm text-slate-600">
-          연결 중… 그림은 먼저 그릴 수 있어요.
-        </p>
+          <Text>연결 중… 그림은 먼저 그릴 수 있어요.</Text> </p>
       )}
 
       {errorMessage && <div role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">
-        <p>{errorMessage} 그림은 이 브라우저에 임시 저장돼요.</p>
-        <button type="button" onClick={retry} className="button-secondary mt-3">연결 다시 시도</button>
+        <p><Text>{errorMessage}</Text> <Text>그림은 이 브라우저에 임시 저장돼요.</Text></p>
+        <button type="button" onClick={retry} className="button-secondary mt-3"><Text>연결 다시 시도</Text></button>
       </div>}
 
-      {draftError && <p role="alert" className="text-sm text-amber-700">{draftError}</p>}
+      {draftError && <p role="alert" className="text-sm text-amber-700"><Text>{draftError}</Text></p>}
 
       {drawingSide === "left" && <TopicSuggestions value={roomPrompt} onChange={setRoomPrompt} disabled={readOnly || isDrawing || !isPromptRestored} />}
 
@@ -468,23 +470,23 @@ export function DrawingCanvas({
       </div>
 
       {readOnly && (createdRoom || isDrawingSubmitted) && (
-        <p className="text-sm text-slate-600">저장된 그림은 수정할 수 없습니다.</p>
+        <p className="text-sm text-slate-600"><Text>저장된 그림은 수정할 수 없습니다.</Text></p>
       )}
 
       <div className="drawing-view-controls flex flex-wrap items-center gap-2">
-        {!isExpanded && <p className="mr-auto text-sm font-semibold text-slate-700">{tool === "fill" ? "채울 곳을 눌러요" : drawingSide === "left" ? "왼쪽에 그려요" : "오른쪽에 이어 그려요"}</p>}
+        {!isExpanded && <p className="mr-auto text-sm font-semibold text-slate-700"><Text>{tool === "fill" ? "채울 곳을 눌러요" : drawingSide === "left" ? "왼쪽에 그려요" : "오른쪽에 이어 그려요"}</Text></p>}
         {isExpanded && (prompt || roomPrompt.trim()) && <DrawingPrompt prompt={prompt || roomPrompt.trim()} compact />}
-        <button data-view-toggle type="button" aria-pressed={isExpanded} disabled={isDrawing} onClick={() => { setReviewRequested(false); setIsExpanded(!isExpanded); }} className="button-secondary">{isExpanded ? "그리기 화면으로 돌아가기" : "내 반쪽 크게 그리기"}</button>
-        {isExpanded && <button type="button" onClick={finishFocusedDrawing} disabled={readOnly || isDrawing || !hasInk} className="button-primary">다 그렸어요</button>}
+        <button data-view-toggle type="button" aria-pressed={isExpanded} disabled={isDrawing} onClick={() => { setReviewRequested(false); setIsExpanded(!isExpanded); }} className="button-secondary"><Text>{isExpanded ? "그리기 화면으로 돌아가기" : "내 반쪽 크게 그리기"}</Text></button>
+        {isExpanded && <button type="button" onClick={finishFocusedDrawing} disabled={readOnly || isDrawing || !hasInk} className="button-primary"><Text>다 그렸어요</Text></button>}
         {isExpanded && (errorMessage || draftError) && <div role="alert" className="w-full rounded-xl bg-amber-50 p-2 text-sm text-amber-900">
-          {draftError ?? errorMessage}
-          {errorMessage && <button type="button" onClick={retry} className="button-secondary ml-2">연결 다시 시도</button>}
+          <Text>{draftError ?? errorMessage}</Text>
+          {errorMessage && <button type="button" onClick={retry} className="button-secondary ml-2"><Text>연결 다시 시도</Text></button>}
         </div>}
-        {isExpanded && !hasInk && strokes.length > 0 && <p role="status" className="text-sm text-amber-800">남은 그림이 없어요. 다시 그려주세요.</p>}
-        {isExpanded && <p className="text-xs text-slate-500">{tool === "fill" ? "닫힌 영역을 누르면 내 반쪽 안에서만 채워져요." : drawingSide === "left" ? "오른쪽 점선까지 그리면 친구 그림과 이어져요." : "왼쪽의 얇은 힌트를 보고 점선부터 이어 그려요."}</p>}
+        {isExpanded && !hasInk && strokes.length > 0 && <p role="status" className="text-sm text-amber-800"><Text>남은 그림이 없어요. 다시 그려주세요.</Text></p>}
+        {isExpanded && <p className="text-xs text-slate-500"><Text>{tool === "fill" ? "닫힌 영역을 누르면 내 반쪽 안에서만 채워져요." : drawingSide === "left" ? "오른쪽 점선까지 그리면 친구 그림과 이어져요." : "왼쪽의 얇은 힌트를 보고 점선부터 이어 그려요."}</Text></p>}
       </div>
       <div className="drawing-stage w-full max-w-[800px]">
-      <div className="drawing-frame relative w-full overflow-hidden rounded-xl border border-slate-300" aria-label="그림 작업 영역">
+      <div className="drawing-frame relative w-full overflow-hidden rounded-xl border border-slate-300" aria-label={t("그림 작업 영역")}>
         <div className="drawing-bitmap relative w-full">
         <canvas
           ref={canvasRef}
@@ -497,7 +499,7 @@ export function DrawingCanvas({
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
           onLostPointerCapture={handlePointerUp}
-          aria-label={drawingSide === "left" ? "왼쪽 반쪽 그림 그리기" : "오른쪽 반쪽 그림 그리기"}
+          aria-label={t(drawingSide === "left" ? "왼쪽 반쪽 그림 그리기" : "오른쪽 반쪽 그림 그리기")}
           width={800}
           height={500}
           className={`block h-auto w-full touch-none bg-white ${readOnly ? "cursor-not-allowed" : "cursor-crosshair"}`}
@@ -525,20 +527,19 @@ export function DrawingCanvas({
       </div>
 
       <details className="text-sm text-slate-600">
-        <summary className="min-h-11 cursor-pointer py-3">자동 저장 · 그림 연결 안내</summary>
-        <p className="text-sm leading-6">{isRestoring ? "임시 그림 복원 중…" : "완료한 선은 이 브라우저에 자동 임시 저장돼요. 다른 기기에서는 복원되지 않아요."}</p>
-        <p className="mt-2 text-sm leading-6">점선이 친구 그림과 이어지는 경계예요. 이어질 선은 점선까지 그려주세요. 큰 보기에서 돌아오면 전체 그림을 볼 수 있어요.</p>
+        <summary className="min-h-11 cursor-pointer py-3"><Text>자동 저장 · 그림 연결 안내</Text></summary>
+        <p className="text-sm leading-6"><Text>{isRestoring ? "임시 그림 복원 중…" : "완료한 선은 이 브라우저에 자동 임시 저장돼요. 다른 기기에서는 복원되지 않아요."}</Text></p>
+        <p className="mt-2 text-sm leading-6"><Text>점선이 친구 그림과 이어지는 경계예요. 이어질 선은 점선까지 그려주세요. 큰 보기에서 돌아오면 전체 그림을 볼 수 있어요.</Text></p>
       </details>
 
       {drawingSide === "left" && (
-        <div ref={reviewRef} tabIndex={-1} aria-label="그림 주제와 등록" className="panel flex w-full max-w-[800px] flex-col gap-4 p-5 sm:p-7">
-          {reviewRequested && <p role="status" className="text-sm font-semibold text-indigo-700">그림 주제를 확인하고 등록해주세요. 아직 친구에게 전송되지 않았어요.</p>}
+        <div ref={reviewRef} tabIndex={-1} aria-label={t("그림 주제와 등록")} className="panel flex w-full max-w-[800px] flex-col gap-4 p-5 sm:p-7">
+          {reviewRequested && <p role="status" className="text-sm font-semibold text-indigo-700"><Text>그림 주제를 확인하고 등록해주세요. 아직 친구에게 전송되지 않았어요.</Text></p>}
           <label
             htmlFor="room-prompt"
             className="text-lg font-bold tracking-tight text-slate-900"
           >
-            그림 주제
-          </label>
+            <Text>그림 주제</Text> </label>
 
           <input
             id="room-prompt"
@@ -551,7 +552,7 @@ export function DrawingCanvas({
                 event.target.value
               );
             }}
-            placeholder="예: 화난 딸기, 울보 양파"
+            placeholder={t("예: 화난 딸기, 울보 양파")}
             className="min-h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-500 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 sm:text-lg"
           />
 
@@ -573,23 +574,21 @@ export function DrawingCanvas({
             }
             className="button-primary"
           >
-            {isSaving
+            <Text>{isSaving
               ? "등록 중..."
-              : "반쪽 그림 등록"}
+              : "반쪽 그림 등록"}</Text>
           </button>
-          {strokes.length > 0 && !hasInk && <p role="status" className="text-sm text-amber-800">남은 그림이 없어요. 다시 그리면 등록할 수 있어요.</p>}
-          {(!hasInk || !roomPrompt.trim()) && <p className="text-sm text-slate-600">그림과 주제를 채우면 등록할 수 있어요.</p>}
-          <p className="text-xs leading-5 text-slate-500">등록하면 그림을 수정할 수 없어요. 다음 화면에서 친구에게 줄 참여 코드를 확인할 수 있어요.</p>
+          {strokes.length > 0 && !hasInk && <p role="status" className="text-sm text-amber-800"><Text>남은 그림이 없어요. 다시 그리면 등록할 수 있어요.</Text></p>}
+          {(!hasInk || !roomPrompt.trim()) && <p className="text-sm text-slate-600"><Text>그림과 주제를 채우면 등록할 수 있어요.</Text></p>}
+          <p className="text-xs leading-5 text-slate-500"><Text>등록하면 그림을 수정할 수 없어요. 다음 화면에서 친구에게 줄 참여 코드를 확인할 수 있어요.</Text></p>
 
           {createdRoom && (
             <div className="rounded-lg border border-green-200 bg-green-50 p-4">
               <p className="font-medium text-green-800">
-                반쪽 그림이
-                등록되었습니다.
-              </p>
+                <Text>반쪽 그림이 등록되었습니다.</Text> </p>
 
               <p className="mt-2 text-sm text-green-700">
-                참여 코드:{" "}
+                <Text>참여 코드:</Text>{" "}
                 <strong className="font-mono">
                   {
                     createdRoom.room_code
@@ -601,14 +600,12 @@ export function DrawingCanvas({
                 onClick={handleCopyCode}
                 className="button-secondary mt-3"
               >
-                참여 코드 복사
-              </button>
+                <Text>참여 코드 복사</Text> </button>
               <a
                 href={`/rooms/${createdRoom.room_id}`}
                 className="mt-3 inline-block text-sm font-medium text-green-800 underline"
               >
-                방으로 이동해 완성 결과 기다리기
-              </a>
+                <Text>방으로 이동해 완성 결과 기다리기</Text> </a>
             </div>
           )}
         </div>
@@ -616,8 +613,8 @@ export function DrawingCanvas({
 
       {drawingSide === "right" &&
         onSubmitDrawing && (
-          <div ref={reviewRef} tabIndex={-1} aria-label="이어 그리기 완료 확인" className="panel flex w-full max-w-[800px] flex-col gap-4 p-5 sm:p-7">
-            {reviewRequested && <p role="status" className="text-sm font-semibold text-indigo-700">경계 연결을 확인하고 완료해주세요. 아직 제출되지 않았어요.</p>}
+          <div ref={reviewRef} tabIndex={-1} aria-label={t("이어 그리기 완료 확인")} className="panel flex w-full max-w-[800px] flex-col gap-4 p-5 sm:p-7">
+            {reviewRequested && <p role="status" className="text-sm font-semibold text-indigo-700"><Text>경계 연결을 확인하고 완료해주세요. 아직 제출되지 않았어요.</Text></p>}
             <button
               type="button"
               onClick={
@@ -633,13 +630,13 @@ export function DrawingCanvas({
               }
               className="button-primary"
             >
-              {isSaving
+              <Text>{isSaving
                 ? "완성 중..."
-                : "이어 그리기 완료"}
+                : "이어 그리기 완료"}</Text>
             </button>
-            {strokes.length > 0 && !hasInk && <p role="status" className="text-sm text-amber-800">남은 그림이 없어요. 다시 그려주세요.</p>}
-            {!hasInk && <p className="text-sm text-slate-600">그리거나 색을 채우면 완료할 수 있어요.</p>}
-            <p className="text-xs leading-5 text-slate-500">완료하면 수정할 수 없어요. 두 사람의 그림이 합쳐진 결과를 바로 확인해요.</p>
+            {strokes.length > 0 && !hasInk && <p role="status" className="text-sm text-amber-800"><Text>남은 그림이 없어요. 다시 그려주세요.</Text></p>}
+            {!hasInk && <p className="text-sm text-slate-600"><Text>그리거나 색을 채우면 완료할 수 있어요.</Text></p>}
+            <p className="text-xs leading-5 text-slate-500"><Text>완료하면 수정할 수 없어요. 두 사람의 그림이 합쳐진 결과를 바로 확인해요.</Text></p>
           </div>
         )}
     </section>

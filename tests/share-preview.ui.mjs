@@ -9,7 +9,7 @@ const out = process.env.VISUAL_ARTIFACT_DIR || path.resolve('artifacts/share');
 fs.mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || (fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined), args: ['--no-sandbox'] });
 try {
-  const context = await browser.newContext(); await mock(context, hostId);
+  const context = await browser.newContext({ locale: "ko-KR" }); await mock(context, hostId);
   const page = await context.newPage(); await page.goto(base);
   const pngSize = body => ({ width: body.readUInt32BE(16), height: body.readUInt32BE(20) });
   for (const route of ['/', '/join?code=ABC123DEF4', '/library']) {

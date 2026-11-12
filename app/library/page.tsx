@@ -1,3 +1,4 @@
+import { Text } from "../i18n/I18n";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DrawingLibrary } from "../components/DrawingLibrary";
@@ -10,10 +11,10 @@ export default function LibraryPage() {
     <main className="workspace">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <span className="eyebrow">우리의 그림 노트</span>
-          <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">내 보관함</h1>
+          <span className="eyebrow"><Text>우리의 그림 노트</Text></span>
+          <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl"><Text>내 보관함</Text></h1>
         </div>
-        <Link href="/draw" className="button-primary">그림 시작하기</Link>
+        <Link href="/draw" className="button-primary"><Text>그림 시작하기</Text></Link>
       </div>
       <DrawingLibrary adConfig={publicBannerConfig()} />
     </main>

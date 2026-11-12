@@ -1,5 +1,6 @@
 "use client";
 
+import { Text } from "../i18n/I18n";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -74,12 +75,12 @@ export function RematchPanel({ roomId, userId }: { roomId: string; userId: strin
   const starter = round?.starter_id === userId;
   const ready = round?.next_room_id && round.next_status !== "expired";
   return <section aria-labelledby="rematch-heading" className="panel my-4 bg-[#dcedd5]! p-5 sm:p-6">
-    <p className="eyebrow">이번엔 순서를 바꿔서</p><h2 id="rematch-heading" className="mt-2 text-xl font-extrabold">역할 바꿔 한 판 더</h2>
-    <p className="mt-3 text-sm leading-7" role="status">{ready ? starter ? "내 반쪽이 준비됐어요. 친구가 같은 방에서 이어 그릴 수 있어요." : "친구의 반쪽이 준비됐어요! 이번에는 내가 오른쪽을 이어 그릴 차례예요." : starter ? round?.requested_by === round?.partner_id ? "친구가 한 판 더 신청했어요! 이번에는 내가 왼쪽부터 그려요." : "이번에는 내가 왼쪽을 먼저 그리고, 같은 친구가 오른쪽을 이어 그려요." : round?.requested_by ? round.requested_by === userId ? "다음 판을 신청했어요. 친구가 먼저 그려 등록하면 여기서 바로 이어 그릴 수 있어요." : "친구가 한 판 더 시작했어요! 반쪽을 등록하면 여기서 바로 이어 그릴 수 있어요." : "이번에는 친구가 먼저 그리고 내가 이어 그려요. 코드를 다시 보낼 필요 없어요."}</p>
+    <p className="eyebrow"><Text>이번엔 순서를 바꿔서</Text></p><h2 id="rematch-heading" className="mt-2 text-xl font-extrabold"><Text>역할 바꿔 한 판 더</Text></h2>
+    <p className="mt-3 text-sm leading-7" role="status"><Text>{ready ? starter ? "내 반쪽이 준비됐어요. 친구가 같은 방에서 이어 그릴 수 있어요." : "친구의 반쪽이 준비됐어요! 이번에는 내가 오른쪽을 이어 그릴 차례예요." : starter ? round?.requested_by === round?.partner_id ? "친구가 한 판 더 신청했어요! 이번에는 내가 왼쪽부터 그려요." : "이번에는 내가 왼쪽을 먼저 그리고, 같은 친구가 오른쪽을 이어 그려요." : round?.requested_by ? round.requested_by === userId ? "다음 판을 신청했어요. 친구가 먼저 그려 등록하면 여기서 바로 이어 그릴 수 있어요." : "친구가 한 판 더 시작했어요! 반쪽을 등록하면 여기서 바로 이어 그릴 수 있어요." : "이번에는 친구가 먼저 그리고 내가 이어 그려요. 코드를 다시 보낼 필요 없어요."}</Text></p>
     {round && <div className="mt-4 flex flex-wrap gap-3">
-      {ready ? starter || round.next_status !== "waiting" ? <Link href={`/rooms/${round.next_room_id}`} className="button-primary">다음 그림 열기 →</Link> : <button type="button" disabled={busy} onClick={() => { void continueDrawing(); }} className="button-primary">{busy ? "참여 중…" : "친구의 반쪽 이어 그리기 →"}</button>
-        : <button type="button" disabled={busy || (!starter && Boolean(round.requested_by) && round.next_status !== "expired")} onClick={() => { void playAgain(); }} className="button-primary">{busy ? "준비 중…" : starter ? "역할 바꿔 먼저 그리기 →" : round.requested_by && round.next_status !== "expired" ? "친구가 먼저 그릴 차례예요" : "친구에게 한 판 더 신청"}</button>}
+      {ready ? starter || round.next_status !== "waiting" ? <Link href={`/rooms/${round.next_room_id}`} className="button-primary"><Text>다음 그림 열기 →</Text></Link> : <button type="button" disabled={busy} onClick={() => { void continueDrawing(); }} className="button-primary"><Text>{busy ? "참여 중…" : "친구의 반쪽 이어 그리기 →"}</Text></button>
+        : <button type="button" disabled={busy || (!starter && Boolean(round.requested_by) && round.next_status !== "expired")} onClick={() => { void playAgain(); }} className="button-primary"><Text>{busy ? "준비 중…" : starter ? "역할 바꿔 먼저 그리기 →" : round.requested_by && round.next_status !== "expired" ? "친구가 먼저 그릴 차례예요" : "친구에게 한 판 더 신청"}</Text></button>}
     </div>}
-    {error && <div className="mt-3"><p role="alert" className="text-sm leading-6 text-red-700">{error}</p>{!round && <button type="button" className="button-secondary mt-2" onClick={() => setAttempt(value => value + 1)}>다음 판 다시 확인</button>}</div>}
+    {error && <div className="mt-3"><p role="alert" className="text-sm leading-6 text-red-700"><Text>{error}</Text></p>{!round && <button type="button" className="button-secondary mt-2" onClick={() => setAttempt(value => value + 1)}><Text>다음 판 다시 확인</Text></button>}</div>}
   </section>;
 }

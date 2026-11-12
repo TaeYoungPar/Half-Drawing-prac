@@ -16,7 +16,7 @@ async function color(page, name) {
 }
 try {
   for (const width of [320, 390]) {
-    const context = await browser.newContext({ viewport: { width, height: 844 }, isMobile: true, hasTouch: true });
+    const context = await browser.newContext({locale: "ko-KR",  viewport: { width, height: 844 }, isMobile: true, hasTouch: true });
     await mock(context, hostId);
     const page = await context.newPage();
     await page.goto(`${base}/draw`);

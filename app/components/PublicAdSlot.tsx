@@ -1,5 +1,6 @@
 "use client";
 
+import { Text, useI18n } from "../i18n/I18n";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { isAdPage } from "../utils/adPages";
@@ -19,6 +20,7 @@ export function PublicAdSlot({ client, slot }: { client: string; slot: string })
 }
 
 function Banner({ client, slot }: { client: string; slot: string }) {
+  const { t } = useI18n();
   const container = useRef<HTMLElement>(null);
   const ins = useRef<HTMLModElement>(null);
   const requested = useRef(false);
@@ -79,11 +81,11 @@ function Banner({ client, slot }: { client: string; slot: string }) {
     return () => { active = false; };
   }, [client, near]);
 
-  return <aside ref={container} hidden={hidden} aria-label="광고" aria-busy={near && adState !== "filled" && !hidden}
+  return <aside ref={container} hidden={hidden} aria-label={t("광고")} aria-busy={near && adState !== "filled" && !hidden}
     data-ad-state={adState} data-ad-error={adError ?? undefined}
     style={{ borderColor: adState === "filled" ? undefined : "transparent" }}
     className="ad-banner mx-auto mt-12 w-full max-w-[728px] border-t border-[#d8ccb3] pt-4">
-    <p aria-hidden={adState !== "filled"} style={{ visibility: adState === "filled" ? "visible" : "hidden" }} className="mb-2 text-center text-[11px] font-normal text-slate-500">광고</p>
+    <p aria-hidden={adState !== "filled"} style={{ visibility: adState === "filled" ? "visible" : "hidden" }} className="mb-2 text-center text-[11px] font-normal text-slate-500"><Text>광고</Text></p>
     <ins ref={ins} className="adsbygoogle" style={{ display: "block", width: "100%", height: 100 }}
       data-ad-client={client} data-ad-slot={slot} data-ad-format="horizontal" data-full-width-responsive="false" />
   </aside>;

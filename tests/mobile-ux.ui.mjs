@@ -38,7 +38,7 @@ async function swipe(context, page, x, y, dx, dy) {
   const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || (fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined), args: ['--no-sandbox'] });
   const results = [];
   for (const width of [320, 390]) {
-    const context = await browser.newContext({ viewport: { width, height: 740 }, isMobile: true, hasTouch: true });
+    const context = await browser.newContext({locale: "ko-KR",  viewport: { width, height: 740 }, isMobile: true, hasTouch: true });
     await mock(context, hostId);
     const page = await context.newPage();
     await page.goto(base);

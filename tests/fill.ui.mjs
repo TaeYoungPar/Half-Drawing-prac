@@ -33,7 +33,7 @@ async function redo(page) {
 try {
   for (const [width, height] of [[320, 740], [390, 844], [1440, 1000], [844, 390]].filter(([width]) => !process.env.TEST_FILL_WIDTH || width === Number(process.env.TEST_FILL_WIDTH))) {
     fixture.room = null; fixture.writes = 0;
-    const context = await browser.newContext({ viewport: { width, height }, isMobile: width !== 1440, hasTouch: true });
+    const context = await browser.newContext({locale: "ko-KR",  viewport: { width, height }, isMobile: width !== 1440, hasTouch: true });
     await mock(context, hostId);
     const page = await context.newPage();
     const errors = [];
@@ -103,7 +103,7 @@ try {
     await page.getByRole('heading', { name: '이제 친구의 차례예요.', exact: true }).waitFor();
     assert.ok(fixture.room.drawings[0].strokes.some(stroke => stroke.tool === 'fill'));
 
-    const guest = await browser.newContext({ viewport: { width, height }, isMobile: width !== 1440, hasTouch: true });
+    const guest = await browser.newContext({locale: "ko-KR",  viewport: { width, height }, isMobile: width !== 1440, hasTouch: true });
     await mock(guest, guestId);
     // Match the existing SQL RPC: only points/tool/color/width, no fill grouping ID.
     await guest.route('**/rest/v1/rpc/get_left_preview', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify(fixture.room.drawings[0].strokes.map(({ tool, color, lineWidth, points }) => ({ tool, color, lineWidth, points: points.filter(point => point.x >= 376 && point.x <= 400) })).filter(stroke => stroke.points.length)) }));

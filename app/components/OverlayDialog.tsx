@@ -1,5 +1,6 @@
 "use client";
 
+import { Text, useI18n } from "../i18n/I18n";
 import { useEffect, useRef, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import { createPortal } from "react-dom";
 import { useOverlayHistory } from "../hooks/useOverlayHistory";
@@ -8,6 +9,7 @@ import { lockBodyScroll } from "../utils/bodyScrollLock";
 export function OverlayDialog({ open, setOpen, title, children, wide = false, className = "", bodyClassName = "" }: {
   open: boolean; setOpen: Dispatch<SetStateAction<boolean>>; title: string; children: ReactNode; wide?: boolean; className?: string; bodyClassName?: string;
 }) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDialogElement>(null);
   useOverlayHistory(open, setOpen, title, false);
   useEffect(() => {
@@ -19,7 +21,7 @@ export function OverlayDialog({ open, setOpen, title, children, wide = false, cl
   }, [open]);
   if (!open) return null;
   return createPortal(
-    <dialog ref={ref} aria-label={title} onKeyDown={(event) => event.stopPropagation()}
+    <dialog ref={ref} aria-label={t(title)} onKeyDown={(event) => event.stopPropagation()}
       onCancel={(event) => { event.preventDefault(); setOpen(false); }}
       onClick={(event) => {
         if (event.target !== event.currentTarget) return;
@@ -28,8 +30,8 @@ export function OverlayDialog({ open, setOpen, title, children, wide = false, cl
       }}
       className={`overlay-dialog m-auto w-[calc(100%-1rem)] rounded-3xl border border-slate-200 bg-white p-0 text-slate-800 shadow-xl backdrop:bg-slate-900/40 ${wide ? "max-w-5xl" : "max-w-lg"} ${className}`}>
       <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b-2 border-[#493127] bg-[#fff0bd] px-4 py-2">
-        <h2 className="text-lg font-bold tracking-tight">{title}</h2>
-        <button type="button" onClick={() => setOpen(false)} className="button-secondary" autoFocus aria-label={`${title} 닫기`}>닫기</button>
+        <h2 className="text-lg font-bold tracking-tight"><Text>{title}</Text></h2>
+        <button type="button" onClick={() => setOpen(false)} className="button-secondary" autoFocus aria-label={t("{0} 닫기", title)}><Text>닫기</Text></button>
       </div>
       <div className={`p-4 ${bodyClassName}`}>{children}</div>
     </dialog>, document.body,

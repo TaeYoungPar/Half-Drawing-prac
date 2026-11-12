@@ -1,5 +1,6 @@
 "use client";
 
+import { Text, useI18n } from "../../i18n/I18n";
 import {
   useEffect,
   useState,
@@ -30,6 +31,7 @@ import { copyRoomCode } from "../../utils/copyRoomCode";
 import type { Stroke } from "../../types/drawing";
 
 export default function RoomPage() {
+  const { locale } = useI18n();
   const params = useParams<{
     id: string;
   }>();
@@ -209,9 +211,9 @@ export default function RoomPage() {
           role="alert"
           className="text-red-600"
         >
-          로그인 오류: {authError}
+          <Text>로그인 오류:</Text> <Text>{authError}</Text>
         </p>
-        <button type="button" onClick={retryAuth} className="button-secondary mt-4">연결 다시 시도</button>
+        <button type="button" onClick={retryAuth} className="button-secondary mt-4"><Text>연결 다시 시도</Text></button>
       </main>
     );
   }
@@ -223,9 +225,7 @@ export default function RoomPage() {
   if (!userId) {
     return (
       <main className="p-6">
-        사용자 정보를 확인할 수
-        없습니다.
-      </main>
+        <Text>사용자 정보를 확인할 수 없습니다.</Text> </main>
     );
   }
 
@@ -240,10 +240,10 @@ export default function RoomPage() {
           role="alert"
           className="text-red-600"
         >
-          {roomError}
+          <Text>{roomError}</Text>
         </p>
-        <button type="button" onClick={() => { setIsRoomLoading(true); setRoomError(null); setLoadAttempt((value) => value + 1); }} className="button-secondary mt-4">다시 불러오기</button>
-        <Link href="/join" className="button-secondary ml-3">다른 코드로 참여</Link>
+        <button type="button" onClick={() => { setIsRoomLoading(true); setRoomError(null); setLoadAttempt((value) => value + 1); }} className="button-secondary mt-4"><Text>다시 불러오기</Text></button>
+        <Link href="/join" className="button-secondary ml-3"><Text>다른 코드로 참여</Text></Link>
       </main>
     );
   }
@@ -251,16 +251,15 @@ export default function RoomPage() {
   if (!room) {
     return (
       <main className="p-6">
-        방을 찾을 수 없습니다.
-      </main>
+        <Text>방을 찾을 수 없습니다.</Text> </main>
     );
   }
 
   if (room.status === "expired") {
     return (
       <main className="p-6">
-        <p role="alert">사용 기한이 지난 방입니다.</p>
-        <Link href="/draw" className="button-primary mt-4">새 그림 시작하기</Link>
+        <p role="alert"><Text>사용 기한이 지난 방입니다.</Text></p>
+        <Link href="/draw" className="button-primary mt-4"><Text>새 그림 시작하기</Text></Link>
       </main>
     );
   }
@@ -275,20 +274,20 @@ export default function RoomPage() {
   // Completed rooms are read-only for both artists, including after a reload.
   if (room.status === "completed") {
     if (room.host_id !== userId && room.guest_id !== userId) {
-      return <main className="p-6"><p role="alert">이 그림에 참여한 두 사람만 볼 수 있어요.</p><Link href="/" className="button-secondary mt-4">홈으로</Link></main>;
+      return <main className="p-6"><p role="alert"><Text>이 그림에 참여한 두 사람만 볼 수 있어요.</Text></p><Link href="/" className="button-secondary mt-4"><Text>홈으로</Text></Link></main>;
     }
     if (!leftDrawing || !rightDrawing) {
       return (
         <main className="p-6">
-          <p role="alert">완성된 그림을 불러오지 못했습니다.</p>
+          <p role="alert"><Text>완성된 그림을 불러오지 못했습니다.</Text></p>
         </main>
       );
     }
 
     return (
       <main className="workspace">
-        <span className="eyebrow">STEP 3 · 우리 그림 공개</span>
-        <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl">이런 그림이 될 줄 알았나요?</h1>
+        <span className="eyebrow"><Text>STEP 3 · 우리 그림 공개</Text></span>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl"><Text>이런 그림이 될 줄 알았나요?</Text></h1>
         <DrawingPrompt prompt={room.prompt} />
         <DrawingResultCanvas
           prompt={room.prompt}
@@ -308,41 +307,41 @@ export default function RoomPage() {
     if (!leftDrawing) {
       return (
         <main className="p-6">
-          <p role="alert">첫 번째 그림을 찾을 수 없습니다.</p>
+          <p role="alert"><Text>첫 번째 그림을 찾을 수 없습니다.</Text></p>
         </main>
       );
     }
     return (
       <main className="workspace">
-        <span className="eyebrow">내 반쪽 등록 완료</span>
-        <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl">이제 친구의 차례예요.</h1>
+        <span className="eyebrow"><Text>내 반쪽 등록 완료</Text></span>
+        <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl"><Text>이제 친구의 차례예요.</Text></h1>
         <DrawingPrompt prompt={room.prompt} />
         <section aria-labelledby="invite-heading" className="panel max-w-[800px] space-y-4 p-4 sm:p-6">
           <div>
-            <h2 id="invite-heading" className="text-lg font-extrabold">친구 초대</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">링크를 보내면 친구의 참여 코드가 자동으로 입력돼요.</p>
+            <h2 id="invite-heading" className="text-lg font-extrabold"><Text>친구 초대</Text></h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600"><Text>링크를 보내면 친구의 참여 코드가 자동으로 입력돼요.</Text></p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <button type="button" onClick={handleShareInvitation} className="button-primary">친구에게 초대 링크 공유</button>
-            <button type="button" onClick={handleCopyCode} className="button-secondary">참여 코드 복사</button>
+            <button type="button" onClick={handleShareInvitation} className="button-primary"><Text>친구에게 초대 링크 공유</Text></button>
+            <button type="button" onClick={handleCopyCode} className="button-secondary"><Text>참여 코드 복사</Text></button>
           </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <p className="text-xs font-semibold text-slate-600">참여 코드</p>
+            <p className="text-xs font-semibold text-slate-600"><Text>참여 코드</Text></p>
             <p className="mt-1 break-all font-mono text-2xl font-bold tracking-widest text-indigo-700">{room.code}</p>
-            <p className="mt-2 text-xs leading-5 text-slate-600">초대 기한: <time dateTime={room.expires_at}>{new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Seoul" }).format(new Date(room.expires_at))}</time> (한국 시간)</p>
+            <p className="mt-2 text-xs leading-5 text-slate-600"><Text>초대 기한:</Text> <time dateTime={room.expires_at}>{new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", { month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Seoul" }).format(new Date(room.expires_at))}</time> <Text>(한국 시간)</Text></p>
           </div>
-          {copyMessage && <p role="status" className="text-sm font-semibold text-indigo-700">{copyMessage}</p>}
+          {copyMessage && <p role="status" className="text-sm font-semibold text-indigo-700"><Text>{copyMessage}</Text></p>}
         </section>
         <section aria-labelledby="progress-heading" className="panel max-w-[800px] space-y-3 p-4 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 id="progress-heading" className="text-lg font-extrabold">{room.guest_id ? "친구가 이어 그릴 차례예요" : "친구를 기다리고 있어요"}</h2>
-            <button type="button" onClick={refreshRoom} disabled={isRefreshing} className="button-secondary">{isRefreshing ? "확인 중..." : "완성 여부 확인"}</button>
+            <h2 id="progress-heading" className="text-lg font-extrabold"><Text>{room.guest_id ? "친구가 이어 그릴 차례예요" : "친구를 기다리고 있어요"}</Text></h2>
+            <button type="button" onClick={refreshRoom} disabled={isRefreshing} className="button-secondary"><Text>{isRefreshing ? "확인 중..." : "완성 여부 확인"}</Text></button>
           </div>
-          <p role="status" className="text-sm leading-6 text-slate-700">{room.guest_id ? "친구가 참여했어요. 완성하면 여기서 확인할 수 있어요." : "초대 링크를 보내고 잠시 기다려주세요."}</p>
-          <p className="text-xs leading-5 text-slate-600">이 화면에서는 약 7초마다 자동 확인해요. 나중에는 내 보관함에서 다시 열 수 있어요.</p>
-          {roomError && <p role="alert" className="text-sm text-red-700">{roomError}</p>}
+          <p role="status" className="text-sm leading-6 text-slate-700"><Text>{room.guest_id ? "친구가 참여했어요. 완성하면 여기서 확인할 수 있어요." : "초대 링크를 보내고 잠시 기다려주세요."}</Text></p>
+          <p className="text-xs leading-5 text-slate-600"><Text>이 화면에서는 약 7초마다 자동 확인해요. 나중에는 내 보관함에서 다시 열 수 있어요.</Text></p>
+          {roomError && <p role="alert" className="text-sm text-red-700"><Text>{roomError}</Text></p>}
         </section>
-        <p className="max-w-[800px] text-xs leading-5 text-slate-600">그림을 시작한 브라우저로 돌아와 주세요. 브라우저 데이터를 지우면 기존 보관함에 접근할 수 없어요.</p>
+        <p className="max-w-[800px] text-xs leading-5 text-slate-600"><Text>그림을 시작한 브라우저로 돌아와 주세요. 브라우저 데이터를 지우면 기존 보관함에 접근할 수 없어요.</Text></p>
         <DrawingWaitingCanvas strokes={leftDrawing.strokes} />
       </main>
     );
@@ -351,7 +350,7 @@ export default function RoomPage() {
   if (room.guest_id !== userId || room.status !== "guest_joined") {
     return (
       <main className="p-6">
-        <p role="alert">이 방에서 그림을 그릴 수 없습니다.</p>
+        <p role="alert"><Text>이 방에서 그림을 그릴 수 없습니다.</Text></p>
       </main>
     );
   }
@@ -359,15 +358,13 @@ export default function RoomPage() {
   return (
     <main className="workspace drawing-workspace">
       <h1 className="text-xl font-extrabold sm:text-2xl">
-        이어 그리기
-      </h1>
+        <Text>이어 그리기</Text> </h1>
 
       <DrawingPrompt prompt={room.prompt} />
 
       <p className="text-sm leading-6 text-slate-600">
-        경계 힌트만 보고 오른쪽을 그려요. 완성하면 전체가 공개돼요.
-      </p>
-      {roomError && <p role="alert" className="text-sm text-red-600">{roomError}</p>}
+        <Text>경계 힌트만 보고 오른쪽을 그려요. 완성하면 전체가 공개돼요.</Text> </p>
+      {roomError && <p role="alert" className="text-sm text-red-600"><Text>{roomError}</Text></p>}
 
       <DrawingCanvas
         key={roomId}

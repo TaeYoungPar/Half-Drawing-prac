@@ -1,5 +1,6 @@
 "use client";
 
+import { Text, useI18n } from "../i18n/I18n";
 import { useState } from "react";
 import type { ExampleKind } from "../lib/public-content";
 import { ExampleArtwork, type ExampleMode } from "./ExampleArtwork";
@@ -10,12 +11,13 @@ const views: { mode: ExampleMode; label: string; description: string }[] = [
   { mode: "full", label: "완성 예시", description: "두 사람이 제출하면 전체 그림을 함께 볼 수 있어요. 색과 표정이 달라도 하나의 그림으로 이어져요." },
 ];
 export function ExamplePreview({ kind }: { kind: ExampleKind }) {
+  const { t } = useI18n();
   const [mode, setMode] = useState<ExampleMode>("left");
   return <figure className="panel overflow-hidden p-3 sm:p-5">
-    <div className="mb-4 grid grid-cols-3 gap-2" role="group" aria-label="예시 화면 선택">
-      {views.map(view => <button key={view.mode} type="button" className="example-switch" aria-pressed={mode === view.mode} onClick={() => setMode(view.mode)}>{view.label}</button>)}
+    <div className="mb-4 grid grid-cols-3 gap-2" role="group" aria-label={t("예시 화면 선택")}>
+      {views.map(view => <button key={view.mode} type="button" className="example-switch" aria-pressed={mode === view.mode} onClick={() => setMode(view.mode)}><Text>{view.label}</Text></button>)}
     </div>
     <div className="overflow-hidden rounded-xl border border-[#c8b99b]"><ExampleArtwork kind={kind} mode={mode} /></div>
-    <figcaption className="mt-4"><p className="min-h-28 text-sm leading-7 sm:min-h-20" aria-live="polite">{views.find(view => view.mode === mode)?.description}</p><p className="mt-2 text-xs leading-6 text-slate-500">이용 방법을 설명하기 위해 제작한 가이드용 그림이에요. 사용자 작품이 아니에요.</p></figcaption>
+    <figcaption className="mt-4"><p className="min-h-28 text-sm leading-7 sm:min-h-20" aria-live="polite"><Text>{views.find(view => view.mode === mode)?.description}</Text></p><p className="mt-2 text-xs leading-6 text-slate-500"><Text>이용 방법을 설명하기 위해 제작한 가이드용 그림이에요. 사용자 작품이 아니에요.</Text></p></figcaption>
   </figure>;
 }

@@ -23,7 +23,7 @@ const records = Array.from({ length: 8 }, (_, i) => ({
 try {
   for (const width of [320, 390, 1440]) {
     const height = width === 1440 ? 1000 : 740;
-    const context = await browser.newContext({ viewport: { width, height }, isMobile: width < 640, hasTouch: width < 640 });
+    const context = await browser.newContext({locale: "ko-KR",  viewport: { width, height }, isMobile: width < 640, hasTouch: width < 640 });
     await mock(context, hostId);
     const thumbnails = new Map();
     let failFirst = width !== 320;

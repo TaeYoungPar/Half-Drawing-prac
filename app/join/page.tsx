@@ -1,5 +1,6 @@
 "use client";
 
+import { Text, useI18n } from "../i18n/I18n";
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAnonymousAuth } from "../hooks/useAnonymousAuth";
@@ -9,6 +10,7 @@ import { normalizeRoomCode } from "../utils/shareInvitation";
 import { LoadingState } from "../components/LoadingState";
 
 export default function JoinRoomPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const [roomCode, setRoomCode] = useState("");
   const [isInvited, setIsInvited] = useState(false);
@@ -51,7 +53,7 @@ export default function JoinRoomPage() {
   }
 
   const codeField = <>
-    <label htmlFor="room-code" className="text-sm font-semibold">참여 코드</label>
+    <label htmlFor="room-code" className="text-sm font-semibold"><Text>참여 코드</Text></label>
     <input id="room-code" type="text" maxLength={10} value={roomCode}
       disabled={isLoading || isJoining} autoComplete="off" autoCapitalize="characters" spellCheck={false}
       aria-describedby="code-help" aria-invalid={Boolean(joinError)}
@@ -61,31 +63,31 @@ export default function JoinRoomPage() {
       }}
       placeholder="A1B2C3D4E5"
       className="min-h-16 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 font-mono text-xl tracking-widest transition focus:border-slate-400 focus:bg-white" />
-    <p id="code-help" className="text-xs leading-5 text-slate-500">영문·숫자 10자리 · 친구와 각자의 기기나 브라우저에서 참여해주세요.</p>
+    <p id="code-help" className="text-xs leading-5 text-slate-500"><Text>영문·숫자 10자리 · 친구와 각자의 기기나 브라우저에서 참여해주세요.</Text></p>
   </>;
 
   return (
     <main className="mx-auto w-full max-w-xl px-4 py-5 sm:px-5 sm:py-10">
       <div className="panel mt-2 p-5 sm:p-10">
-        <span className="eyebrow">STEP 2 · 친구의 상상 이어가기</span>
-        <h1 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl">{isInvited ? "친구의 그림이 기다려요!" : "초대받으셨나요?"}</h1>
-        <p className="mt-3 text-sm leading-6 text-slate-600">{isInvited ? "초대 링크의 코드가 준비됐어요. 아래 버튼을 누르면 이어 그릴 수 있어요." : "친구에게 받은 참여 코드를 입력해주세요."}</p>
-        <p className="mt-3 rounded-xl bg-[#e5efdb] p-3 text-sm leading-6 text-slate-800">친구 그림은 경계 힌트만 보여요. 오른쪽을 이어 그리면 둘의 그림이 함께 공개돼요.</p>
+        <span className="eyebrow"><Text>STEP 2 · 친구의 상상 이어가기</Text></span>
+        <h1 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl"><Text>{isInvited ? "친구의 그림이 기다려요!" : "초대받으셨나요?"}</Text></h1>
+        <p className="mt-3 text-sm leading-6 text-slate-600"><Text>{isInvited ? "초대 링크의 코드가 준비됐어요. 아래 버튼을 누르면 이어 그릴 수 있어요." : "친구에게 받은 참여 코드를 입력해주세요."}</Text></p>
+        <p className="mt-3 rounded-xl bg-[#e5efdb] p-3 text-sm leading-6 text-slate-800"><Text>친구 그림은 경계 힌트만 보여요. 오른쪽을 이어 그리면 둘의 그림이 함께 공개돼요.</Text></p>
         <form onSubmit={handleJoin} className="mt-7 flex flex-col gap-3" aria-busy={isJoining}>
           {!isInvited && codeField}
           <button type="submit" disabled={isLoading || isJoining || !userId || !roomCode} className="button-primary mt-3">
-            {isLoading ? "연결 중…" : isJoining ? "그림으로 이동 중…" : "이어 그리러 가기 →"}
+            <Text>{isLoading ? "연결 중…" : isJoining ? "그림으로 이동 중…" : "이어 그리러 가기 →"}</Text>
           </button>
-          {isJoining && <LoadingState variant="inline" title="친구의 그림으로 가고 있어요" description="내 반쪽을 준비하고 있어요." />}
-          {joinError && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{joinError}</p>}
+          {isJoining && <LoadingState variant="inline" title={t("친구의 그림으로 가고 있어요")} description="내 반쪽을 준비하고 있어요." />}
+          {joinError && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700"><Text>{joinError}</Text></p>}
           {isInvited && <details open={showCode} onToggle={(event) => setShowCode(event.currentTarget.open)} className="text-sm text-slate-600">
-            <summary className="min-h-11 cursor-pointer py-3 font-semibold">참여 코드 확인·변경</summary>
+            <summary className="min-h-11 cursor-pointer py-3 font-semibold"><Text>참여 코드 확인·변경</Text></summary>
             <div className="flex flex-col gap-3 pt-2">{codeField}</div>
           </details>}
         </form>
         {errorMessage && <div role="alert" className="mt-4 text-sm text-red-700">
-          <p>{errorMessage}</p>
-          <button onClick={retry} className="button-secondary mt-3" type="button">연결 다시 시도</button>
+          <p><Text>{errorMessage}</Text></p>
+          <button onClick={retry} className="button-secondary mt-3" type="button"><Text>연결 다시 시도</Text></button>
         </div>}
       </div>
     </main>

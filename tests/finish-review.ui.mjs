@@ -21,7 +21,7 @@ try {
           guest_id: guestId, status: 'guest_joined', expires_at: new Date(Date.now() + 86400000).toISOString(),
           drawings: [{ role: 'left', strokes: [], completed: true }],
         } : null;
-        const context = await browser.newContext({ viewport: { width, height }, isMobile: width < 768, hasTouch: width < 768 });
+        const context = await browser.newContext({locale: "ko-KR",  viewport: { width, height }, isMobile: width < 768, hasTouch: width < 768 });
         await mock(context, side === 'left' ? hostId : guestId);
         const page = await context.newPage();
         await page.goto(`${base}${side === 'left' ? '/draw' : `/rooms/${roomId}`}`);

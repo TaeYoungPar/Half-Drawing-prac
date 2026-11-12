@@ -23,7 +23,7 @@ window.__adPushes = 0; window.adsbygoogle = { push() {
 } };`;
 
 async function setup(width, behavior = 'filled') {
-  const context = await browser.newContext({ viewport: { width, height: width < 640 ? 844 : 1000 }, hasTouch: width < 640, isMobile: width < 640 });
+  const context = await browser.newContext({locale: "ko-KR",  viewport: { width, height: width < 640 ? 844 : 1000 }, hasTouch: width < 640, isMobile: width < 640 });
   await mock(context, hostId);
   let loads = 0;
   await context.route('https://pagead2.googlesyndication.com/**', async route => {
@@ -73,6 +73,14 @@ try {
     assert.equal(await t.page.evaluate(() => window.__adPushes), 1);
     assert.equal((await banner.boundingBox()).height, before.height);
     await t.page.screenshot({ path: `${out}/guide-bottom-${width}.png` });
+    await t.page.locator('ins.adsbygoogle').evaluate(element => { window.__languageAd = element; });
+    await t.page.getByRole('button', { name: 'English', exact: true }).click();
+    await t.page.waitForFunction(() => document.documentElement.lang === 'en');
+    assert.equal(await t.page.evaluate(() => window.__languageAd === document.querySelector('ins.adsbygoogle')), true);
+    assert.equal(await t.page.evaluate(() => window.__adPushes), 1, 'language switching never refreshes an existing ad');
+    assert.equal(t.loads(), 1);
+    await t.page.getByRole('button', { name: '한국어', exact: true }).click();
+    await t.page.waitForFunction(() => document.documentElement.lang === 'ko');
     await t.page.evaluate(() => { window.__adDocumentMarker = 'same-public-document'; });
     await t.page.getByRole('navigation', { name: '그리기 안내', exact: true }).getByRole('link', { name: '그리기 예시', exact: true }).click();
     await t.page.getByRole('heading', { level: 1, name: '무엇을 그릴지 망설여질 때' }).waitFor();

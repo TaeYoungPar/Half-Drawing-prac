@@ -1,11 +1,13 @@
 "use client";
 
+import { useI18n } from "../i18n/I18n";
 import { useEffect, useRef } from "react";
 import type { Stroke } from "../types/drawing";
 import { drawHalfStrokes } from "../utils/drawHalfStrokes";
 
 /** Shows the saved first half while the second artist is working. */
 export function DrawingWaitingCanvas({ strokes }: { strokes: Stroke[] }) {
+  const { t } = useI18n();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -18,7 +20,7 @@ export function DrawingWaitingCanvas({ strokes }: { strokes: Stroke[] }) {
   }, [strokes]);
 
   return (
-    <div className="relative w-full max-w-[800px] overflow-hidden rounded-xl border border-slate-300" aria-label="내가 등록한 왼쪽 그림">
+    <div className="relative w-full max-w-[800px] overflow-hidden rounded-xl border border-slate-300" aria-label={t("내가 등록한 왼쪽 그림")}>
       <canvas
         ref={canvasRef}
         width={800}

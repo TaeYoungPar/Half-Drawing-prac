@@ -20,7 +20,7 @@ function assertPng(filename, width, height) {
 try {
   for (const [width, height] of [[320, 740], [390, 844], [1440, 1000]]) {
     fixture.room = null; fixture.writes = 0;
-    const context = await browser.newContext({ viewport: { width, height }, isMobile: width < 640, hasTouch: width < 640 });
+    const context = await browser.newContext({locale: "ko-KR",  viewport: { width, height }, isMobile: width < 640, hasTouch: width < 640 });
     await mock(context, hostId);
     const page = await context.newPage();
     await page.goto(`${base}/draw`);

@@ -1,3 +1,4 @@
+import { Localized, Text, LanguageProvider } from "./i18n/I18n";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -49,15 +50,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <LanguageProvider>
         <SiteHeader />
         {children}
         <footer className="mt-auto border-t border-[#c8b99b] bg-[#fffbed]/90 px-5 py-8 text-center text-xs leading-6 text-slate-500 sm:py-10">
-          <nav aria-label="서비스 안내" className="mb-4 flex flex-wrap justify-center gap-x-6 gap-y-1 text-sm font-bold text-slate-700"><Link className="inline-flex min-h-11 items-center" href="/guide">이용 가이드</Link><Link className="inline-flex min-h-11 items-center" href="/examples">그리기 예시</Link><Link className="inline-flex min-h-11 items-center" href="/about">소개·문의</Link><Link className="inline-flex min-h-11 items-center" href="/privacy">개인정보·저장 안내</Link></nav>
-          두 사람의 상상이 만나는 곳, 반쪽그림<br />
-          참여 코드는 7일 동안 유효해요. 완성한 그림은 기기에 저장해주세요.
-          <p className="mt-2">운영 문의 <a className="inline-flex min-h-11 items-center underline underline-offset-4" href={`mailto:${contactEmail}`}>{contactEmail}</a></p>
+          <Localized as="nav" aria-label="서비스 안내" className="mb-4 flex flex-wrap justify-center gap-x-6 gap-y-1 text-sm font-bold text-slate-700"><Link className="inline-flex min-h-11 items-center" href="/guide"><Text>이용 가이드</Text></Link><Link className="inline-flex min-h-11 items-center" href="/examples"><Text>그리기 예시</Text></Link><Link className="inline-flex min-h-11 items-center" href="/about"><Text>소개·문의</Text></Link><Link className="inline-flex min-h-11 items-center" href="/privacy"><Text>개인정보·저장 안내</Text></Link></Localized>
+          <Text>두 사람의 상상이 만나는 곳, 반쪽그림</Text><br />
+          <Text>참여 코드는 7일 동안 유효해요. 완성한 그림은 기기에 저장해주세요.</Text> <p className="mt-2"><Text>운영 문의</Text> <a className="inline-flex min-h-11 items-center underline underline-offset-4" href={`mailto:${contactEmail}`}>{contactEmail}</a></p>
         </footer>
         {process.env.VERCEL_ENV === "production" && <SiteAnalytics />}
+        </LanguageProvider>
       </body>
     </html>
   );

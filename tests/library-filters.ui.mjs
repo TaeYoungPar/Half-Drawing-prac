@@ -12,7 +12,7 @@ try {
   for (const width of [320, 390]) {
     fixture.room = { id: roomId, code: 'ABC123DEF4', prompt: '친구와 떠나는 여행', host_id: hostId, guest_id: guestId,
       status: 'completed', expires_at: new Date(Date.now() + 86400000).toISOString(), drawings: [] };
-    const context = await browser.newContext({ viewport: { width, height: 740 }, isMobile: true, hasTouch: true });
+    const context = await browser.newContext({locale: "ko-KR",  viewport: { width, height: 740 }, isMobile: true, hasTouch: true });
     await mock(context, guestId);
     const requests = { all: 0, host: 0, guest: 0 };
     let guestGate = null;

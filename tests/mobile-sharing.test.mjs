@@ -5,12 +5,17 @@ import vm from "node:vm";
 import ts from "typescript";
 
 function load(filename, globals = {}) {
-  const exports = {};
-  const source = ts.transpileModule(fs.readFileSync(new URL(`../app/utils/${filename}.ts`, import.meta.url), "utf8"), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
-  }).outputText;
-  vm.runInNewContext(source, { exports, URL, Error, File, ...globals });
-  return exports;
+  function evaluate(url) {
+    if (url.pathname.endsWith('.json')) return JSON.parse(fs.readFileSync(url, 'utf8'));
+    const exports = {};
+    const source = ts.transpileModule(fs.readFileSync(url, 'utf8'), {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, esModuleInterop: true },
+    }).outputText;
+    const require = specifier => evaluate(new URL(specifier.endsWith('.json') ? specifier : `${specifier}.ts`, url));
+    vm.runInNewContext(source, { exports, require, URL, Error, File, ...globals });
+    return exports;
+  }
+  return evaluate(new URL(`../app/utils/${filename}.ts`, import.meta.url));
 }
 
 const location = { origin: "https://example.com" };

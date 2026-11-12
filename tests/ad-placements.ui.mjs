@@ -27,7 +27,7 @@ const records = Array.from({ length: 3 }, (_, i) => ({
 const drawings = ['left', 'right'].map((role, i) => ({ role, completed: true, strokes: [{ tool: 'pen', color: i ? '#16a34a' : '#dc2626', lineWidth: 15, points: [{ x: i ? 500 : 200, y: 120 }, { x: i ? 600 : 300, y: 350 }] }] }));
 
 async function setup(width, mode = 'normal') {
-  const context = await browser.newContext({ viewport: { width, height: width < 640 ? 844 : 1000 }, isMobile: width < 640, hasTouch: width < 640 });
+  const context = await browser.newContext({locale: "ko-KR",  viewport: { width, height: width < 640 ? 844 : 1000 }, isMobile: width < 640, hasTouch: width < 640 });
   await mock(context, hostId);
   const dataset = mode === 'pagination' ? Array.from({ length: 14 }, (_, i) => ({ ...records[i % 3], id: `55555555-5555-4555-8555-${String(i).padStart(12, '0')}` })) : records;
   let scripts = 0, listRequests = 0;

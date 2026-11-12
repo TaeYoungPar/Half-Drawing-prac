@@ -37,7 +37,7 @@ function seed() {
   fixture.comments=[{room_id:roomId,author_id:guestId,body:'나는 양파였는데 너는 뭐였어? 😂',created_at:new Date().toISOString(),updated_at:new Date().toISOString()}];
 }
 async function viewer(width,id) {
-  const context=await browser.newContext({viewport:{width,height:width<640?844:1000},isMobile:width<640,hasTouch:width<640});
+  const context=await browser.newContext({locale: "ko-KR", viewport:{width,height:width<640?844:1000},isMobile:width<640,hasTouch:width<640});
   await mock(context,id); const page=await context.newPage(); const errors=[];page.on('pageerror',e=>errors.push(e.message));
   return{context,page,errors};
 }
@@ -136,7 +136,7 @@ try {
     console.log(`${width}px: daily draft isolation, hide/undo/restore/page refill, private friend state, offscreen unread/read/edit, two-player request -> role swap -> full result without resend PASS`);
   }
   // Leaving home open across Korean midnight updates both the subject and its link.
-  social.enabled=false;const context=await browser.newContext();await mock(context,hostId);const page=await context.newPage();
+  social.enabled=false;const context=await browser.newContext({ locale: "ko-KR" });await mock(context,hostId);const page=await context.newPage();
   await page.clock.install({time:new Date('2026-11-04T14:59:00Z')});await page.goto(base);
   const today=page.getByRole('region',{name:'오늘의 엉뚱한 주제',exact:true});
   await page.waitForFunction(()=>document.querySelector('#daily-topic-heading')?.parentElement.querySelector('time').dateTime==='2026-11-04');

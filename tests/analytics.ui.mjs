@@ -22,7 +22,7 @@ const tracker = `(() => {
 })();`;
 
 try {
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const context = await browser.newContext({locale: "ko-KR",  viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await mock(context, hostId);
   const page = await context.newPage();
   const errors = []; page.on('pageerror', e => errors.push(e.message));
@@ -75,7 +75,7 @@ try {
     assert.equal(views.length, 5, 'no duplicate pageviews after navigation settles');
     assert.deepEqual(errors, []);
     await context.close();
-    const blocked = await browser.newContext();
+    const blocked = await browser.newContext({ locale: "ko-KR" });
     await mock(blocked, hostId);
     await blocked.route('**/_vercel/insights/script.js', r => r.abort());
     const b = await blocked.newPage();

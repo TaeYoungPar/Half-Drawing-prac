@@ -216,3 +216,6 @@ button:not(:disabled), a { cursor: pointer; }
 @media (max-height: 480px) {
   .color-preview-footer { grid-template-columns: minmax(0, 1fr) auto; }
 }
+
+/* Keep direction marks legible when the English font lacks these glyphs. */
+.direction-symbol { font-family: "DejaVu Sans", "Segoe UI Symbol", "Apple Symbols", sans-serif; }

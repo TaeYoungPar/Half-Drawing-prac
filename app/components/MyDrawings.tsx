@@ -1,5 +1,6 @@
 "use client";
 
+import { Text, useI18n } from "../i18n/I18n";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RoomThumbnail, type ThumbnailCache } from "./RoomThumbnail";
@@ -19,6 +20,7 @@ const STATUS: Record<DrawingStatus, { label: string; className: string; descript
 };
 
 export function MyDrawings({ state, adConfig }: { state: ReturnType<typeof useMyRooms>; adConfig?: ReturnType<typeof publicBannerConfig> }) {
+  const { t, locale } = useI18n();
   const { rooms, total, page, scope, changeScope, isLoading, isRefreshing, error, refresh, changePage, hasNextPage, extrasAvailable, showHidden, changeVisibility, setHidden, busyRoomId, actionError } = state;
   const roomList = useRef<HTMLDivElement>(null);
   const pendingPageScroll = useRef<number | null>(null);
@@ -61,64 +63,63 @@ export function MyDrawings({ state, adConfig }: { state: ReturnType<typeof useMy
     <section id="my-drawings" aria-labelledby="my-drawings-heading" className="mt-6 scroll-mt-6 sm:mt-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 id="my-drawings-heading" className="section-heading">{showHidden ? "숨긴 그림" : "내 그림"}</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">{showHidden ? "내 목록에서 숨긴 그림이에요. 언제든 다시 가져올 수 있어요." : "시작하거나 참여한 그림을 다시 열고 완성 상태를 확인해요."}</p>
+          <h2 id="my-drawings-heading" className="section-heading"><Text>{showHidden ? "숨긴 그림" : "내 그림"}</Text></h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600"><Text>{showHidden ? "내 목록에서 숨긴 그림이에요. 언제든 다시 가져올 수 있어요." : "시작하거나 참여한 그림을 다시 열고 완성 상태를 확인해요."}</Text></p>
         </div>
         <button type="button" onClick={refresh} disabled={isRefreshing} aria-busy={isRefreshing} className="button-secondary min-w-36">
-          {isRefreshing ? "새로고침 중…" : "상태 새로고침"}
+          <Text>{isRefreshing ? "새로고침 중…" : "상태 새로고침"}</Text>
         </button>
       </div>
-      {(extrasAvailable || showHidden) && <button type="button" aria-pressed={showHidden} disabled={busyRoomId !== null} onClick={changeVisibility} className="mt-3 inline-flex min-h-11 items-center px-1 text-sm font-bold underline underline-offset-4">{showHidden ? "← 내 그림으로 돌아가기" : "숨긴 그림 보기"}</button>}
-      <div className="mt-5 grid grid-cols-3 gap-3 sm:max-w-lg" role="group" aria-label="내 그림 목록 선택">
+      {(extrasAvailable || showHidden) && <button type="button" aria-pressed={showHidden} disabled={busyRoomId !== null} onClick={changeVisibility} className="mt-3 inline-flex min-h-11 items-center px-1 text-sm font-bold underline underline-offset-4"><Text>{showHidden ? "← 내 그림으로 돌아가기" : "숨긴 그림 보기"}</Text></button>}
+      <div className="mt-5 grid grid-cols-3 gap-3 sm:max-w-lg" role="group" aria-label={t("내 그림 목록 선택")}>
         {([["all", "전체"], ["host", "시작한 그림"], ["guest", "참여한 그림"]] as const).map(([value, label]) => (
-          <button key={value} type="button" aria-label={value === "all" ? "전체" : value === "host" ? "내가 시작한 그림" : "내가 참여한 그림"} aria-pressed={scope === value} onClick={() => changeScope(value as RoomScope)}
-            className={`${scope === value ? "button-primary" : "button-secondary"} min-w-0 px-2 text-xs sm:text-sm`}>{label}</button>
+          <button key={value} type="button" aria-label={t(value === "all" ? "전체" : value === "host" ? "내가 시작한 그림" : "내가 참여한 그림")} aria-pressed={scope === value} onClick={() => changeScope(value as RoomScope)}
+            className={`${scope === value ? "button-primary" : "button-secondary"} min-w-0 px-2 text-xs sm:text-sm`}><Text>{label}</Text></button>
         ))}
       </div>
-      <aside aria-label="보관함 이용 안내" className="mt-4 rounded-xl border border-slate-200 bg-[#fffdf3] px-4 py-3 text-sm leading-6 text-slate-700">
-        <p className="font-semibold">내 그림은 이 브라우저에서 다시 볼 수 있어요.</p>
-        <p className="mt-1 text-xs leading-5">다른 기기·브라우저에서는 목록이 달라져요. 브라우저 데이터를 지우면 기존 보관함에 접근할 수 없어요. 소중한 그림은 PNG로 저장해주세요.</p>
+      <aside aria-label={t("보관함 이용 안내")} className="mt-4 rounded-xl border border-slate-200 bg-[#fffdf3] px-4 py-3 text-sm leading-6 text-slate-700">
+        <p className="font-semibold"><Text>내 그림은 이 브라우저에서 다시 볼 수 있어요.</Text></p>
+        <p className="mt-1 text-xs leading-5"><Text>다른 기기·브라우저에서는 목록이 달라져요. 브라우저 데이터를 지우면 기존 보관함에 접근할 수 없어요. 소중한 그림은 PNG로 저장해주세요.</Text></p>
       </aside>
-      {copyMessage && <p role="status" className="mt-3 text-sm text-indigo-700">{copyMessage}</p>}
-      {undoHidden && <button type="button" disabled={busyRoomId !== null} onClick={() => { void changeHidden(undoHidden.id, !undoHidden.hidden, true); }} className="button-secondary mt-2">{undoHidden.hidden ? "숨기기 취소" : "복원 취소"}</button>}
-      {actionError && <p role="alert" className="mt-3 text-sm text-red-700">{actionError}</p>}
+      {copyMessage && <p role="status" className="mt-3 text-sm text-indigo-700"><Text>{copyMessage}</Text></p>}
+      {undoHidden && <button type="button" disabled={busyRoomId !== null} onClick={() => { void changeHidden(undoHidden.id, !undoHidden.hidden, true); }} className="button-secondary mt-2"><Text>{undoHidden.hidden ? "숨기기 취소" : "복원 취소"}</Text></button>}
+      {actionError && <p role="alert" className="mt-3 text-sm text-red-700"><Text>{actionError}</Text></p>}
       {error && <div role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">
-        <p>{error} {rooms.length > 0 && "아래 목록은 마지막으로 확인한 상태예요."}</p>
-        <button type="button" onClick={refresh} disabled={isRefreshing} className="button-secondary mt-3">다시 시도</button>
+        <p><Text>{error}</Text> <Text>{rooms.length > 0 && "아래 목록은 마지막으로 확인한 상태예요."}</Text></p>
+        <button type="button" onClick={refresh} disabled={isRefreshing} className="button-secondary mt-3"><Text>다시 시도</Text></button>
       </div>}
-      {isLoading ? <div className="mt-8"><LoadingState title="그림 노트를 펼치고 있어요" description="내 그림을 확인하는 중이에요." /></div>
+      {isLoading ? <div className="mt-8"><LoadingState title={t("그림 노트를 펼치고 있어요")} description="내 그림을 확인하는 중이에요." /></div>
         : !error && rooms.length === 0 ? <div className="panel mt-5 px-6 py-8 sm:px-8 sm:py-10">
-          <p className="font-semibold">{showHidden ? "숨긴 그림이 없어요." : scope === "guest" ? "아직 참여한 그림이 없어요." : scope === "host" ? "아직 시작한 그림이 없어요." : "아직 함께 그린 그림이 없어요."}</p>
-          <p className="mt-2 text-sm text-slate-500">{showHidden ? "숨긴 그림은 여기서 확인하고 복원할 수 있어요." : "그림을 시작하거나 친구의 그림에 참여하면 여기에 표시돼요."}</p>
-          <Link href={scope === "guest" ? "/join" : "/draw"} className="button-secondary mt-4">{scope === "guest" ? "참여 코드 입력하기" : "그림 시작하기"}</Link>
+          <p className="font-semibold"><Text>{showHidden ? "숨긴 그림이 없어요." : scope === "guest" ? "아직 참여한 그림이 없어요." : scope === "host" ? "아직 시작한 그림이 없어요." : "아직 함께 그린 그림이 없어요."}</Text></p>
+          <p className="mt-2 text-sm text-slate-500"><Text>{showHidden ? "숨긴 그림은 여기서 확인하고 복원할 수 있어요." : "그림을 시작하거나 친구의 그림에 참여하면 여기에 표시돼요."}</Text></p>
+          <Link href={scope === "guest" ? "/join" : "/draw"} className="button-secondary mt-4"><Text>{scope === "guest" ? "참여 코드 입력하기" : "그림 시작하기"}</Text></Link>
         </div> : <div ref={roomList} className="mt-5 grid scroll-mt-6 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rooms.map((room) => {
             const status = STATUS[room.status];
             return <article key={room.id} className="panel room-card flex flex-col items-start p-4 sm:p-5">
-              <p className="mb-2 text-xs font-semibold text-slate-500">{room.participantRole === "host" ? "내가 시작한 그림" : "내가 참여한 그림"}</p>
-              <span className={`rounded-full px-3 py-1 text-xs font-bold ${status.className}`}>{room.status === "guest_joined" && room.participantRole === "guest" ? "이어 그릴 차례" : status.label}</span>
-              {room.hasUnreadComment && <span className="mt-2 rounded-full border border-[#c38c9a] bg-[#f9dce0] px-3 py-1 text-xs font-bold">💬 친구의 새 한마디</span>}
-              {room.status === "completed" && <Link href={`/rooms/${room.id}`} aria-label={`${room.prompt} 완성 그림 열기`} className="block w-full rounded-xl"><RoomThumbnail roomId={room.id} prompt={room.prompt} cache={thumbnails} onReadyChange={onThumbnailReady} /></Link>}
-              <div className="room-topic mt-4"><p className="text-xs font-semibold text-slate-600">그림 주제</p><h3 className="mt-2 break-words text-lg font-bold">{room.prompt}</h3></div>
+              <p className="mb-2 text-xs font-semibold text-slate-500"><Text>{room.participantRole === "host" ? "내가 시작한 그림" : "내가 참여한 그림"}</Text></p>
+              <span className={`rounded-full px-3 py-1 text-xs font-bold ${status.className}`}><Text>{room.status === "guest_joined" && room.participantRole === "guest" ? "이어 그릴 차례" : status.label}</Text></span>
+              {room.hasUnreadComment && <span className="mt-2 rounded-full border border-[#c38c9a] bg-[#f9dce0] px-3 py-1 text-xs font-bold"><Text>💬 친구의 새 한마디</Text></span>}
+              {room.status === "completed" && <Link href={`/rooms/${room.id}`} aria-label={t("{0} 완성 그림 열기", room.prompt)} className="block w-full rounded-xl"><RoomThumbnail roomId={room.id} prompt={room.prompt} cache={thumbnails} onReadyChange={onThumbnailReady} /></Link>}
+              <div className="room-topic mt-4"><p className="text-xs font-semibold text-slate-600"><Text>그림 주제</Text></p><h3 className="mt-2 break-words text-lg font-bold">{room.prompt}</h3></div>
               <time dateTime={room.created_at} className="mt-1 text-xs text-slate-500">
-                {new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeZone: "Asia/Seoul" }).format(new Date(room.created_at))} 시작
-              </time>
-              <p className="mb-5 mt-3 text-sm leading-6 text-slate-600">{room.participantRole === "guest" && room.status === "guest_joined" ? "내 반쪽을 이어 그려 완성해주세요." : status.description}</p>
+                {new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", { dateStyle: "medium", timeZone: "Asia/Seoul" }).format(new Date(room.created_at))} <Text>시작</Text> </time>
+              <p className="mb-5 mt-3 text-sm leading-6 text-slate-600"><Text>{room.participantRole === "guest" && room.status === "guest_joined" ? "내 반쪽을 이어 그려 완성해주세요." : status.description}</Text></p>
               <div className="mt-auto flex flex-wrap gap-2">
                 <Link href={`/rooms/${room.id}`} className={room.status === "completed" ? "button-primary" : "button-secondary"}>
-                  {room.status === "completed" ? "완성 그림 보기 →" : "방으로 이동"}
+                  <Text>{room.status === "completed" ? "완성 그림 보기 →" : "방으로 이동"}</Text>
                 </Link>
                 {room.participantRole === "host" && (room.status === "waiting" || room.status === "guest_joined") &&
-                  <button type="button" onClick={() => copyCode(room.code)} className="button-secondary">코드 복사</button>}
-                {extrasAvailable && <button type="button" disabled={busyRoomId !== null} onClick={() => { void changeHidden(room.id, !showHidden); }} className="button-secondary">{busyRoomId === room.id ? "정리 중…" : showHidden ? "보관함으로 복원" : "보관함에서 숨기기"}</button>}
+                  <button type="button" onClick={() => copyCode(room.code)} className="button-secondary"><Text>코드 복사</Text></button>}
+                {extrasAvailable && <button type="button" disabled={busyRoomId !== null} onClick={() => { void changeHidden(room.id, !showHidden); }} className="button-secondary"><Text>{busyRoomId === room.id ? "정리 중…" : showHidden ? "보관함으로 복원" : "보관함에서 숨기기"}</Text></button>}
               </div>
             </article>;
           })}
         </div>}
-      {total > MY_ROOMS_PAGE_SIZE && <nav aria-label="내 그림 목록 페이지" className="mt-5 flex items-center justify-center gap-4">
-        <button type="button" onClick={() => selectPage(page - 1)} disabled={page === 0 || isLoading || isRefreshing} className="button-secondary">이전</button>
+      {total > MY_ROOMS_PAGE_SIZE && <nav aria-label={t("내 그림 목록 페이지")} className="mt-5 flex items-center justify-center gap-4">
+        <button type="button" onClick={() => selectPage(page - 1)} disabled={page === 0 || isLoading || isRefreshing} className="button-secondary"><Text>이전</Text></button>
         <span className="text-sm text-slate-500">{page + 1} / {Math.ceil(total / MY_ROOMS_PAGE_SIZE)}</span>
-        <button type="button" onClick={() => selectPage(page + 1)} disabled={!hasNextPage || isLoading || isRefreshing} className="button-secondary">다음</button>
+        <button type="button" onClick={() => selectPage(page + 1)} disabled={!hasNextPage || isLoading || isRefreshing} className="button-secondary"><Text>다음</Text></button>
       </nav>}
       {adConfig && adEligible && <PublicAdSlot {...adConfig} />}
     </section>

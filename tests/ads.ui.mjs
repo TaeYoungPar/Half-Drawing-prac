@@ -16,7 +16,7 @@ function room() {
 }
 try {
   for (const width of [320, 390, 1440]) {
-    const context = await browser.newContext({ viewport: { width, height: width < 640 ? 844 : 1000 } });
+    const context = await browser.newContext({locale: "ko-KR",  viewport: { width, height: width < 640 ? 844 : 1000 } });
     await mock(context, hostId);
     let loads = 0;
     await context.route('https://pagead2.googlesyndication.com/**', route => { loads++; return route.abort(); });

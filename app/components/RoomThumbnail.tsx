@@ -1,5 +1,6 @@
 "use client";
 
+import { Text, useI18n } from "../i18n/I18n";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { getCompletedThumbnail } from "../lib/rooms/getCompletedThumbnail";
@@ -25,6 +26,7 @@ function loadThumbnail(cache: ThumbnailCache, roomId: string) {
 }
 
 export function RoomThumbnail({ roomId, prompt, cache, onReadyChange }: { roomId: string; prompt: string; cache: ThumbnailCache; onReadyChange?: (roomId: string, ready: boolean) => void }) {
+  const { t } = useI18n();
   const container = useRef<HTMLDivElement>(null);
   const [url, setUrl] = useState<string | null>(() => cache.get(roomId)?.url ?? null);
   const [failed, setFailed] = useState(false);
@@ -55,9 +57,9 @@ export function RoomThumbnail({ roomId, prompt, cache, onReadyChange }: { roomId
 
   return (
     <div ref={container} className="relative mt-4 flex aspect-[8/5] w-full items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white">
-      {url ? <Image src={url} width={320} height={200} unoptimized alt={`${prompt} 완성 그림 미리보기`} className="h-full w-full object-contain"
+      {url ? <Image src={url} width={320} height={200} unoptimized alt={t("{0} 완성 그림 미리보기", prompt)} className="h-full w-full object-contain"
         onLoad={() => onReadyChange?.(roomId, true)} onError={() => onReadyChange?.(roomId, false)} />
-        : <p className="px-4 text-center text-xs leading-5 text-slate-600">{failed ? "미리보기 대신 아래 버튼으로 그림을 열어주세요." : "완성 그림 미리보기"}</p>}
+        : <p className="px-4 text-center text-xs leading-5 text-slate-600"><Text>{failed ? "미리보기 대신 아래 버튼으로 그림을 열어주세요." : "완성 그림 미리보기"}</Text></p>}
     </div>
   );
 }

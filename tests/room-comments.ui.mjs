@@ -17,7 +17,7 @@ function complete() {
   ] };
 }
 async function viewer(width, id) {
-  const context = await browser.newContext({ viewport: { width, height: width < 640 ? 844 : 1000 }, isMobile: width < 640, hasTouch: width < 640 });
+  const context = await browser.newContext({locale: "ko-KR",  viewport: { width, height: width < 640 ? 844 : 1000 }, isMobile: width < 640, hasTouch: width < 640 });
   await mock(context, id);
   const page = await context.newPage(); const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto(`${base}/rooms/${roomId}`);
@@ -102,7 +102,7 @@ try {
   await run.context.close();
   // A missing migration must not break drawing results or invite early comments.
   complete(); fixture.commentsUnavailable = true;
-  const context = await browser.newContext(); await mock(context, hostId); const page = await context.newPage();
+  const context = await browser.newContext({ locale: "ko-KR" }); await mock(context, hostId); const page = await context.newPage();
   await page.goto(`${base}/rooms/${roomId}`); await page.getByRole('heading', { name: '이런 그림이 될 줄 알았나요?', exact: true }).waitFor();
   await section(page).waitFor({ state: 'hidden' }); await page.getByRole('button', { name: '완성 그림 PNG 저장', exact: true }).waitFor();
   fixture.commentsUnavailable = false; fixture.room.status = 'waiting'; fixture.room.expires_at = new Date(Date.now()+86400000).toISOString(); fixture.room.guest_id = null; fixture.room.drawings = fixture.room.drawings.slice(0,1);
