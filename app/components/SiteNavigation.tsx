@@ -9,7 +9,7 @@ export function SiteNavigation() {
   const { t } = useI18n();
   const pathname = usePathname();
   return (
-    <div className="flex w-full items-center justify-end gap-2 sm:w-auto" aria-label={t("바로가기")}>
+    <div className="site-navigation" aria-label={t("바로가기")}>
       {[
         { href: "/", label: "홈", color: "bg-[#ffdc8a]" },
         { href: "/library", label: "내 보관함", color: "bg-[#c9dfb6]" },

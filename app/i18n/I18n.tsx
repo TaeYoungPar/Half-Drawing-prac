@@ -62,8 +62,8 @@ export function LocalizedImage({ alt, ...props }: ImageProps) {
 
 export function LanguageSwitcher() {
   const { locale, setLocale } = useI18n();
-  return <div role="group" aria-label={locale === "ko" ? "언어 선택" : "Choose language"} className="language-switcher flex shrink-0 items-center gap-1 rounded-xl border-2 border-[#493127] bg-[#fffdf3] p-1">
-    <button type="button" lang="ko" aria-label="한국어" aria-pressed={locale === "ko"} onClick={() => setLocale("ko")} className={`min-h-11 rounded-lg px-2 text-xs font-bold transition-colors hover:bg-[#ffedb7] focus-visible:outline-2 focus-visible:outline-offset-2 ${locale === "ko" ? "bg-[#ffdc8a]" : ""}`}>한국어</button>
-    <button type="button" lang="en" aria-label="English" aria-pressed={locale === "en"} onClick={() => setLocale("en")} className={`min-h-11 rounded-lg px-2 text-xs font-bold transition-colors hover:bg-[#ffedb7] focus-visible:outline-2 focus-visible:outline-offset-2 ${locale === "en" ? "bg-[#ffdc8a]" : ""}`}>ENG</button>
+  return <div role="group" aria-label={locale === "ko" ? "언어 선택" : "Choose language"} className="language-switcher flex shrink-0 items-center gap-0.5 rounded-xl border border-[#c8b99b] bg-[#fffdf3] p-0.5">
+    <button type="button" lang="ko" aria-label="한국어" aria-pressed={locale === "ko"} onClick={() => setLocale("ko")} className={`min-h-11 min-w-11 rounded-lg px-2 text-xs font-bold transition-colors hover:bg-[#ffedb7] focus-visible:outline-2 focus-visible:outline-offset-2 ${locale === "ko" ? "bg-[#ffdc8a]" : ""}`}>한국어</button>
+    <button type="button" lang="en" aria-label="English" aria-pressed={locale === "en"} onClick={() => setLocale("en")} className={`min-h-11 min-w-11 rounded-lg px-2 text-xs font-bold transition-colors hover:bg-[#ffedb7] focus-visible:outline-2 focus-visible:outline-offset-2 ${locale === "en" ? "bg-[#ffdc8a]" : ""}`}>ENG</button>
   </div>;
 }

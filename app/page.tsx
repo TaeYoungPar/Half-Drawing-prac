@@ -12,7 +12,7 @@ export const metadata = { alternates: { canonical: "/" } };
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const variant = (await searchParams).variant === "b" ? "b" : "a";
   return (
-    <main id="main-content" className="mx-auto w-full max-w-5xl px-4 pb-14 pt-5 sm:px-8 sm:pb-20 sm:pt-8">
+    <main id="main-content" className="mx-auto w-full max-w-5xl px-4 pb-14 pt-3 sm:px-8 sm:pb-20 sm:pt-6">
       <section aria-labelledby="home-heading" data-design-variant={variant} className={`home-hero hero-variant-${variant}`}>
         <h1 id="home-heading" className="board-label"><Text>{variant === "a" ? "반쪽은 내가, 나머지는 너!" : "둘의 상상이 만나는 그림판"}</Text></h1>
         <div className="board-shell">
