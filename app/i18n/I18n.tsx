@@ -2,6 +2,7 @@
 
 import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useSyncExternalStore, type ReactNode } from "react";
 import Image, { type ImageProps } from "next/image";
+import { ActionText } from "../components/ActionText";
 import { LANGUAGE_KEY, preferredLocale, translate, type Locale } from "./translate";
 
 let memoryChoice: Locale | null = null;
@@ -36,11 +37,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 export const useI18n = () => useContext(I18nContext);
 
 /** Explicit UI text only. Never wrap user-entered topics or notes in this component. */
-export function Text({ children, values = [] }: { children: ReactNode; values?: unknown[] }) {
+export function Text({ children, values = [], action = false, hideArrow = false }: { children: ReactNode; values?: unknown[]; action?: boolean; hideArrow?: boolean }) {
   const { t } = useI18n();
   if (typeof children !== "string") return children;
   const message = t(children, ...values);
-  return /[↗→←⤢]/.test(message) ? message.split(/([↗→←⤢])/).map((part, index) => /[↗→←⤢]/.test(part) ? <span key={index} className="direction-symbol">{part}</span> : part) : message;
+  return action || /[↗→←⤢]/.test(message) ? <ActionText message={message} hideArrow={hideArrow} /> : message;
 }
 
 /** Translatable accessible attributes for static Server Component markup. */

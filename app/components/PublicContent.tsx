@@ -16,7 +16,7 @@ export function ContentShell({ title, intro, children }: { title: string; intro:
 export function ExampleCards() {
   return <div className="mt-6 grid gap-5 sm:grid-cols-3">{examples.map(example => <Link key={example.slug} href={`/examples/${example.slug}`} className="example-card panel block overflow-hidden">
     <div className="border-b border-[#c8b99b] p-3" style={{ backgroundColor: example.color }}><div className="overflow-hidden rounded-xl border border-[#c8b99b]"><ExampleArtwork kind={example.slug} /></div></div>
-    <div className="p-5"><span className="text-xs font-bold text-slate-500"><Text>{example.tag}</Text></span><h3 className="mt-2 text-lg font-bold"><Text>{example.title}</Text></h3><p className="mt-3 text-sm leading-7 text-slate-700"><Text>{example.description}</Text></p><span className="mt-5 inline-block text-sm font-bold"><Text>그리는 방법 보기</Text> <span aria-hidden="true" className="direction-symbol">↗</span></span></div>
+    <div className="p-5"><span className="text-xs font-bold text-slate-500"><Text>{example.tag}</Text></span><h3 className="mt-2 text-lg font-bold"><Text>{example.title}</Text></h3><p className="mt-3 text-sm leading-7 text-slate-700"><Text>{example.description}</Text></p><span className="mt-5 inline-block text-sm font-bold"><Text hideArrow>그리는 방법 보기 ↗</Text></span></div>
   </Link>)}</div>;
 }
 

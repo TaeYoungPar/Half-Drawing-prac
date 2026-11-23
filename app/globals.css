@@ -217,5 +217,11 @@ button:not(:disabled), a { cursor: pointer; }
   .color-preview-footer { grid-template-columns: minmax(0, 1fr) auto; }
 }
 
-/* Keep direction marks legible when the English font lacks these glyphs. */
-.direction-symbol { font-family: "DejaVu Sans", "Segoe UI Symbol", "Apple Symbols", sans-serif; }
+/* SVG directions share one row and spacing; only the link's label is underlined. */
+.action-text { display: inline-flex; max-width: 100%; min-width: 0; align-items: center; gap: 6px; vertical-align: middle; }
+.action-text-label { min-width: 0; }
+.action-arrow { display: inline-flex; width: 1em; height: 1em; flex: none; align-items: center; justify-content: center; }
+.action-arrow svg { display: block; width: 100%; height: 100%; }
+.action-link, .article-copy a.action-link { text-decoration: none; }
+.action-link .action-text-label { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.action-link:hover .action-text-label { text-decoration-thickness: 2px; }

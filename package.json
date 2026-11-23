@@ -32,7 +32,8 @@
     "test:social-db": "node tests/social-features.db.mjs",
     "test:social": "node tests/social-features.ui.mjs",
     "db:social-bundle": "node scripts/build-social-sql.mjs",
-    "test:language": "node tests/language.ui.mjs"
+    "test:language": "node tests/language.ui.mjs",
+    "test:action-arrows": "node tests/action-arrows.ui.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

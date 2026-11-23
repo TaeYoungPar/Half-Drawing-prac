@@ -70,7 +70,7 @@ export function MyDrawings({ state, adConfig }: { state: ReturnType<typeof useMy
           <Text>{isRefreshing ? "새로고침 중…" : "상태 새로고침"}</Text>
         </button>
       </div>
-      {(extrasAvailable || showHidden) && <button type="button" aria-pressed={showHidden} disabled={busyRoomId !== null} onClick={changeVisibility} className="mt-3 inline-flex min-h-11 items-center px-1 text-sm font-bold underline underline-offset-4"><Text>{showHidden ? "← 내 그림으로 돌아가기" : "숨긴 그림 보기"}</Text></button>}
+      {(extrasAvailable || showHidden) && <button type="button" aria-pressed={showHidden} disabled={busyRoomId !== null} onClick={changeVisibility} className="action-link mt-3 inline-flex min-h-11 items-center px-1 text-sm font-bold"><Text action>{showHidden ? "← 내 그림으로 돌아가기" : "숨긴 그림 보기"}</Text></button>}
       <div className="mt-5 grid grid-cols-3 gap-3 sm:max-w-lg" role="group" aria-label={t("내 그림 목록 선택")}>
         {([["all", "전체"], ["host", "시작한 그림"], ["guest", "참여한 그림"]] as const).map(([value, label]) => (
           <button key={value} type="button" aria-label={t(value === "all" ? "전체" : value === "host" ? "내가 시작한 그림" : "내가 참여한 그림")} aria-pressed={scope === value} onClick={() => changeScope(value as RoomScope)}

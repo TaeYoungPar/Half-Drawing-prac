@@ -29,9 +29,9 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             <p className="text-sm font-semibold leading-6 text-slate-800 sm:text-base"><Text>나는 왼쪽, 친구는 오른쪽.</Text><br className="sm:hidden" /> <Text>경계 힌트만 보고 이어 그려요.</Text></p>
             <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
               <IntentLink href="/draw" className="button-primary"><ToolIcon name="pen" /><Text>그림 시작하기</Text></IntentLink>
-              <IntentLink href="/join" className="button-secondary"><Text>참여 코드 입력하기</Text> <span aria-hidden="true" className="direction-symbol">↗</span></IntentLink>
+              <IntentLink href="/join" className="button-secondary"><Text hideArrow>참여 코드 입력하기 ↗</Text></IntentLink>
             </div>
-            <IntentLink href="/examples/cat" className="mt-2 inline-flex min-h-11 items-center px-2 text-sm font-bold underline underline-offset-4"><Text>친구 없이 예시 먼저 보기</Text> <span aria-hidden="true" className="direction-symbol">↗</span></IntentLink>
+            <IntentLink href="/examples/cat" className="action-link mt-2 inline-flex min-h-11 items-center px-2 text-sm font-bold"><Text hideArrow>친구 없이 예시 먼저 보기 ↗</Text></IntentLink>
             <p className="mt-4 text-xs leading-5 text-slate-700"><Text>회원가입 없이 · 친구 한 명과 · 그림 실력은 상관없어요</Text></p>
           </div>
         </div>
@@ -55,7 +55,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         </div>
       </section>
       <section aria-labelledby="learn-more" className="mt-12 sm:mt-16">
-        <div className="flex flex-wrap items-end justify-between gap-4"><div><span className="eyebrow"><Text>어떤 그림이 나올까요?</Text></span><h2 id="learn-more" className="section-heading mt-2"><Text>상상은 다르게, 그림은 함께</Text></h2></div><Link href="/examples" className="inline-flex min-h-11 items-center text-sm font-bold underline underline-offset-4"><Text>모든 예시 보기 ↗</Text></Link></div>
+        <div className="flex flex-wrap items-end justify-between gap-4"><div><span className="eyebrow"><Text>어떤 그림이 나올까요?</Text></span><h2 id="learn-more" className="section-heading mt-2"><Text>상상은 다르게, 그림은 함께</Text></h2></div><Link href="/examples" className="action-link inline-flex min-h-11 items-center text-sm font-bold"><Text>모든 예시 보기 ↗</Text></Link></div>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-700"><Text>얼굴, 로봇, 꽃처럼 익숙한 모양에서 시작해요. 경계에 어떤 힌트를 남길지, 친구는 무엇을 보며 이어 그릴지 가이드용 예시로 살펴보세요.</Text></p><ExampleCards />
       </section>
       <section aria-labelledby="guide-intro" className="panel mt-10 bg-[#c5e0e8]! p-6 sm:p-8"><h2 id="guide-intro" className="section-heading"><Text>처음이라면, 작은 안내서부터</Text></h2><p className="mt-3 max-w-2xl text-sm leading-7"><Text>친구 초대부터 물감통으로 채우기, 완성 그림 저장까지. 처음 쓰는 도구도 차근차근 알아볼 수 있어요. 그림은 공개 게시판에 자동으로 올라가지 않아요.</Text></p><div className="mt-5 flex flex-wrap gap-3"><Link href="/guide" className="button-secondary"><Text>이용 가이드 읽기</Text></Link><Link href="/about" className="inline-flex min-h-11 items-center px-2 text-sm font-bold underline underline-offset-4"><Text>반쪽그림 소개</Text></Link></div></section>
