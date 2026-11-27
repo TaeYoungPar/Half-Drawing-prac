@@ -22,7 +22,12 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, inte
 const adPublisher = adsPublisherId();
 
 export const metadata: Metadata = {
-  verification: { google: "L2GlAepP6f4E9SEBD7CsBlv7i1U3EXMZ9zU7YVkO-Xg" },
+  verification: {
+    google: [
+      "L2GlAepP6f4E9SEBD7CsBlv7i1U3EXMZ9zU7YVkO-Xg",
+      "iNNjNR9756OlxhsRmOaWVmKo13ID172qPXwrkwU8npQ",
+    ],
+  },
   other: adPublisher ? { "google-adsense-account": adPublisher } : undefined,
   metadataBase: siteUrl,
   applicationName: "Half Drawing",

@@ -12,6 +12,8 @@
 
 `TEST_BASE_URL=http://127.0.0.1:3000 npm run test:domains`는 프로덕션 서버를 대상으로 Host별 검색 헤더 격리, 페이지별 canonical, 8개 사이트맵 URL, 크롤링 허용, 기존 초대/보관함 경로와 ads.txt를 검사합니다.
 
+`app/layout.tsx`의 Google 확인 태그에는 기존 주소용 값과 새 도메인 소유권 확인용 값을 함께 유지합니다. 배포 완료 후 Search Console의 `https://halfdrawing.com/` 속성에서 **HTML 태그 → 확인**을 눌러 인증합니다. 태그 추가만으로 인증 완료나 색인 생성이 자동으로 이루어지지는 않습니다.
+
 ### 광고가 접히는 이유 확인 — 2026-11-06
 
 광고를 받기 전에는 예약 높이만 유지하고, `filled`가 확인된 뒤 ‘광고’ 문구와 구분선을 표시합니다. `unfilled`·스크립트 실패·초기화 오류는 접되 숨겨진 `.ad-banner`의 `data-ad-state`와 `data-ad-error`에 원인을 남깁니다. 사용자에게 내부 오류 메시지를 표시하거나 자동으로 광고를 재요청하지 않습니다.

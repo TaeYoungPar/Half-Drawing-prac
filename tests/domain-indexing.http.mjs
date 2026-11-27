@@ -44,6 +44,7 @@ for (const [host, excluded] of hosts) {
     assert.deepEqual(canonical, [`${origin}${path === '/' ? '' : path}`], `${host}${path} canonical`);
     assert.equal(/<meta\b[^>]*name="robots"[^>]*content="[^"]*noindex/.test(response.body), false, 'no globally cached noindex metadata');
     assert.match(response.body, /name="google-site-verification" content="L2GlAepP6f4E9SEBD7CsBlv7i1U3EXMZ9zU7YVkO-Xg"/);
+    assert.match(response.body.split('</head>')[0], /name="google-site-verification" content="iNNjNR9756OlxhsRmOaWVmKo13ID172qPXwrkwU8npQ"/, 'custom-domain verification is present in the initial head');
   }
   const robots = await get('/robots.txt', host);
   assert.equal(robots.status, 200);
