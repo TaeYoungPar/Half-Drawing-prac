@@ -1,3 +1,14 @@
+# 대표 도메인과 Vercel 검색 제외 — 2026-11-27
+
+- 대표 주소를 `https://halfdrawing.com`으로 고정해 canonical·Open Graph/Twitter 이미지·공개 사이트맵·공유 카드에서 함께 사용한다. 이전 Vercel 주소가 두 사이트 URL 환경 변수에 남은 상태로 프로덕션 빌드해도 새 주소가 생성되는 것을 확인했다.
+- `*.vercel.app` 요청에만 `X-Robots-Tag: noindex`를 적용한다. robots.txt는 크롤링을 허용해 검색 로봇이 noindex를 읽도록 한다. 사용자 지정 도메인에는 noindex를 추가하지 않고, 기존 Vercel 접속도 유지해 해당 도메인의 익명 인증·보관함·초안 접근을 보존한다.
+- `test:domains`는 실제 로컬 프로덕션 HTTP 응답으로 루트/www 도메인·Vercel 운영/프리뷰·대문자/포트 포함 호스트·localhost·유사 접미어 주소 등 8개 Host × 공개 페이지 8개의 검색 헤더 격리와 canonical을 검증했다. 호스트마다 사이트맵의 새 도메인 URL 8개, robots의 크롤링 허용과 새 사이트맵, ads.txt·Google 확인 태그·기존 Referrer-Policy를 확인했다. Vercel의 그리기/초대/보관함/방 링크도 리다이렉트 없이 200과 noindex를 반환했다.
+- 단위 테스트 73개, 린트, 타입 검사 포함 프로덕션 빌드 통과. `test:content`는 320/390/1440px의 공개 콘텐츠·탐색·서버 HTML·canonical·404를 통과했다. `test:share`는 3개 크롤러 UA의 홈/초대/보관함 OG·Twitter 이미지가 새 도메인을 가리키고 이미지/아이콘이 제공되는 것을 확인했다.
+- `test:topics-card`의 320/390/1440px 추천·수정·등록·카드 PNG·공유 취소/다운로드·실패 재시도를 통과했다. `/workspace/scratch/domain-cards/share-card-390.png`를 직접 확인해 카드 하단이 `halfdrawing.com`인 것을 확인했다. 백엔드·네이티브 공유는 테스트 응답을 사용하고 실제 광고 노출/클릭이나 운영 DB 쓰기는 만들지 않았다.
+- 운영 배포 응답과 Search Console 제출·실제 Google 결과 제거는 미검증이다. 기존 검색 결과는 배포 후 재수집이 필요하고, 빠른 임시 숨김은 기존 Vercel Search Console 속성에서 주소 접두어 전체에 대한 삭제 요청이 필요하다. 절차와 새 도메인 사이트맵 주소는 README에 기록했다.
+
+---
+
 # 가운데 메뉴와 간결한 상단 — 2026-11-23
 
 - 수정 전 390px에서 상단 메뉴 중심이 화면 중앙보다 오른쪽 66.30px, 1440px에서는 367.30px 치우친 것을 측정했다. 기존 flex의 우측 정렬과 언어 선택/로고 행 배치가 원인이었다. 수정 전 화면은 /workspace/scratch/header-before에 보관했다.

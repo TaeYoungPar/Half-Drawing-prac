@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { SITE_ORIGIN } from "./site";
 
 export const contactEmail = "dhfak1@gmail.com";
-export const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "https://half-drawing-prac.vercel.app"));
+export const siteUrl = new URL(SITE_ORIGIN);
 
 export function contentMetadata(title: string, description: string, path: string): Metadata {
   return {

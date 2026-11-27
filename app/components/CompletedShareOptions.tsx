@@ -4,6 +4,7 @@ import { Text, useI18n } from "../i18n/I18n";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { drawShareCard, SHARE_CARD_FILENAME } from "../utils/shareCard";
 import { downloadCanvasImage, shareCanvasImage } from "../utils/downloadCanvasImage";
+import { SITE_ORIGIN } from "../lib/site";
 
 export function CompletedShareOptions({ drawingRef, prompt }: { drawingRef: RefObject<HTMLCanvasElement | null>; prompt: string }) {
   const { t, locale } = useI18n();
@@ -24,7 +25,7 @@ export function CompletedShareOptions({ drawingRef, prompt }: { drawingRef: RefO
         await document.fonts.ready;
         // Parent paint effects run before this asynchronous continuation.
         if (cancelled || !cardRef.current || !drawingRef.current) return;
-        drawShareCard(cardRef.current, drawingRef.current, prompt, process.env.NEXT_PUBLIC_SITE_URL, locale);
+        drawShareCard(cardRef.current, drawingRef.current, prompt, SITE_ORIGIN, locale);
         setCardReady(true);
       } catch {
         if (!cancelled) setCardError("공유 카드를 준비하지 못했어요. 다시 시도하거나 원본 그림을 저장해주세요.");

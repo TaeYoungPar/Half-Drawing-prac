@@ -35,7 +35,7 @@ try {
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `overflow ${route} ${width}`);
       assert.equal(await page.getByRole('navigation', { name: '그리기 안내', exact: true }).getByRole('link', { name: '이용 가이드', exact: true }).count(), 1);
       assert.equal(await page.locator('link[rel="canonical"]').count(), 1);
-      assert.equal(new URL(await page.locator('link[rel="canonical"]').getAttribute('href')).pathname, route);
+      assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'), `https://halfdrawing.com${route}`);
       assert.ok((await page.locator('meta[name="description"]').getAttribute('content')).length > 20);
       if (route.startsWith('/examples/')) {
         const figure = page.locator('figure');

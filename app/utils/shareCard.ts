@@ -1,7 +1,8 @@
 import { translate, type Locale } from "../i18n/translate";
+import { SITE_ORIGIN } from "../lib/site";
 export const SHARE_CARD_SIZE = 1200;
 export const SHARE_CARD_FILENAME = "half-drawing-card.png";
-const DEFAULT_SITE = "https://half-drawing-prac.vercel.app";
+const DEFAULT_SITE = SITE_ORIGIN;
 
 export function shareSiteLabel(value = DEFAULT_SITE): string {
   try {

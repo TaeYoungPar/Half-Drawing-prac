@@ -34,7 +34,8 @@
     "db:social-bundle": "node scripts/build-social-sql.mjs",
     "test:language": "node tests/language.ui.mjs",
     "test:action-arrows": "node tests/action-arrows.ui.mjs",
-    "test:header": "node tests/header-layout.ui.mjs"
+    "test:header": "node tests/header-layout.ui.mjs",
+    "test:domains": "node tests/domain-indexing.http.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

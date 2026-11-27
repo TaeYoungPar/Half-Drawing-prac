@@ -26,7 +26,8 @@ try {
       assert.equal(/practice/i.test(tags.documentTitle + tags.title + tags.siteName), false);
       assert.equal(tags.width, '1200'); assert.equal(tags.height, '630');
       assert.equal(tags.twitter, 'summary_large_image');
-      assert.equal(new URL(tags.image).protocol, 'https:');
+      assert.equal(new URL(tags.image).origin, 'https://halfdrawing.com');
+      assert.equal(new URL(tags.twitterImage).origin, 'https://halfdrawing.com');
       for (const imageUrl of [tags.image, tags.twitterImage]) {
         const url = new URL(imageUrl); const asset = await context.request.get(base + url.pathname + url.search);
         assert.equal(asset.status(), 200); assert.match(asset.headers()['content-type'], /image\/png/);

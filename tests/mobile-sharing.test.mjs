@@ -125,6 +125,7 @@ test("share-card site labels never include room paths, invitation codes or crede
   const { shareSiteLabel } = load('shareCard');
   assert.equal(shareSiteLabel('https://example.com/rooms/private?code=SECRET#token'), 'example.com');
   assert.equal(shareSiteLabel('https://user:password@example.com/join'), 'example.com');
-  assert.equal(shareSiteLabel('javascript:invalid'), 'half-drawing-prac.vercel.app');
-  assert.equal(shareSiteLabel('not a URL'), 'half-drawing-prac.vercel.app');
+  assert.equal(shareSiteLabel(), 'halfdrawing.com');
+  assert.equal(shareSiteLabel('javascript:invalid'), 'halfdrawing.com');
+  assert.equal(shareSiteLabel('not a URL'), 'halfdrawing.com');
 });
